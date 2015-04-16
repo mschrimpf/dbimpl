@@ -14,11 +14,11 @@ int main(int argc, char* argv[]) {
 	char* memoryBufferInMB = argv[3];	
 	
 	char * endp;
-    long num = strtol(argv[3],&endp,10);
+    long num = strtol(memoryBufferInMB, &endp, 10);
 	
 	if (*endp){
 		cout << "MemoryBufferInMB has to be an int" << endl;
-		return -1;
+		return 1;
 	}
 	cout << "InputFile: " << inputFile << " OutputFile: " << outputFile << " MemoryBufferInMB: " << memoryBufferInMB << endl;
 }
