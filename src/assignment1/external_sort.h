@@ -7,6 +7,6 @@
 
 #include <stdint.h>
 
-void externalSort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize);
+void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize);
 
 #endif //PROJECT_EXTERNAL_SORT_H
