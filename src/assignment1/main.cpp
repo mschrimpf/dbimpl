@@ -4,7 +4,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <string>
 #include "external_sort.h"
 
 bool validate_sorted(int fd);
@@ -24,12 +23,12 @@ int main(int argc, char *argv[]) {
 	const char *memoryBufferInput = argv[3];
 
 	// check input correct
-	int fdInput = open(inputFile, O_RDONLY | O_EXCL);
+	int fdInput = open(inputFile, O_RDONLY);
 	if (fdInput < 0) {
 		fprintf(stderr, "Error: Cannot open inputFile '%s': %d %s\n", inputFile, errno, strerror(errno));
 		return -1;
 	}
-	int fdOutput = open(outputFile, O_RDWR | O_CREAT | O_TRUNC);
+	int fdOutput = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
 	if (fdOutput < 0) {
 		close(fdInput);
 		fprintf(stderr, "Error: Cannot open outputFile '%s': %d %s\n", outputFile, errno, strerror(errno));
@@ -41,7 +40,8 @@ int main(int argc, char *argv[]) {
 	if (errno) {
 		close(fdInput);
 		close(fdOutput);
-		fprintf(stderr, "memoryBufferInMB '%s' cannot not be parsed: %d %s\n", memoryBufferInput, errno, strerror(errno));
+		fprintf(stderr, "memoryBufferInMB '%s' cannot not be parsed: %d %s\n", memoryBufferInput, errno,
+				strerror(errno));
 		return -1;
 	}
 
@@ -60,10 +60,10 @@ int main(int argc, char *argv[]) {
 	external_sort(fdInput, inputFileSize, fdOutput, memoryBufferInMB);
 
 	// validate algorithm
+	fdOutput = open(outputFile, O_RDONLY);
 	if (!validate_sorted(fdOutput)) {
 		return -1;
 	}
-
 	close(fdOutput);
 
 	return 0;

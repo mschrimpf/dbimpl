@@ -32,5 +32,9 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 	size_t length = sizeof(input) / sizeof(uint64_t);
 	for (unsigned int i(0); i < length; ++i) {
 		printf("%03d: %lld\n", i, input[i]);
+		// TODO
 	}
+
+
+	close(fdOutput);
 }
