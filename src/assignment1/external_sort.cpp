@@ -10,14 +10,26 @@
 #include <sys/stat.h>
 #include "external_sort.h"
 #include "sorted_check.h"
+#include <queue>
 
 #define DEBUG 1
+
+struct QueueElem{ // elem which is stored in the prio queue
+	int chunkNumber; // number of the chunk
+	std::vector<uint64_t>::iterator ptr; // iterator of the values of the file
+};
+
+struct CompareQueuePrio {
+	bool operator()(const QueueElem& lhs, const QueueElem& rhs) const {
+		return *lhs.ptr > *rhs.ptr;
+	}
+};
 
 uint64_t div_ceil(uint64_t divisor, uint64_t dividend);
 
 
 void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize /* in MB */) {
-	uint64_t chunks = size / memSize;
+	uint64_t chunks = size / memSize; // number of runs the sorting requires
 	uint64_t chunk[memSize];
 	printf("Chunk phase with %llu chunks\n", chunks);
 	// steps 1 - 3
@@ -45,6 +57,8 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize /*
 			perror(msg.c_str());
 		}
 		int w = write(fdsTemp[i], chunk, sizeof(chunk));
+		// TODO fehlt hier nicht der check ob die chunk-size auch korrekt ist?
+		// kann ja sein dass im letzten chunk nur 1 wert ist
 		if (w < 0) {
 			perror("Cannot write chunk");
 			return;
@@ -72,6 +86,30 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize /*
 	}
 
 
+	//k-way merge
+	// prio-queue
+	// iterate through every input-buffer, enqueue (nextNumberIn(f), f)
+
+	std::priority_queue<QueueElem, std::vector<QueueElem>, CompareQueuePrio> queue;
+	for (unsigned int i(0); i < chunks; i++){
+		//queue fuellen?
+		//queue.push({i, fdsTemp[i]});
+	}
+
+	while (!queue.empty()){
+		QueueElem headElement = queue.top(); // get top elem
+		queue.pop(); // remove elem
+		int value = *headElement.ptr; // value of elem
+
+		//outputBuffer value hinzufügen
+		//checken ob buffer nun voll,
+		//wenn ja, dann rausschreiben und leeren
+
+
+		headElement.ptr++; // next element of this queue elem
+		//checken ob das letzte element erreicht wurde
+
+	}
 
 	// delete temp files
 	for (unsigned int i(0); i < chunks; i++) {
@@ -87,6 +125,7 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize /*
 //		perror("Could not write data");
 //		return;
 //	}
+
 
 
 	close(fdInput);
