@@ -6,7 +6,7 @@
 #include <string.h>
 #include "external_sort.h"
 
-bool validate_sorted(int fd);
+bool validate_sorted(int fd, uint64_t size);
 
 using namespace std;
 
@@ -61,16 +61,32 @@ int main(int argc, char *argv[]) {
 
 	// validate algorithm
 	fdOutput = open(outputFile, O_RDONLY);
-	if (!validate_sorted(fdOutput)) {
+	if (!validate_sorted(fdOutput, inputFileSize)) {
 		return -1;
 	}
-	close(fdOutput);
 
 	return 0;
 }
 
-bool validate_sorted(int fd) {
+// Closes the file descriptor.
+bool validate_sorted(int fd, uint64_t size) {
+	uint64_t input[size];
+	int r = read(fd, input, sizeof(input));
+	close(fd);
+	if (r < 0) {
+		perror("Read error");
+		return false;
+	}
 
-
+	// validate
+	uint64_t prev = (uint64_t) INT64_MIN;
+	size_t length = sizeof(input) / sizeof(uint64_t);
+	for (unsigned int i(0); i < length; ++i) {
+		uint64_t curr = input[i];
+		if (curr < prev) {
+			fprintf(stderr, "Error at indices %d and %d: %llu is bigger than %llu\n", i - 1, i, prev, curr);
+			return false;
+		}
+	}
 	return true;
 }
