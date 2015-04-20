@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Error: Cannot open inputFile '%s': %d %s\n", inputFile, errno, strerror(errno));
 		return -1;
 	}
-	int fdOutput = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+	int fdOutput = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY | O_APPEND, S_IRUSR | S_IWUSR);
 	if (fdOutput < 0) {
 		close(fdInput);
 		fprintf(stderr, "Error: Cannot open outputFile '%s': %d %s\n", outputFile, errno, strerror(errno));
