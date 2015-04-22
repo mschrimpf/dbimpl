@@ -13,14 +13,14 @@
 struct QueueElem {
 	unsigned int chunkNumber;
 	uint64_t number_of_elements;
-	std::vector<uint64_t>::iterator ptr;
+	std::vector<uint64_t>::iterator current_buffer_iterator;
 	unsigned int index = 0;
 	int fd = 0;
 };
 
 struct CompareQueuePrio {
 	bool operator()(const QueueElem &lhs, const QueueElem &rhs) const {
-		return *lhs.ptr > *rhs.ptr;
+		return *lhs.current_buffer_iterator > *rhs.current_buffer_iterator;
 	}
 };
 
@@ -61,7 +61,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 			perror("Cannot read input");
 			return;
 		}
-		if(read_buffer.size() != elements_to_consume) { // just to be sure a.k.a. defensive programming
+		if (read_buffer.size() != elements_to_consume) { // just to be sure a.k.a. defensive programming
 			fprintf(stderr, "sizes do not match\n");
 		}
 		consumed_elements += elements_to_consume;
@@ -70,7 +70,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 
 		// write chunk to output file
 		int fdTemp = write_chunk(tempFilePrefix, i, read_buffer);
-		if(fdTemp < 0) {
+		if (fdTemp < 0) {
 			return;
 		}
 #ifdef DEBUG
@@ -92,58 +92,58 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	// allocate output buffer
 	printf("Merge phase (%llu-way)\n", number_of_chunks);
 
-	std::vector<std::vector<uint64_t>> input_buffer;
+	std::vector<std::vector<uint64_t>> input_buffers;
 	std::vector<uint64_t> output_buffer;
 
-	uint64_t byte_per_buffer = mem_size_byte / (number_of_chunks + 1 /* 1 output buffer */);
-	uint64_t elements_per_buffer = byte_per_buffer / sizeof(uint64_t);
+	uint64_t max_byte_per_buffer = mem_size_byte / (number_of_chunks + 1 /* 1 output buffer */);
+	uint64_t max_elements_per_buffer = max_byte_per_buffer / sizeof(uint64_t);
 
 	// read data in buffer
 	for (unsigned int i(0); i < number_of_chunks; i++) {
 		std::vector<uint64_t> buffer_elements;
-		uint64_t elems_to_add = std::min(elements_per_buffer, elements[i].number_of_elements);
-		buffer_elements.resize(elems_to_add);
-		elements[i].number_of_elements -= elems_to_add;
-		read(elements[i].fd, &buffer_elements[0], elems_to_add * sizeof(uint64_t));
-		elements[i].ptr = buffer_elements.begin();
-		input_buffer.push_back(buffer_elements);
+		uint64_t elements_to_add = std::min(max_elements_per_buffer, elements[i].number_of_elements);
+		buffer_elements.resize(elements_to_add);
+
+		read(elements[i].fd, &buffer_elements[0], elements_to_add * sizeof(uint64_t));
+		elements[i].number_of_elements -= elements_to_add;
+		elements[i].current_buffer_iterator = buffer_elements.begin();
+		input_buffers.push_back(buffer_elements);
 	}
 
-	// k-way merge
-	// prio-queue
-	// iterate through every input-buffer, enqueue (nextNumberIn(f), f)
-
+	// k-way merge using a priority queue
 	std::priority_queue<QueueElem, std::vector<QueueElem>, CompareQueuePrio> queue;
-	for (unsigned int i(0); i < input_buffer.size(); i++) {
+	for (unsigned int i(0); i < input_buffers.size(); i++) {
 		queue.push(elements[i]);
 	}
 
 	while (!queue.empty()) {
 		QueueElem headElement = queue.top(); // get top elem
 		queue.pop(); // remove elem
-		uint64_t value = *headElement.ptr; // value of elem
+		uint64_t value = *headElement.current_buffer_iterator; // value of elem
+		headElement.current_buffer_iterator++; // next element of this queue elem
 		output_buffer.push_back(value);
 
-		if (output_buffer.size() == elements_per_buffer) {
+		if (output_buffer.size() == max_elements_per_buffer) {
 			write(fdOutput, output_buffer.data(), output_buffer.size() * sizeof(uint64_t));
 			output_buffer.clear();
 		}
 
 		headElement.index += 1;
-		headElement.ptr++; // next element of this queue elem
+		// reload next part of chunk into buffer if necessary
 		if (headElement.index == headElement.number_of_elements) {
-			//next chunk
-			input_buffer[headElement.chunkNumber].clear();
-			uint64_t elemsToAdd = std::min(elements_per_buffer, elements[headElement.chunkNumber].number_of_elements);
-			headElement.number_of_elements -= elemsToAdd;
-			input_buffer.resize(elemsToAdd);
-			read(headElement.fd, &input_buffer[headElement.chunkNumber][0], elemsToAdd * sizeof(uint64_t));
-			headElement.ptr = input_buffer[headElement.chunkNumber].begin();
+			// next chunk
+			input_buffers[headElement.chunkNumber].clear();
+			uint64_t elements_to_add = std::min(max_elements_per_buffer,
+												elements[headElement.chunkNumber].number_of_elements);
+			headElement.number_of_elements -= elements_to_add;
+			input_buffers[headElement.chunkNumber].resize(elements_to_add);
+			read(headElement.fd, &input_buffers[headElement.chunkNumber][0], elements_to_add * sizeof(uint64_t));
+			headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
 			headElement.index = 0;
 		}
 
-		if (headElement.number_of_elements > 0) {
-			queue.push(headElement);
+		if (headElement.number_of_elements > 0) { // elements left
+			queue.push(headElement); // add back to the queue
 		} else {
 			//done with this file
 			close(headElement.fd);
@@ -152,6 +152,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 //			}
 		}
 	}
+
 	// at last, we need to flush the rest of the output-buffer as there might be something inside
 	write(fdOutput, output_buffer.data(), output_buffer.size() * sizeof(uint64_t));
 	output_buffer.clear();
