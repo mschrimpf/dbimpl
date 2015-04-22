@@ -12,7 +12,6 @@
 
 struct QueueElem {
 	unsigned int chunkNumber;
-	std::string fileName;
 	uint64_t number_of_elements;
 	std::vector<uint64_t>::iterator ptr;
 	unsigned int index = 0;
@@ -28,10 +27,15 @@ struct CompareQueuePrio {
 uint64_t div_ceil(uint64_t divisor, uint64_t dividend);
 
 
+int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data);
+
 void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb) {
 	uint64_t mem_size_byte = mem_size_mb * 1024 * 1024;
-	uint64_t number_of_chunks = div_ceil(number_of_elements * sizeof(uint64_t), mem_size_byte); // number of chunks the sorting requires
-	uint64_t elements_per_chunk = (mem_size_byte / (number_of_chunks + 1 /* additional output buffer */)) / sizeof(uint64_t);
+	uint64_t elements_byte = number_of_elements * sizeof(uint64_t);
+	uint64_t number_of_chunks = div_ceil(elements_byte, mem_size_byte); // number of chunks the sorting requires
+	uint64_t byte_per_chunk = mem_size_byte / number_of_chunks;
+	uint64_t elements_per_chunk = byte_per_chunk / sizeof(uint64_t);
+	uint64_t max_elements_in_memory = mem_size_byte / sizeof(uint64_t);
 
 	std::vector<uint64_t> read_buffer;
 
@@ -40,7 +44,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	printf("Chunk phase with %llu chunks\n", number_of_chunks);
 	// steps 1 - 3
 	std::string tempFileDir = "temp";
-	if(0 != mkdir(tempFileDir.c_str())) {
+	if (0 != mkdir(tempFileDir.c_str())) {
 		perror("Cannot create temp dir");
 	}
 	std::string tempFilePrefix = tempFileDir + "/";
@@ -48,53 +52,40 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	uint64_t consumed_elements = 0;
 
 	for (unsigned int i(0); i < number_of_chunks; i++) {
-		int fdsTemp;
-		std::string fdsTempName;
 		// check how many elements we want to read as the last element might have less elements than the previous one
-		uint64_t elements_to_consume = std::min(mem_size_byte / sizeof(uint64_t), number_of_elements - consumed_elements);
-		consumed_elements += elements_to_consume;
+		uint64_t elements_left_to_read = number_of_elements - consumed_elements;
+		uint64_t elements_to_consume = std::min(max_elements_in_memory, elements_left_to_read);
 		read_buffer.resize(elements_to_consume);
 
 		// read chunk
-		int r = read(fdInput, &read_buffer[0], elements_to_consume * sizeof(uint64_t));
-		if (r < 0) {
+		int bytes_read = read(fdInput, &read_buffer[0], elements_to_consume * sizeof(uint64_t));
+		if (bytes_read < 0) {
 			perror("Cannot read input");
 			return;
 		}
+		consumed_elements += elements_to_consume;
 		// sort chunk
 		std::sort(read_buffer.begin(), read_buffer.end());
 
 		// write chunk to output file
-		char iteratorString[21]; // every 64 bit integer will fit in here
-		sprintf(iteratorString, "%d", i);
-		fdsTempName = tempFilePrefix + iteratorString;
-		fdsTemp = open(fdsTempName.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
-		if (fdsTemp < 0) {
-			std::string msg = "Cannot open temp file ";
-			msg = msg + fdsTempName[i];
-			perror(msg.c_str());
-		}
-		int w = write(fdsTemp, read_buffer.data(), read_buffer.size() * sizeof(uint64_t));
-
-		if (w < 0) {
-			perror("Cannot write chunk");
+		int fdTemp = write_chunk(tempFilePrefix, i, read_buffer);
+		if(fdTemp < 0) {
 			return;
 		}
 #ifdef DEBUG
 		printf("Check sorting of temporary file chunk %d...", i);
-		if (check_sorting(fdsTemp, elements_per_chunk)) {
+		if (check_sorting(fdTemp, elements_per_chunk /* FIXME: what if the chunk is not full */)) {
 			printf(" OK.\n");
 		} else {
 			printf(" ERROR!\n");
 		}
 #endif
 		QueueElem elem;
-		elem.fileName = fdsTempName;
+		elem.fd = fdTemp;
 		elem.chunkNumber = i;
 		elem.number_of_elements = read_buffer.size();
 		elements.push_back(elem);
 		read_buffer.clear();
-		close(fdsTemp);
 	}
 
 	// allocate output buffer
@@ -105,13 +96,11 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 
 	// read data in buffer
 	for (unsigned int i(0); i < number_of_chunks; i++) {
-		int fd = open((elements[i].fileName.c_str()), O_RDONLY);
-		elements[i].fd = fd;
 		std::vector<uint64_t> chunk;
 		uint64_t elemsToAdd = std::min(elements_per_chunk, elements[i].number_of_elements);
 		chunk.resize(elemsToAdd);
 		elements[i].number_of_elements -= elemsToAdd;
-		read(fd, &chunk[0], elemsToAdd * sizeof(uint64_t));
+		read(elements[i].fd, &chunk[0], elemsToAdd * sizeof(uint64_t));
 		elements[i].ptr = chunk.begin();
 		input_buffer.push_back(chunk);
 	}
@@ -157,9 +146,9 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		} else {
 			//done with this file
 			close(headElement.fd);
-			if (0 != remove(headElement.fileName.c_str())) {
-				perror("Cannot remove temp file");
-			}
+//			if (0 != remove(headElement.fileName.c_str())) { // TODO: delete
+//				perror("Cannot remove temp file");
+//			}
 		}
 	}
 	// at last, we need to flush the rest of the output-buffer as there might be something inside
@@ -168,6 +157,28 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 
 	close(fdInput);
 	close(fdOutput);
+	// TODO: close and delete temp files
+}
+
+int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data) {
+	std::string fdsTempName;
+	char iteratorString[21]; // every 64 bit integer will fit in here
+	sprintf(iteratorString, "%d", i);
+	fdsTempName = fileprefix + iteratorString;
+	int fdTemp = open(fdsTempName.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+	if (fdTemp < 0) {
+		std::string msg = "Cannot open temp file ";
+		msg = msg + fdsTempName;
+		perror(msg.c_str());
+		return -1;
+	}
+	int w = write(fdTemp, data.data(), data.size() * sizeof(uint64_t));
+
+	if (w < 0) {
+		perror("Cannot write chunk");
+		return -1;
+	}
+	return fdTemp;
 }
 
 
