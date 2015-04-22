@@ -10,6 +10,6 @@
 // Performs an external_sort on the 64-bit integers stored in the input file.
 // The result is written to the output file.
 // Closes input and output file descriptors once finished.
-void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize);
+void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb);
 
 #endif //PROJECT_EXTERNAL_SORT_H

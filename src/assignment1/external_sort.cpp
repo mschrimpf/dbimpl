@@ -28,9 +28,9 @@ struct CompareQueuePrio {
 uint64_t div_ceil(uint64_t divisor, uint64_t dividend);
 
 
-void external_sort(int fdInput, uint64_t size /* number of elements */, int fdOutput, uint64_t memSize /* in MB */) { //TODO sicher in mb? glaube nicht
-	uint64_t mem_size_byte = memSize * 1024 * 1024;
-	uint64_t number_of_chunks = div_ceil(size * sizeof(uint64_t), mem_size_byte); // number of chunks the sorting requires
+void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb) {
+	uint64_t mem_size_byte = mem_size_mb * 1024 * 1024;
+	uint64_t number_of_chunks = div_ceil(number_of_elements * sizeof(uint64_t), mem_size_byte); // number of chunks the sorting requires
 	uint64_t elements_per_chunk = (mem_size_byte / (number_of_chunks + 1 /* additional output buffer */)) / sizeof(uint64_t);
 
 	std::vector<uint64_t> read_buffer;
@@ -43,7 +43,7 @@ void external_sort(int fdInput, uint64_t size /* number of elements */, int fdOu
 	if(0 != mkdir(tempFileDir.c_str())) {
 		perror("Cannot create temp dir");
 	}
-	std::string tempFilePrefix = tempFileDir;
+	std::string tempFilePrefix = tempFileDir + "/";
 
 	uint64_t consumed_elements = 0;
 
@@ -51,7 +51,7 @@ void external_sort(int fdInput, uint64_t size /* number of elements */, int fdOu
 		int fdsTemp;
 		std::string fdsTempName;
 		// check how many elements we want to read as the last element might have less elements than the previous one
-		uint64_t elements_to_consume = std::min(memSize / sizeof(uint64_t), size - consumed_elements);
+		uint64_t elements_to_consume = std::min(mem_size_byte / sizeof(uint64_t), number_of_elements - consumed_elements);
 		consumed_elements += elements_to_consume;
 		read_buffer.resize(elements_to_consume);
 
