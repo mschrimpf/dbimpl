@@ -31,11 +31,9 @@ int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> da
 
 void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb) {
 	uint64_t mem_size_byte = mem_size_mb * 1024 * 1024;
+	uint64_t max_elements_in_memory = mem_size_byte / sizeof(uint64_t);
 	uint64_t elements_byte = number_of_elements * sizeof(uint64_t);
 	uint64_t number_of_chunks = div_ceil(elements_byte, mem_size_byte); // number of chunks the sorting requires
-	uint64_t byte_per_chunk = mem_size_byte / number_of_chunks;
-	uint64_t elements_per_chunk = byte_per_chunk / sizeof(uint64_t);
-	uint64_t max_elements_in_memory = mem_size_byte / sizeof(uint64_t);
 
 	std::vector<uint64_t> read_buffer;
 
@@ -63,6 +61,9 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 			perror("Cannot read input");
 			return;
 		}
+		if(read_buffer.size() != elements_to_consume) { // just to be sure a.k.a. defensive programming
+			fprintf(stderr, "sizes do not match\n");
+		}
 		consumed_elements += elements_to_consume;
 		// sort chunk
 		std::sort(read_buffer.begin(), read_buffer.end());
@@ -74,7 +75,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		}
 #ifdef DEBUG
 		printf("Check sorting of temporary file chunk %d...", i);
-		if (check_sorting(fdTemp, elements_per_chunk /* FIXME: what if the chunk is not full */)) {
+		if (check_sorting(fdTemp, elements_to_consume)) {
 			printf(" OK.\n");
 		} else {
 			printf(" ERROR!\n");
@@ -83,7 +84,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		QueueElem elem;
 		elem.fd = fdTemp;
 		elem.chunkNumber = i;
-		elem.number_of_elements = read_buffer.size();
+		elem.number_of_elements = elements_to_consume;
 		elements.push_back(elem);
 		read_buffer.clear();
 	}
@@ -94,15 +95,18 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	std::vector<std::vector<uint64_t>> input_buffer;
 	std::vector<uint64_t> output_buffer;
 
+	uint64_t byte_per_buffer = mem_size_byte / (number_of_chunks + 1 /* 1 output buffer */);
+	uint64_t elements_per_buffer = byte_per_buffer / sizeof(uint64_t);
+
 	// read data in buffer
 	for (unsigned int i(0); i < number_of_chunks; i++) {
-		std::vector<uint64_t> chunk;
-		uint64_t elemsToAdd = std::min(elements_per_chunk, elements[i].number_of_elements);
-		chunk.resize(elemsToAdd);
-		elements[i].number_of_elements -= elemsToAdd;
-		read(elements[i].fd, &chunk[0], elemsToAdd * sizeof(uint64_t));
-		elements[i].ptr = chunk.begin();
-		input_buffer.push_back(chunk);
+		std::vector<uint64_t> buffer_elements;
+		uint64_t elems_to_add = std::min(elements_per_buffer, elements[i].number_of_elements);
+		buffer_elements.resize(elems_to_add);
+		elements[i].number_of_elements -= elems_to_add;
+		read(elements[i].fd, &buffer_elements[0], elems_to_add * sizeof(uint64_t));
+		elements[i].ptr = buffer_elements.begin();
+		input_buffer.push_back(buffer_elements);
 	}
 
 	// k-way merge
@@ -120,10 +124,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		uint64_t value = *headElement.ptr; // value of elem
 		output_buffer.push_back(value);
 
-		/*
-		 * if full
-		 */
-		if (output_buffer.size() == elements_per_chunk) {
+		if (output_buffer.size() == elements_per_buffer) {
 			write(fdOutput, output_buffer.data(), output_buffer.size() * sizeof(uint64_t));
 			output_buffer.clear();
 		}
@@ -133,7 +134,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		if (headElement.index == headElement.number_of_elements) {
 			//next chunk
 			input_buffer[headElement.chunkNumber].clear();
-			uint64_t elemsToAdd = std::min(elements_per_chunk, elements[headElement.chunkNumber].number_of_elements);
+			uint64_t elemsToAdd = std::min(elements_per_buffer, elements[headElement.chunkNumber].number_of_elements);
 			headElement.number_of_elements -= elemsToAdd;
 			input_buffer.resize(elemsToAdd);
 			read(headElement.fd, &input_buffer[headElement.chunkNumber][0], elemsToAdd * sizeof(uint64_t));
