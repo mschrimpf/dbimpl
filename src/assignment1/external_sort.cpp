@@ -138,13 +138,13 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 			output_buffer.clear();
 		}
 
-		headElement.index++;
+		headElement.index += 1;
 		headElement.ptr++; // next element of this queue elem
 		if (headElement.index == headElement.number_of_elements){
 			//next chunk
 			input_buffer[headElement.chunkNumber].clear();
 			uint64_t  elemsToAdd = std::min(chunk_size, elements[headElement.chunkNumber].number_of_elements);
-			elements[headElement.chunkNumber].number_of_elements -= elemsToAdd;
+			headElement.number_of_elements -= elemsToAdd;
 			input_buffer.resize(elemsToAdd);
 			read(headElement.fd, &input_buffer[headElement.chunkNumber][0], elemsToAdd * sizeof(uint64_t));
 			headElement.ptr = input_buffer[headElement.chunkNumber].begin();
