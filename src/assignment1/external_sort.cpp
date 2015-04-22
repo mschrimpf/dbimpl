@@ -20,7 +20,7 @@ struct QueueElem {
 	uint64_t number_of_elements;
 	std::vector<uint64_t>::iterator ptr;
 	unsigned int index = 0;
-	int fd;
+	int fd = 0;
 };
 
 struct CompareQueuePrio {
@@ -87,7 +87,11 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 			printf(" ERROR!\n");
 		}
 #endif
-		elements.push_back({i, fdsTempName, read_buffer.size()});
+		QueueElem elem;
+		elem.fileName = fdsTempName;
+		elem.chunkNumber = i;
+		elem.number_of_elements = read_buffer.size();
+		elements.push_back(elem);
 		read_buffer.clear();
 		close(fdsTemp);
 	}
