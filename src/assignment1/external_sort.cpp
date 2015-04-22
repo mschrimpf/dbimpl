@@ -1,7 +1,3 @@
-//
-// Created by Martin on 17.04.2015.
-//
-
 #include <stdexcept>
 #include <io.h>
 #include <stdio.h>
@@ -24,7 +20,7 @@ struct QueueElem {
 };
 
 struct CompareQueuePrio {
-	bool operator()(const QueueElem& lhs, const QueueElem& rhs) const {
+	bool operator()(const QueueElem &lhs, const QueueElem &rhs) const {
 		return *lhs.ptr > *rhs.ptr;
 	}
 };
@@ -32,24 +28,29 @@ struct CompareQueuePrio {
 uint64_t div_ceil(uint64_t divisor, uint64_t dividend);
 
 
-void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) { //TODO sicher in mb? glaube nicht
-	uint64_t chunks = div_ceil(size * sizeof(uint64_t),  memSize); // number of chunks the sorting requires
-	uint64_t chunk_size = (memSize / (chunks + 1)) / sizeof(uint64_t);
+void external_sort(int fdInput, uint64_t size /* number of elements */, int fdOutput, uint64_t memSize /* in MB */) { //TODO sicher in mb? glaube nicht
+	uint64_t mem_size_byte = memSize * 1024 * 1024;
+	uint64_t number_of_chunks = div_ceil(size * sizeof(uint64_t), mem_size_byte); // number of chunks the sorting requires
+	uint64_t elements_per_chunk = (mem_size_byte / (number_of_chunks + 1 /* additional output buffer */)) / sizeof(uint64_t);
 
 	std::vector<uint64_t> read_buffer;
 
 	std::vector<QueueElem> elements;
 
-	printf("Chunk phase with %llu chunks\n", chunks);
+	printf("Chunk phase with %llu chunks\n", number_of_chunks);
 	// steps 1 - 3
-	std::string tempFilePrefix = "temp-";
+	std::string tempFileDir = "temp";
+	if(0 != mkdir(tempFileDir.c_str())) {
+		perror("Cannot create temp dir");
+	}
+	std::string tempFilePrefix = tempFileDir;
 
 	uint64_t consumed_elements = 0;
 
-	for (unsigned int i(0); i < chunks; i++) {
+	for (unsigned int i(0); i < number_of_chunks; i++) {
 		int fdsTemp;
 		std::string fdsTempName;
-		// check how many elements we want to read as the last element might have less elements than the previous onse
+		// check how many elements we want to read as the last element might have less elements than the previous one
 		uint64_t elements_to_consume = std::min(memSize / sizeof(uint64_t), size - consumed_elements);
 		consumed_elements += elements_to_consume;
 		read_buffer.resize(elements_to_consume);
@@ -81,7 +82,7 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 		}
 #ifdef DEBUG
 		printf("Check sorting of temporary file chunk %d...", i);
-		if (check_sorting(fdsTemp, chunk_size)) {
+		if (check_sorting(fdsTemp, elements_per_chunk)) {
 			printf(" OK.\n");
 		} else {
 			printf(" ERROR!\n");
@@ -97,17 +98,17 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 	}
 
 	// allocate output buffer
-	printf("Merge phase (%llu-way)\n", chunks);
+	printf("Merge phase (%llu-way)\n", number_of_chunks);
 
 	std::vector<std::vector<uint64_t>> input_buffer;
 	std::vector<uint64_t> output_buffer;
 
 	// read data in buffer
-	for (unsigned int i(0); i < chunks; i++) {
+	for (unsigned int i(0); i < number_of_chunks; i++) {
 		int fd = open((elements[i].fileName.c_str()), O_RDONLY);
 		elements[i].fd = fd;
 		std::vector<uint64_t> chunk;
-		uint64_t  elemsToAdd = std::min(chunk_size, elements[i].number_of_elements);
+		uint64_t elemsToAdd = std::min(elements_per_chunk, elements[i].number_of_elements);
 		chunk.resize(elemsToAdd);
 		elements[i].number_of_elements -= elemsToAdd;
 		read(fd, &chunk[0], elemsToAdd * sizeof(uint64_t));
@@ -120,11 +121,11 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 	// iterate through every input-buffer, enqueue (nextNumberIn(f), f)
 
 	std::priority_queue<QueueElem, std::vector<QueueElem>, CompareQueuePrio> queue;
-	for (unsigned int i(0); i < input_buffer.size(); i++){
+	for (unsigned int i(0); i < input_buffer.size(); i++) {
 		queue.push(elements[i]);
 	}
 
-	while (!queue.empty()){
+	while (!queue.empty()) {
 		QueueElem headElement = queue.top(); // get top elem
 		queue.pop(); // remove elem
 		uint64_t value = *headElement.ptr; // value of elem
@@ -133,17 +134,17 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 		/*
 		 * if full
 		 */
-		if (output_buffer.size() == chunk_size){
+		if (output_buffer.size() == elements_per_chunk) {
 			write(fdOutput, output_buffer.data(), output_buffer.size() * sizeof(uint64_t));
 			output_buffer.clear();
 		}
 
 		headElement.index += 1;
 		headElement.ptr++; // next element of this queue elem
-		if (headElement.index == headElement.number_of_elements){
+		if (headElement.index == headElement.number_of_elements) {
 			//next chunk
 			input_buffer[headElement.chunkNumber].clear();
-			uint64_t  elemsToAdd = std::min(chunk_size, elements[headElement.chunkNumber].number_of_elements);
+			uint64_t elemsToAdd = std::min(elements_per_chunk, elements[headElement.chunkNumber].number_of_elements);
 			headElement.number_of_elements -= elemsToAdd;
 			input_buffer.resize(elemsToAdd);
 			read(headElement.fd, &input_buffer[headElement.chunkNumber][0], elemsToAdd * sizeof(uint64_t));
@@ -151,9 +152,9 @@ void external_sort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize) {
 			headElement.index = 0;
 		}
 
-		if (headElement.number_of_elements > 0){
+		if (headElement.number_of_elements > 0) {
 			queue.push(headElement);
-		}else{
+		} else {
 			//done with this file
 			close(headElement.fd);
 			if (0 != remove(headElement.fileName.c_str())) {

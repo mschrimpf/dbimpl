@@ -48,11 +48,14 @@ int main(int argc, char *argv[]) {
 	struct stat inputStat;
 	fstat(fdInput, &inputStat);
 	uint64_t inputFileSize = (uint64_t) inputStat.st_size;
+	uint64_t numberOfValues = inputFileSize / sizeof(uint64_t);
 
 	printf("InputFile: %s (Size: %lld bytes)\n"
+				   "NumberOfValues: %lld\n"
 				   "OutputFile: %s\n"
 				   "MemoryBufferInMB: %lld\n",
 		   inputFile, inputFileSize,
+		   numberOfValues,
 		   outputFile, memoryBufferInMB);
 
 	// sort
