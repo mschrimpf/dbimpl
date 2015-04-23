@@ -15,7 +15,8 @@ using namespace std;
 int main(int argc, char *argv[]) {
 	if (argc < 4) {
 		printf("Invalid number of arguments.\n"
-					   "Usage: 'sort <inputFile> <outputFile> <memoryBufferInMB>'");
+					   "Usage: '%s <inputFile> <outputFile> <memoryBufferInMB>'",
+			   argv[0]);
 		return -1;
 	}
 
