@@ -151,9 +151,8 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 			headElement.number_of_elements_in_buffer = elements_to_add;
 			if (elements_to_add > 0) {
 				input_buffers[headElement.chunkNumber].resize(elements_to_add);
-				int values_read = read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
-									   elements_to_add * element_size_byte);
-//				printf("Chunk %d - refilled buffer: %d", values_read, headElement.chunkNumber);
+				read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
+					 elements_to_add * element_size_byte);
 				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
 			}
 		}
@@ -166,7 +165,9 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 	elementsFlushed += output_buffer.size();
 	output_buffer.clear();
-	printf("Elements flushed %d\n", elementsFlushed);
+#ifdef DEBUG
+	printf("%d elements flushed\n", elementsFlushed);
+#endif
 
 	// clean up
 	close(fdInput);
@@ -174,18 +175,18 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	for (unsigned int i(0); i < number_of_chunks; i++) {
 		close(elements[i].fd);
 		std::string tempName = getTempFileName(tempFilePrefix, i);
-		if (0 != remove(tempName.c_str())) {
-			perror("Cannot remove temp file");
-		}
+		remove(tempName.c_str());
 	}
-	if (0 != remove(tempFileDir.c_str())) {
-//		perror("Cannot remove temp dir");
-	}
+	remove(tempFileDir.c_str());
 }
 
 int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data) {
 	std::string fdsTempName = getTempFileName(fileprefix, i);
-	int fdTemp = open(fdsTempName.c_str(), O_CREAT | O_TRUNC | O_RDWR | O_BINARY, S_IRUSR | S_IWUSR);
+	int flags = O_CREAT | O_TRUNC | O_RDWR;
+#ifdef _WIN32
+	flags |= O_BINARY;
+#endif
+	int fdTemp = open(fdsTempName.c_str(), flags, S_IRUSR | S_IWUSR);
 	if (fdTemp < 0) {
 		std::string msg = "Cannot open temp file ";
 		msg = msg + fdsTempName;
@@ -198,7 +199,11 @@ int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> da
 		return -1;
 	}
 	close(fdTemp); // flush
-	fdTemp = open(fdsTempName.c_str(), O_RDONLY | O_BINARY, S_IREAD);
+	int newFlags = O_RDONLY;
+#ifdef _WIN32
+	newFlags |= O_BINARY;
+#endif
+	fdTemp = open(fdsTempName.c_str(), newFlags, S_IREAD);
 	lseek(fdTemp, 0, SEEK_SET);
 	return fdTemp;
 }

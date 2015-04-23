@@ -24,12 +24,21 @@ int main(int argc, char *argv[]) {
 	const char *memoryBufferInput = argv[3];
 
 	// check input correct
-	int fdInput = open(inputFile, O_RDONLY | O_BINARY);
+	int inputFlags = O_RDONLY;
+#ifdef _WIN32
+	printf("Using O_BINARY flag for windows systems\n");
+	inputFlags |= O_BINARY;
+#endif
+	int fdInput = open(inputFile, inputFlags);
 	if (fdInput < 0) {
 		fprintf(stderr, "Error: Cannot open inputFile '%s': %d %s\n", inputFile, errno, strerror(errno));
 		return -1;
 	}
-	int fdOutput = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY | O_APPEND | O_BINARY, S_IRUSR | S_IWUSR);
+	int outputFlags = O_CREAT | O_TRUNC | O_WRONLY | O_APPEND;
+#ifdef _WIN32
+	outputFlags |= O_BINARY;
+#endif
+	int fdOutput = open(outputFile, outputFlags, S_IRUSR | S_IWUSR);
 	if (fdOutput < 0) {
 		close(fdInput);
 		fprintf(stderr, "Error: Cannot open outputFile '%s': %d %s\n", outputFile, errno, strerror(errno));
@@ -63,14 +72,18 @@ int main(int argc, char *argv[]) {
 	external_sort(fdInput, numberOfValues, fdOutput, memoryBufferInMB);
 
 	// validate algorithm
-	fdOutput = open(outputFile, O_RDONLY | O_BINARY);
-	if (fdOutput < 0){
+	inputFlags = O_RDONLY;
+#ifdef _WIN32
+	inputFlags |= O_BINARY;
+#endif
+	fdOutput = open(outputFile, inputFlags);
+	if (fdOutput < 0) {
 		perror("Cannot open temp file");
 	}
 	uint64_t outputFileSize = file_size(fdOutput);
 	if (outputFileSize != inputFileSize) {
 		fprintf(stderr, "Output file size %llu does not match input file size %llu\n", outputFileSize, inputFileSize);
-//		return -1;
+		return -1;
 	}
 	printf("Check sorting...");
 	if (!check_sorting(fdOutput, numberOfValues)) {
