@@ -7,6 +7,6 @@
 
 #include <stddef.h>
 
-bool check_sorting(int fd, size_t size);
+bool check_sorting(int fd, uint64_t size);
 
 #endif //PROJECT_SORTED_CHECK_H

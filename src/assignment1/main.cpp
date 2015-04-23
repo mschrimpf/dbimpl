@@ -59,12 +59,14 @@ int main(int argc, char *argv[]) {
 		   outputFile, memoryBufferInMB);
 
 	// sort
-	external_sort(fdInput, inputFileSize, fdOutput, memoryBufferInMB);
+	external_sort(fdInput, numberOfValues, fdOutput, memoryBufferInMB);
 
 	// validate algorithm
 	fdOutput = open(outputFile, O_RDONLY);
 	if (!check_sorting(fdOutput, (size_t) inputFileSize)) {
 		return -1;
+	} else {
+		printf("sorted.");
 	}
 
 	return 0;

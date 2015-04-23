@@ -4,9 +4,9 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <queue>
 #include "external_sort.h"
 #include "sorted_check.h"
-#include <queue>
 
 #define DEBUG 1
 
@@ -20,7 +20,7 @@ struct QueueElem {
 
 struct CompareQueuePrio {
 	bool operator()(const QueueElem &lhs, const QueueElem &rhs) const {
-		return *lhs.current_buffer_iterator > *rhs.current_buffer_iterator;
+		return *lhs.current_buffer_iterator < *rhs.current_buffer_iterator;
 	}
 };
 
@@ -42,8 +42,9 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	printf("Chunk phase with %llu chunks\n", number_of_chunks);
 	// steps 1 - 3
 	std::string tempFileDir = "temp";
-	if (0 != mkdir(tempFileDir.c_str())) {
+	if (0 != mkdir(tempFileDir.c_str()) && errno != EEXIST) {
 		perror("Cannot create temp dir");
+		return;
 	}
 	std::string tempFilePrefix = tempFileDir + "/";
 
@@ -180,6 +181,8 @@ int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> da
 		perror("Cannot write chunk");
 		return -1;
 	}
+	close(fdTemp); // flush
+	fdTemp = open(fdsTempName.c_str(), O_RDONLY);
 	return fdTemp;
 }
 
