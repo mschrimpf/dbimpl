@@ -6,9 +6,10 @@
 #include <sys/stat.h>
 #include <queue>
 #include "external_sort.h"
+#include "util.h"
 #include "sorted_check.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 
 struct QueueElem {
 	unsigned int chunkNumber;
@@ -24,8 +25,6 @@ struct CompareQueuePrio {
 		return *lhs.current_buffer_iterator < *rhs.current_buffer_iterator;
 	}
 };
-
-uint64_t div_ceil(uint64_t divisor, uint64_t dividend);
 
 
 int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data);
@@ -154,7 +153,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 				input_buffers[headElement.chunkNumber].resize(elements_to_add);
 				int values_read = read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
 									   elements_to_add * element_size_byte);
-				printf("Chunk %d - refilled buffer: %d", values_read, headElement.chunkNumber);
+//				printf("Chunk %d - refilled buffer: %d", values_read, headElement.chunkNumber);
 				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
 			}
 		}
@@ -167,7 +166,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 	elementsFlushed += output_buffer.size();
 	output_buffer.clear();
-	printf("Elements flushed %d", elementsFlushed);
+//	printf("Elements flushed %d", elementsFlushed);
 
 	// clean up
 	close(fdInput);
@@ -180,7 +179,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		}
 	}
 	if (0 != remove(tempFileDir.c_str())) {
-		perror("Cannot remove temp dir");
+//		perror("Cannot remove temp dir");
 	}
 }
 
@@ -210,8 +209,4 @@ std::string getTempFileName(std::string &tempFilePrefix, unsigned int i) {
 	sprintf(iteratorString, "%d", i);
 	tempName = tempFilePrefix + iteratorString;
 	return tempName;
-}
-
-uint64_t div_ceil(uint64_t divisor, uint64_t dividend) {
-	return 1 + ((divisor - 1) / dividend);
 }
