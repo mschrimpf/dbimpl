@@ -14,7 +14,7 @@ Please follow these shell commands.
     # generate data
     cd lib/data_generator
     make
-    ./gen ../../resources/test_data 500
+    ./gen ../../resources/test_data 67108864
     
     # build executable
     cd ../..

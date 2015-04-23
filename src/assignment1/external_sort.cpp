@@ -9,7 +9,7 @@
 #include "util.h"
 #include "sorted_check.h"
 
-//#define DEBUG 1
+#define DEBUG
 
 struct QueueElem {
 	unsigned int chunkNumber;
@@ -22,7 +22,7 @@ struct QueueElem {
 
 struct CompareQueuePrio {
 	bool operator()(const QueueElem &lhs, const QueueElem &rhs) const {
-		return *lhs.current_buffer_iterator < *rhs.current_buffer_iterator;
+		return *lhs.current_buffer_iterator > *rhs.current_buffer_iterator;
 	}
 };
 
@@ -133,7 +133,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		headElement.current_buffer_iterator++; // next element of this queue elem
 		output_buffer.push_back(value);
 
-		if (output_buffer.size() == max_elements_per_buffer) {
+		if (output_buffer.size() == max_elements_per_buffer) { // buffer full -> write out
 			write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 			elementsFlushed += output_buffer.size();
 			output_buffer.clear();
@@ -149,7 +149,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 												headElement.number_of_elements_not_in_buffer);
 			headElement.number_of_elements_not_in_buffer -= elements_to_add;
 			headElement.number_of_elements_in_buffer = elements_to_add;
-			if (elements_to_add > 0){
+			if (elements_to_add > 0) {
 				input_buffers[headElement.chunkNumber].resize(elements_to_add);
 				int values_read = read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
 									   elements_to_add * element_size_byte);
@@ -157,7 +157,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
 			}
 		}
-		if (headElement.number_of_elements_in_buffer > 0){
+		if (headElement.number_of_elements_in_buffer > 0) {
 			queue.push(headElement); // add back to the queue
 		}
 	}
@@ -166,7 +166,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 	elementsFlushed += output_buffer.size();
 	output_buffer.clear();
-//	printf("Elements flushed %d", elementsFlushed);
+	printf("Elements flushed %d", elementsFlushed);
 
 	// clean up
 	close(fdInput);
