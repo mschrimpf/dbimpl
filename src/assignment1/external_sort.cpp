@@ -166,7 +166,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 	elementsFlushed += output_buffer.size();
 	output_buffer.clear();
-	printf("Elements flushed %d", elementsFlushed);
+	printf("Elements flushed %d\n", elementsFlushed);
 
 	// clean up
 	close(fdInput);

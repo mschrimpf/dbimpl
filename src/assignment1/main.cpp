@@ -72,10 +72,12 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Output file size %llu does not match input file size %llu\n", outputFileSize, inputFileSize);
 //		return -1;
 	}
+	printf("Check sorting...");
 	if (!check_sorting(fdOutput, numberOfValues)) {
+		printf(" ERROR!\n");
 		return -1;
 	} else {
-		printf("sorted.");
+		printf("sorted.\n");
 	}
 
 	return 0;
