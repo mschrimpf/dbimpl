@@ -34,8 +34,9 @@ std::string getTempFileName(std::string &tempFilePrefix, unsigned int i);
 
 void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb) {
 	uint64_t mem_size_byte = mem_size_mb * 1024 * 1024;
-	uint64_t max_elements_in_memory = mem_size_byte / sizeof(uint64_t);
-	uint64_t elements_total_required_byte = number_of_elements * sizeof(uint64_t);
+	size_t element_size_byte = sizeof(uint64_t);
+	uint64_t max_elements_in_memory = mem_size_byte / element_size_byte;
+	uint64_t elements_total_required_byte = number_of_elements * element_size_byte;
 	uint64_t number_of_chunks = div_ceil(elements_total_required_byte,
 										 mem_size_byte); // number of chunks the sorting requires
 
@@ -61,7 +62,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		read_buffer.resize((unsigned int) elements_to_consume);
 
 		// read chunk
-		uint64_t bytes_to_read = elements_to_consume * sizeof(uint64_t);
+		uint64_t bytes_to_read = elements_to_consume * element_size_byte;
 		int bytes_read = read(fdInput, &read_buffer[0], (unsigned int) bytes_to_read);
 		if (bytes_read < 0) {
 			perror("Cannot read input");
@@ -73,7 +74,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		}
 		consumed_elements += elements_to_consume;
 		// sort chunk
-		std::sort(read_buffer.begin(), read_buffer.begin() + elements_to_consume); // read_buffer.end());
+		std::sort(read_buffer.begin(), read_buffer.end());
 
 		// write chunk to output file
 		int fdTemp = write_chunk(tempFilePrefix, i, read_buffer);
@@ -104,7 +105,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	std::vector<uint64_t> output_buffer;
 
 	uint64_t max_byte_per_buffer = mem_size_byte / (number_of_chunks + 1 /* 1 output buffer */);
-	uint64_t max_elements_per_buffer = max_byte_per_buffer / sizeof(uint64_t);
+	uint64_t max_elements_per_buffer = max_byte_per_buffer / element_size_byte;
 
 	// read data in buffer
 	for (unsigned int i(0); i < number_of_chunks; i++) {
@@ -112,7 +113,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		uint64_t elements_to_add = std::min(max_elements_per_buffer, elements[i].number_of_elements_not_in_buffer);
 		buffer_elements.resize(elements_to_add);
 
-		read(elements[i].fd, &buffer_elements[0], elements_to_add * sizeof(uint64_t));
+		read(elements[i].fd, &buffer_elements[0], elements_to_add * element_size_byte);
 		elements[i].number_of_elements_not_in_buffer -= elements_to_add;
 		elements[i].number_of_elements_in_buffer = elements_to_add;
 		input_buffers.push_back(buffer_elements);
@@ -133,7 +134,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		output_buffer.push_back(value);
 
 		if (output_buffer.size() == max_elements_per_buffer) {
-			write(fdOutput, output_buffer.data(), output_buffer.size() * sizeof(uint64_t));
+			write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 			output_buffer.clear();
 		}
 
@@ -149,7 +150,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 				headElement.number_of_elements_in_buffer = elements_to_add;
 				input_buffers[headElement.chunkNumber].resize(elements_to_add);
 				read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
-					 elements_to_add * sizeof(uint64_t));
+					 elements_to_add * element_size_byte);
 				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
 				headElement.index = 0;
 			} else {
@@ -160,7 +161,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	}
 
 	// at last, we need to flush the rest of the output-buffer as there might be something inside
-	write(fdOutput, output_buffer.data(), output_buffer.size() * sizeof(uint64_t));
+	write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 	output_buffer.clear();
 
 	// clean up
@@ -180,7 +181,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 
 int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data) {
 	std::string fdsTempName = getTempFileName(fileprefix, i);
-	int fdTemp = open(fdsTempName.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+	int fdTemp = open(fdsTempName.c_str(), O_CREAT | O_TRUNC | O_RDWR | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fdTemp < 0) {
 		std::string msg = "Cannot open temp file ";
 		msg = msg + fdsTempName;
@@ -192,9 +193,9 @@ int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> da
 	if (bytes_written < 0) {
 		return -1;
 	}
-	lseek(fdTemp, 0, SEEK_SET);
 	close(fdTemp); // flush
-	fdTemp = open(fdsTempName.c_str(), O_RDONLY, S_IREAD);
+	fdTemp = open(fdsTempName.c_str(), O_RDONLY | O_BINARY, S_IREAD);
+	lseek(fdTemp, 0, SEEK_SET);
 	return fdTemp;
 }
 

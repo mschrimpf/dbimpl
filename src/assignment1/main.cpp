@@ -24,12 +24,12 @@ int main(int argc, char *argv[]) {
 	const char *memoryBufferInput = argv[3];
 
 	// check input correct
-	int fdInput = open(inputFile, O_RDONLY);
+	int fdInput = open(inputFile, O_RDONLY | O_BINARY);
 	if (fdInput < 0) {
 		fprintf(stderr, "Error: Cannot open inputFile '%s': %d %s\n", inputFile, errno, strerror(errno));
 		return -1;
 	}
-	int fdOutput = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY | O_APPEND, S_IRUSR | S_IWUSR);
+	int fdOutput = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY | O_APPEND | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fdOutput < 0) {
 		close(fdInput);
 		fprintf(stderr, "Error: Cannot open outputFile '%s': %d %s\n", outputFile, errno, strerror(errno));
@@ -59,10 +59,11 @@ int main(int argc, char *argv[]) {
 		   outputFile, memoryBufferInMB);
 
 	// sort
+	lseek(fdInput, 0, SEEK_SET);
 	external_sort(fdInput, numberOfValues, fdOutput, memoryBufferInMB);
 
 	// validate algorithm
-	fdOutput = open(outputFile, O_RDONLY);
+	fdOutput = open(outputFile, O_RDONLY | O_BINARY);
 	uint64_t outputFileSize = file_size(fdOutput);
 	if (outputFileSize != inputFileSize) {
 		fprintf(stderr, "Output file size %llu does not match input file size %llu\n", outputFileSize, inputFileSize);

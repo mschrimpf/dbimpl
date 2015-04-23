@@ -13,10 +13,15 @@
 // @return true if the values in the file are sorted
 bool check_sorting(int fd, uint64_t size) {
 	uint64_t input[size];
-	int bytes_read = read(fd, input, size * sizeof(uint64_t));
+	uint64_t bytes_to_read = size * sizeof(uint64_t);
+	int bytes_read = read(fd, input, bytes_to_read);
 	if (bytes_read < 0) {
 		perror("Read error");
 		return false;
+	}
+	if (bytes_read != bytes_to_read) {
+		fprintf(stderr, "Expected %llu bytes to be read, but got %d\n", bytes_to_read, bytes_read);
+		throw;
 	}
 
 	// validate
