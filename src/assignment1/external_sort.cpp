@@ -126,6 +126,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		queue.push(elements[i]);
 	}
 
+	unsigned int elementsFlushed = 0;
 	while (!queue.empty()) {
 		QueueElem headElement = queue.top(); // get top elem
 		queue.pop(); // remove elem
@@ -135,6 +136,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 
 		if (output_buffer.size() == max_elements_per_buffer) {
 			write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
+			elementsFlushed += output_buffer.size();
 			output_buffer.clear();
 		}
 
@@ -149,20 +151,23 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 				headElement.number_of_elements_not_in_buffer -= elements_to_add;
 				headElement.number_of_elements_in_buffer = elements_to_add;
 				input_buffers[headElement.chunkNumber].resize(elements_to_add);
-				read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
+				int values_read = read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
 					 elements_to_add * element_size_byte);
+				printf("Chunk %d - refilled buffer: %d", values_read, headElement.chunkNumber);
 				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
 				headElement.index = 0;
-			} else {
 			}
-		} else { // elements left
+		}
+		if (headElement.number_of_elements_in_buffer > 0){
 			queue.push(headElement); // add back to the queue
 		}
 	}
 
 	// at last, we need to flush the rest of the output-buffer as there might be something inside
 	write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
+	elementsFlushed += output_buffer.size();
 	output_buffer.clear();
+	printf("Elements flushed %d", elementsFlushed);
 
 	// clean up
 	close(fdInput);
