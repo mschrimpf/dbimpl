@@ -35,8 +35,9 @@ std::string getTempFileName(std::string &tempFilePrefix, unsigned int i);
 void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb) {
 	uint64_t mem_size_byte = mem_size_mb * 1024 * 1024;
 	uint64_t max_elements_in_memory = mem_size_byte / sizeof(uint64_t);
-	uint64_t elements_byte = number_of_elements * sizeof(uint64_t);
-	uint64_t number_of_chunks = div_ceil(elements_byte, mem_size_byte); // number of chunks the sorting requires
+	uint64_t elements_total_required_byte = number_of_elements * sizeof(uint64_t);
+	uint64_t number_of_chunks = div_ceil(elements_total_required_byte,
+										 mem_size_byte); // number of chunks the sorting requires
 
 	std::vector<uint64_t> read_buffer;
 
@@ -57,16 +58,18 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		// check how many elements we want to read as the last element might have less elements than the previous one
 		uint64_t elements_left_to_read = number_of_elements - consumed_elements;
 		uint64_t elements_to_consume = std::min(max_elements_in_memory, elements_left_to_read);
-		read_buffer.resize(elements_to_consume);
+		read_buffer.resize((unsigned int) elements_to_consume);
 
 		// read chunk
-		int bytes_read = read(fdInput, &read_buffer[0], elements_to_consume * sizeof(uint64_t));
+		uint64_t bytes_to_read = elements_to_consume * sizeof(uint64_t);
+		int bytes_read = read(fdInput, &read_buffer[0], (unsigned int) bytes_to_read);
 		if (bytes_read < 0) {
 			perror("Cannot read input");
 			return;
 		}
-		if (read_buffer.size() != elements_to_consume) { // just to be sure a.k.a. defensive programming
-			fprintf(stderr, "sizes do not match\n");
+		if (bytes_read != bytes_to_read) { // make sure everything got read
+			fprintf(stderr, "Expected %llu bytes to be read, but got %d\n", bytes_to_read, bytes_read);
+			return;
 		}
 		consumed_elements += elements_to_consume;
 		// sort chunk
