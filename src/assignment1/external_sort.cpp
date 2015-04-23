@@ -12,7 +12,8 @@
 
 struct QueueElem {
 	unsigned int chunkNumber;
-	uint64_t number_of_elements;
+	uint64_t number_of_elements_not_in_buffer;
+	uint64_t number_of_elements_in_buffer;
 	std::vector<uint64_t>::iterator current_buffer_iterator;
 	unsigned int index = 0;
 	int fd = 0;
@@ -28,6 +29,8 @@ uint64_t div_ceil(uint64_t divisor, uint64_t dividend);
 
 
 int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data);
+
+std::string getTempFileName(std::string &tempFilePrefix, unsigned int i);
 
 void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb) {
 	uint64_t mem_size_byte = mem_size_mb * 1024 * 1024;
@@ -85,7 +88,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		QueueElem elem;
 		elem.fd = fdTemp;
 		elem.chunkNumber = i;
-		elem.number_of_elements = elements_to_consume;
+		elem.number_of_elements_not_in_buffer = elements_to_consume;
 		elements.push_back(elem);
 		read_buffer.clear();
 	}
@@ -102,13 +105,14 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	// read data in buffer
 	for (unsigned int i(0); i < number_of_chunks; i++) {
 		std::vector<uint64_t> buffer_elements;
-		uint64_t elements_to_add = std::min(max_elements_per_buffer, elements[i].number_of_elements);
+		uint64_t elements_to_add = std::min(max_elements_per_buffer, elements[i].number_of_elements_not_in_buffer);
 		buffer_elements.resize(elements_to_add);
 
 		read(elements[i].fd, &buffer_elements[0], elements_to_add * sizeof(uint64_t));
-		elements[i].number_of_elements -= elements_to_add;
-		elements[i].current_buffer_iterator = buffer_elements.begin();
+		elements[i].number_of_elements_not_in_buffer -= elements_to_add;
+		elements[i].number_of_elements_in_buffer = elements_to_add;
 		input_buffers.push_back(buffer_elements);
+		elements[i].current_buffer_iterator = input_buffers[i].begin(); // buffer_elements.begin() would go out of scope!
 	}
 
 	// k-way merge using a priority queue
@@ -131,26 +135,23 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 
 		headElement.index += 1;
 		// reload next part of chunk into buffer if necessary
-		if (headElement.index == headElement.number_of_elements) {
-			// next chunk
-			input_buffers[headElement.chunkNumber].clear();
-			uint64_t elements_to_add = std::min(max_elements_per_buffer,
-												elements[headElement.chunkNumber].number_of_elements);
-			headElement.number_of_elements -= elements_to_add;
-			input_buffers[headElement.chunkNumber].resize(elements_to_add);
-			read(headElement.fd, &input_buffers[headElement.chunkNumber][0], elements_to_add * sizeof(uint64_t));
-			headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
-			headElement.index = 0;
-		}
-
-		if (headElement.number_of_elements > 0) { // elements left
+		if (headElement.index == headElement.number_of_elements_in_buffer) {
+			if (headElement.number_of_elements_not_in_buffer > 0) { //elements left
+				// next chunk
+				input_buffers[headElement.chunkNumber].clear();
+				uint64_t elements_to_add = std::min(max_elements_per_buffer,
+													elements[headElement.chunkNumber].number_of_elements_not_in_buffer);
+				headElement.number_of_elements_not_in_buffer -= elements_to_add;
+				headElement.number_of_elements_in_buffer = elements_to_add;
+				input_buffers[headElement.chunkNumber].resize(elements_to_add);
+				read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
+					 elements_to_add * sizeof(uint64_t)); // TODO: does this read from the fd's current offset?
+				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
+				headElement.index = 0;
+			} else {
+			}
+		} else { // elements left
 			queue.push(headElement); // add back to the queue
-		} else {
-			//done with this file
-			close(headElement.fd);
-//			if (0 != remove(headElement.fileName.c_str())) { // TODO: delete
-//				perror("Cannot remove temp file");
-//			}
 		}
 	}
 
@@ -158,16 +159,23 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	write(fdOutput, output_buffer.data(), output_buffer.size() * sizeof(uint64_t));
 	output_buffer.clear();
 
+	// clean up
 	close(fdInput);
 	close(fdOutput);
-	// TODO: close and delete temp files
+	for (unsigned int i(0); i < number_of_chunks; i++) {
+		close(elements[i].fd);
+		std::string tempName = getTempFileName(tempFilePrefix, i);
+		if (0 != remove(tempName.c_str())) {
+			perror("Cannot remove temp file");
+		}
+	}
+	if (0 != remove(tempFileDir.c_str())) {
+		perror("Cannot remove temp dir");
+	}
 }
 
 int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data) {
-	std::string fdsTempName;
-	char iteratorString[21]; // every 64 bit integer will fit in here
-	sprintf(iteratorString, "%d", i);
-	fdsTempName = fileprefix + iteratorString;
+	std::string fdsTempName = getTempFileName(fileprefix, i);
 	int fdTemp = open(fdsTempName.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
 	if (fdTemp < 0) {
 		std::string msg = "Cannot open temp file ";
@@ -182,10 +190,17 @@ int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> da
 		return -1;
 	}
 	close(fdTemp); // flush
-	fdTemp = open(fdsTempName.c_str(), O_RDONLY);
+	fdTemp = open(fdsTempName.c_str(), O_RDONLY, S_IREAD);
 	return fdTemp;
 }
 
+std::string getTempFileName(std::string &tempFilePrefix, unsigned int i) {
+	std::string tempName;
+	char iteratorString[21]; // every 64 bit integer will fit in here
+	sprintf(iteratorString, "%d", i);
+	tempName = tempFilePrefix + iteratorString;
+	return tempName;
+}
 
 uint64_t div_ceil(uint64_t divisor, uint64_t dividend) {
 	return 1 + ((divisor - 1) / dividend);

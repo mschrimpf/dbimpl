@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
 	// validate algorithm
 	fdOutput = open(outputFile, O_RDONLY);
-	if (!check_sorting(fdOutput, (size_t) inputFileSize)) {
+	if (!check_sorting(fdOutput, numberOfValues)) {
 		return -1;
 	} else {
 		printf("sorted.");
