@@ -70,7 +70,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		}
 		if (bytes_read != bytes_to_read) { // make sure everything got read
 			fprintf(stderr, "Expected %llu bytes to be read, but got %d\n", bytes_to_read, bytes_read);
-//			return;
+			return;
 		}
 		consumed_elements += elements_to_consume;
 		// sort chunk
