@@ -14,7 +14,7 @@ Please follow these shell commands.
     # generate data
     cd lib/data_generator
     make
-    ./gen ../../resources/test_data 67108864
+    ./gen ../../resources/test_data 83886080 # 5 GB (5 * 1024 * 1024 * 1024 / 64)
     
     # build executable
     cd ../..
