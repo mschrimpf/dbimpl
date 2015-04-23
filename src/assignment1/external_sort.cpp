@@ -1,7 +1,13 @@
 #include <stdexcept>
-#include <io.h>
 #include <stdio.h>
 #include <algorithm>
+
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <queue>
@@ -46,7 +52,11 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	printf("Chunk phase with %llu chunks\n", number_of_chunks);
 	// steps 1 - 3
 	std::string tempFileDir = "temp";
+#ifdef _WIN32
 	if (0 != mkdir(tempFileDir.c_str()) && errno != EEXIST) {
+#else
+	if (0 != mkdir(tempFileDir.c_str(), 777) && errno != EEXIST) {
+		#endif
 		perror("Cannot create temp dir");
 		return;
 	}

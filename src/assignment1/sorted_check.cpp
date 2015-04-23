@@ -1,10 +1,10 @@
-//
-// Created by Martin on 20.04.2015.
-//
-
 #include <stdio.h>
 #include <stdint.h>
+#ifdef _WIN32
 #include <io.h>
+#else
+#include <unistd.h>
+#endif
 #include <bits/stl_algobase.h>
 #include "sorted_check.h"
 
