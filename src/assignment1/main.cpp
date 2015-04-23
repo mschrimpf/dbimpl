@@ -7,6 +7,8 @@
 #include "external_sort.h"
 #include "sorted_check.h"
 
+uint64_t file_size(int fd);
+
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -45,9 +47,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// print parameters
-	struct stat inputStat;
-	fstat(fdInput, &inputStat);
-	uint64_t inputFileSize = (uint64_t) inputStat.st_size;
+	uint64_t inputFileSize = file_size(fdInput);
 	uint64_t numberOfValues = inputFileSize / sizeof(uint64_t);
 
 	printf("InputFile: %s (Size: %lld bytes)\n"
@@ -63,6 +63,11 @@ int main(int argc, char *argv[]) {
 
 	// validate algorithm
 	fdOutput = open(outputFile, O_RDONLY);
+	uint64_t outputFileSize = file_size(fdOutput);
+	if (outputFileSize != inputFileSize) {
+		fprintf(stderr, "Output file size %llu does not match input file size %llu\n", outputFileSize, inputFileSize);
+		return -1;
+	}
 	if (!check_sorting(fdOutput, numberOfValues)) {
 		return -1;
 	} else {
@@ -70,4 +75,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	return 0;
+}
+
+uint64_t file_size(int fd) {
+	struct stat inputStat;
+	fstat(fd, &inputStat);
+	uint64_t inputFileSize = (uint64_t) inputStat.st_size;
+	return inputFileSize;
 }

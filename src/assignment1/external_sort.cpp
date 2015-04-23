@@ -69,15 +69,16 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		}
 		if (bytes_read != bytes_to_read) { // make sure everything got read
 			fprintf(stderr, "Expected %llu bytes to be read, but got %d\n", bytes_to_read, bytes_read);
-			return;
+//			return;
 		}
 		consumed_elements += elements_to_consume;
 		// sort chunk
-		std::sort(read_buffer.begin(), read_buffer.end());
+		std::sort(read_buffer.begin(), read_buffer.begin() + elements_to_consume); // read_buffer.end());
 
 		// write chunk to output file
 		int fdTemp = write_chunk(tempFilePrefix, i, read_buffer);
 		if (fdTemp < 0) {
+			fprintf(stderr, "Cannot write chunk\n");
 			return;
 		}
 #ifdef DEBUG
@@ -186,12 +187,12 @@ int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> da
 		perror(msg.c_str());
 		return -1;
 	}
-	int w = write(fdTemp, data.data(), data.size() * sizeof(uint64_t));
+	int bytes_written = write(fdTemp, data.data(), data.size() * sizeof(uint64_t));
 
-	if (w < 0) {
-		perror("Cannot write chunk");
+	if (bytes_written < 0) {
 		return -1;
 	}
+	lseek(fdTemp, 0, SEEK_SET);
 	close(fdTemp); // flush
 	fdTemp = open(fdsTempName.c_str(), O_RDONLY, S_IREAD);
 	return fdTemp;
