@@ -145,7 +145,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 				headElement.number_of_elements_in_buffer = elements_to_add;
 				input_buffers[headElement.chunkNumber].resize(elements_to_add);
 				read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
-					 elements_to_add * sizeof(uint64_t)); // TODO: does this read from the fd's current offset?
+					 elements_to_add * sizeof(uint64_t));
 				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
 				headElement.index = 0;
 			} else {
