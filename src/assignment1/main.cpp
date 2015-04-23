@@ -64,6 +64,9 @@ int main(int argc, char *argv[]) {
 
 	// validate algorithm
 	fdOutput = open(outputFile, O_RDONLY | O_BINARY);
+	if (fdOutput < 0){
+		perror("Cannot open temp file");
+	}
 	uint64_t outputFileSize = file_size(fdOutput);
 	if (outputFileSize != inputFileSize) {
 		fprintf(stderr, "Output file size %llu does not match input file size %llu\n", outputFileSize, inputFileSize);

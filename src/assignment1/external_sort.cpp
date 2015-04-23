@@ -143,19 +143,19 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 		headElement.index += 1;
 		// reload next part of chunk into buffer if necessary
 		if (headElement.index == headElement.number_of_elements_in_buffer) {
-			if (headElement.number_of_elements_not_in_buffer > 0) { //elements left
-				// next chunk
-				input_buffers[headElement.chunkNumber].clear();
-				uint64_t elements_to_add = std::min(max_elements_per_buffer,
-													elements[headElement.chunkNumber].number_of_elements_not_in_buffer);
-				headElement.number_of_elements_not_in_buffer -= elements_to_add;
-				headElement.number_of_elements_in_buffer = elements_to_add;
+			// next chunk
+			headElement.index = 0;
+			input_buffers[headElement.chunkNumber].clear();
+			uint64_t elements_to_add = std::min(max_elements_per_buffer,
+												headElement.number_of_elements_not_in_buffer);
+			headElement.number_of_elements_not_in_buffer -= elements_to_add;
+			headElement.number_of_elements_in_buffer = elements_to_add;
+			if (elements_to_add > 0){
 				input_buffers[headElement.chunkNumber].resize(elements_to_add);
 				int values_read = read(headElement.fd, &input_buffers[headElement.chunkNumber][0],
-					 elements_to_add * element_size_byte);
+									   elements_to_add * element_size_byte);
 				printf("Chunk %d - refilled buffer: %d", values_read, headElement.chunkNumber);
 				headElement.current_buffer_iterator = input_buffers[headElement.chunkNumber].begin();
-				headElement.index = 0;
 			}
 		}
 		if (headElement.number_of_elements_in_buffer > 0){
