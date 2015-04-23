@@ -13,9 +13,12 @@
 #include <queue>
 #include "external_sort.h"
 #include "util.h"
-#include "sorted_check.h"
 
-#define DEBUG
+#define DEBUG 0
+
+#if DEBUG > 0
+#include "sorted_check.h"
+#endif
 
 struct QueueElem {
 	unsigned int chunkNumber;
@@ -91,7 +94,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 			fprintf(stderr, "Cannot write chunk\n");
 			return;
 		}
-#ifdef DEBUG
+#if DEBUG > 0
 		printf("Check sorting of temporary file chunk %d...", i);
 		if (check_sorting(fdTemp, elements_to_consume)) {
 			printf(" OK.\n");
@@ -175,7 +178,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	write(fdOutput, output_buffer.data(), output_buffer.size() * element_size_byte);
 	elementsFlushed += output_buffer.size();
 	output_buffer.clear();
-#ifdef DEBUG
+#if DEBUG > 0
 	printf("%d elements flushed\n", elementsFlushed);
 #endif
 
