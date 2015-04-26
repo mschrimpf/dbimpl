@@ -11,4 +11,5 @@ cmake_minimum_required(VERSION 3.1)
 
 ### Assignments
 add_subdirectory(src/assignment1)
+add_subdirectory(src/database)
 #add_subdirectory(test/assignment1)
