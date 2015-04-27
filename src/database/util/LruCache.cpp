@@ -16,7 +16,7 @@ template<typename Key, typename Value>
     }
 
 template<typename Key, typename Value>
-    LruCache<Key, Value>::LruCache(uint64_t size) {
+    LruCache<Key, Value>::LruCache(size_t size) {
         maxEntries = size;
     }
 
