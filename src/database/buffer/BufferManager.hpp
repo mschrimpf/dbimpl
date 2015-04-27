@@ -6,11 +6,10 @@
 
 class BufferManager{
 public:
-    BufferManager::BufferManager(uint64_t size);
-    BufferFrame& BufferManager::fixPage(uint64_t pageId, bool exclusive);
-    void BufferManager::unfixPage(BufferFrame& frame, bool isDirty);
-    void* BufferFrame::getData();
-    BufferManager::~BufferManager();
+    BufferManager(uint64_t size);
+    BufferFrame& fixPage(uint64_t pageId, bool exclusive);
+    void unfixPage(BufferFrame& frame, bool isDirty);
+    ~BufferManager();
 };
 
 
