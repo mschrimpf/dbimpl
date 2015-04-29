@@ -3,8 +3,10 @@
 
 #include <stdint.h>
 #include "BufferFrame.hpp"
+#include <mutex>
 
 class BufferManager{
+private:
 public:
     BufferManager(uint64_t size);
     BufferFrame& fixPage(uint64_t pageId, bool exclusive);

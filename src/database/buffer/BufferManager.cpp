@@ -16,7 +16,12 @@ BufferManager::~BufferManager() {
 /* Retrieve frames given a page Id and indication whether or not it is exclusive for the thread
  * Can fail, if no free frame is available and no used frame can be freed*/
 BufferFrame &BufferManager::fixPage(uint64_t pageId, bool exclusive) {
+    //mutex lock
     BufferFrame frame;
+
+    //mutex unlock
+    //frame lock(exclusive)
+    //frame increase reader
     return frame;
 }
 
@@ -24,5 +29,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageId, bool exclusive) {
  * If so, the page mut be written back to disk.
  * If not, it must be written back before unfixPage is called */
 void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
+    //mutex lock
+    //frame decrease reader
 
+    //frame unlock
+    //mutex unlock
 }
