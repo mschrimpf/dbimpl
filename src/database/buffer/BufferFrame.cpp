@@ -62,3 +62,7 @@ void BufferFrame::setFlag(uint8_t flag) {
 void BufferFrame::unsetFlag(uint8_t flag) {
 	this->state &= ~flag;
 }
+
+void BufferFrame::resetFlags() {
+	this->state &= 0x0;
+}

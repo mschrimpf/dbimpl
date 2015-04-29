@@ -22,7 +22,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
-	BufferFrame *frame = this->getPageInMemory(pageId);
+	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
 		if (exclusive || frame->isExclusive()) {
 			throw "Fixing the same page with an exclusive flag is not allowed";
@@ -32,10 +32,13 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		// frame does not exist
 	else {
 		if (this->isSpaceAvailable()) { // don't have to replace anything
-			frame = this->createFrame(pageId);
+			frame = this->createFrame(pageId, segmentId);
 			replacementStrategy.push(frame);
 		} else {
 			frame = replacementStrategy.pop();
+			if(frame == nullptr) {
+				throw "Frame is not swapped in, no space is available and no pages are poppable";
+			}
 			this->writeOutIfNecessary(frame);
 			this->reinitialize(frame, pageId);
 			replacementStrategy.push(frame);
@@ -49,12 +52,26 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	return *frame;
 }
 
-/* Return a frame to the buffer manager indicating whether it is dirty or not.
- * If so, the page mut be written back to disk.
- * If not, it must be written back before unfixPage is called */
+/**
+ * Return a frame to the buer manager indicating whether it is dirty or not.
+ * If dirty, the page manager must write it back to disk.
+ * It does not have to write it back immediately,
+ * but must not write it back before unfixPage is called.
+ */
 void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	//mutex lock
 	//frame decrease reader
+
+	/*
+	 * Only set the dirty flag.
+	 * The frame will be swapped out when it is replaced in memory
+	 * or when the BufferManager dies.
+	 * Hence, the data pointer of the frame is not added to the free pages
+	 * because the page data is still occupied although it can be replaced.
+	 */
+	frame.setDirty(isDirty);
+	frame.setUnfixed(true);
+	// TODO: delete from map?
 
 	//frame unlock
 	//mutex unlock
@@ -67,7 +84,7 @@ void BufferManager::extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t 
 void BufferManager::initCache(uint64_t pages) {
 	this->cache = malloc((size_t) (pages * PAGE_SIZE_BYTE));
 	for (int i = 0; i < pages; ++i) {
-		this->freePages.add(this->cache + i * PAGE_SIZE_BYTE);
+		this->freePages.push_back(this->cache + i * PAGE_SIZE_BYTE);
 	}
 }
 
@@ -75,15 +92,14 @@ void BufferManager::freeCache() {
 	free(this->cache);
 }
 
-BufferFrame *BufferManager::getPageInMemory(uint64_t pageId) {
-	void *data = this->pageMemoryMap[pageId]; // pre-assign space for map
-	return nullptr;
+BufferFrame *BufferManager::getPageInMemoryOrNull(uint64_t pageId) {
+	return this->pageFrameMap[pageId];
 }
 
-BufferFrame *BufferManager::createFrame(uint64_t pageId) {
+BufferFrame *BufferManager::createFrame(uint64_t pageId, uint64_t segmentId) {
 	void *page = this->getFreePage();
-	BufferFrame *frame = new BufferFrame(pageId, page);
-	this->pageMemoryMap[pageId] = frame;
+	BufferFrame *frame = new BufferFrame(pageId, segmentId, page);
+	this->pageFrameMap[pageId] = frame;
 }
 
 bool BufferManager::isSpaceAvailable() {
@@ -109,8 +125,9 @@ void BufferManager::writeOutIfNecessary(BufferFrame *frame) {
 
 void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
 	this->pageIO->write(frame->getPageId(), frame->getSegmentId(), frame->getData());
-	this->pageMemoryMap.erase(frame->getPageId());
-	this->pageMemoryMap[newPageId] = frame;
+	this->pageFrameMap.erase(frame->getPageId());
+	frame->resetFlags();
+	this->pageFrameMap[newPageId] = frame;
 }
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {

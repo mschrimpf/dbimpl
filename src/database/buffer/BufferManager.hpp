@@ -21,7 +21,7 @@ private:
 	uint64_t maxFramesInMemory;
 	IReplacementStrategy replacementStrategy;
 	void *cache;
-	map<uint64_t, BufferFrame *> pageMemoryMap;
+	map<uint64_t, BufferFrame *> pageFrameMap;
 	list <void *> freePages;
 	IPageIO pageIO;
 
@@ -31,9 +31,9 @@ private:
 
 	void freeCache();
 
-	BufferFrame *getPageInMemory(uint64_t pageId);
+	BufferFrame *getPageInMemoryOrNull(uint64_t pageId);
 
-	BufferFrame *createFrame(uint64_t pageId);
+	BufferFrame *createFrame(uint64_t pageId, uint64_t segmentId);
 
 	void * getFreePage();
 

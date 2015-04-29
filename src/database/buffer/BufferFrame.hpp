@@ -41,6 +41,8 @@ public:
 	uint64_t getPageId();
 
 	uint64_t getSegmentId();
+
+	void resetFlags();
 };
 
 #endif //PROJECT_BUFFER_FRAME_H
