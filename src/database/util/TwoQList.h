@@ -17,6 +17,7 @@ class TwoQList {
 public:
     void push(BufferFrame frame);
     BufferFrame pop();
+    void onUse(BufferFrame frame);
 private:
 
 };
