@@ -12,17 +12,17 @@ void TwoQList::push(BufferFrame frame) {
     FifoSet.insert(frame);
 }
 
-BufferFrame TwoQList::pop() {
+BufferFrame * TwoQList::pop() {
     if (FifoQueue.size() > 0){
         BufferFrame front = FifoQueue.front();
         FifoQueue.pop_front();
         FifoSet.erase(front);
-        return front;
+        return &front;
     }else if (LruQueue.size() > 0){
         BufferFrame front = LruQueue.front();
         LruQueue.pop_front();
         LruSet.erase(front);
-        return front;
+        return &front;
     }else{
         //no frame in List //TODO
     }

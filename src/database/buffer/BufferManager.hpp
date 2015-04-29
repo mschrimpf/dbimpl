@@ -3,9 +3,11 @@
 
 #include <stdint.h>
 #include <mutex>
+#include <list>
 #include <map>
 #include "BufferFrame.hpp"
 #include "IReplacementStrategy.h"
+#include "IPageIO.h"
 
 class BufferManager {
 public:
@@ -21,9 +23,11 @@ private:
 	uint64_t maxFramesInMemory;
 	IReplacementStrategy replacementStrategy;
 	void *cache;
-	map<uint64_t, BufferFrame *> pageFrameMap;
-	list <void *> freePages;
+	std::map<uint64_t, BufferFrame *> pageFrameMap;
+	std::list <void *> freePages;
 	IPageIO pageIO;
+	boost::mutex mutex;
+
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
 

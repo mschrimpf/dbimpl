@@ -66,3 +66,20 @@ void BufferFrame::unsetFlag(uint8_t flag) {
 void BufferFrame::resetFlags() {
 	this->state &= 0x0;
 }
+
+unsigned int BufferFrame::getReaderCount() {
+	return readerCount;
+}
+
+void BufferFrame::unlock() {
+	latch.unlock();
+}
+
+void BufferFrame::lock(bool exclusive) {
+	if (exclusive){
+		boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(latch);
+	}else{
+		boost::shared_lock<boost::shared_mutex> lock(latch);
+	}
+}
+

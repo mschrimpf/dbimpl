@@ -17,7 +17,7 @@ BufferManager::~BufferManager() {
 /* Retrieve frames given a page Id and indication whether or not it is exclusive for the thread
  * Can fail, if no free frame is available and no used frame can be freed*/
 BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
-	//mutex lock
+	mutex.lock();
 
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
@@ -46,9 +46,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		this->loadFromDiskIfExists(frame);
 	}
 
-	//mutex unlock
-	//frame lock(exclusive)
-	//frame increase reader
+	mutex.unlock();
+	frame->lock(exclusive);
+	frame->increaseReaderCount();
 	return *frame;
 }
 
@@ -59,8 +59,8 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
  * but must not write it back before unfixPage is called.
  */
 void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
-	//mutex lock
-	//frame decrease reader
+	mutex.lock();
+	frame.decreaseReaderCount();
 
 	/*
 	 * Only set the dirty flag.
@@ -69,12 +69,15 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	 * Hence, the data pointer of the frame is not added to the free pages
 	 * because the page data is still occupied although it can be replaced.
 	 */
+	if (frame.getReaderCount() == 0){
+		/* if no one is using the frame anymore, we can add it to the queue again */
+		replacementStrategy.push(&frame);
+	}
 	frame.setDirty(isDirty);
 	frame.setUnfixed(true);
 	// TODO: delete from map?
-
-	//frame unlock
-	//mutex unlock
+	frame.unlock();
+	mutex.unlock();
 }
 
 void BufferManager::extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId) {
@@ -132,4 +135,5 @@ void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {
 	this->pageIO->load(frame->getPageId(), frame->getSegmentId(), frame->getData());
+	//TODO open fd only once, save them and close them at the destructor of Buffermanager?
 }

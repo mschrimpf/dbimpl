@@ -10,6 +10,7 @@ private:
 	void *data;
 	uint64_t pageId;
 	uint64_t segmentId;
+	unsigned int readerCount;
 	uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
 	boost::shared_mutex latch; // TODO: make sure false conflicts are avoided - modulo(sizeof(BufferFrame), cache_line_size_byte = 64) = 0!
 
@@ -22,6 +23,13 @@ private:
 	void unsetFlag(uint8_t flag);
 
 public:
+
+	void unlock();
+
+	void lock(bool exclusive);
+
+	unsigned int getReaderCount();
+
 	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
 
 	void *getData();
@@ -43,6 +51,10 @@ public:
 	uint64_t getSegmentId();
 
 	void resetFlags();
+
+	void increaseReaderCount();
+
+	void decreaseReaderCount();
 };
 
 #endif //PROJECT_BUFFER_FRAME_H

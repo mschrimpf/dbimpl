@@ -7,8 +7,9 @@
 
 
 #include "../buffer/BufferFrame.hpp"
+#include "../buffer/IReplacementStrategy.h"
 
-class TwoQList {
+class TwoQList : IReplacementStrategy{
 
     std::set<BufferFrame> FifoSet;
     std::set<BufferFrame> LruSet;
@@ -16,8 +17,8 @@ class TwoQList {
     std::list<BufferFrame> LruQueue;
 public:
     void push(BufferFrame frame);
-    BufferFrame pop();
     void onUse(BufferFrame frame);
+    BufferFrame *pop();
 private:
 
 };
