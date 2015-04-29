@@ -12,6 +12,7 @@ BufferManager::BufferManager(uint64_t pagesInMemory) {
 /* Writes all dirty frames to disk and free all resources */
 BufferManager::~BufferManager() {
 	this->freeCache();
+	pageIO.~FileIOUtil();
 }
 
 /* Retrieve frames given a page Id and indication whether or not it is exclusive for the thread

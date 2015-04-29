@@ -7,7 +7,7 @@
 #include <map>
 #include "BufferFrame.hpp"
 #include "IReplacementStrategy.h"
-#include "IPageIO.h"
+#include "../util/FileIOUtil.h"
 
 class BufferManager {
 public:
@@ -25,9 +25,8 @@ private:
 	void *cache;
 	std::map<uint64_t, BufferFrame *> pageFrameMap;
 	std::list <void *> freePages;
-	IPageIO pageIO;
+	FileIOUtil pageIO;
 	boost::mutex mutex;
-
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
 
