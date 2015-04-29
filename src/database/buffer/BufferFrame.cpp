@@ -1,36 +1,19 @@
 #include <stdint.h>
 #include "BufferFrame.hpp"
 
-
 void *BufferFrame::getData() {
-    return nullptr;
+    return this->data;
 }
 
 
-void BufferFrame::setDirty() {
+uint64_t BufferFrame::getPageId() {
 
 }
 
-BufferFrame::BufferFrame(uint64_t pageId, int fd) {
+uint64_t BufferFrame::getSegmentId() {
 
 }
 
-BufferFrame::~BufferFrame() {
-
-}
-
-void BufferFrame::lock(bool exclusive) {
-
-}
-
-void BufferFrame::unlock() {
-
-}
-
-void BufferFrame::decreaseReader() {
-
-}
-
-void BufferFrame::increaseReader() {
-
+bool BufferFrame::isUnfixed() {
+    return false;
 }
