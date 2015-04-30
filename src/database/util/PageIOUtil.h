@@ -8,14 +8,14 @@
 #include <unordered_map>
 #include "../buffer/IPageIO.h"
 
-class FileIOUtil : public IPageIO {
+class PageIOUtil : public IPageIO {
 private:
 	std::unordered_map<int, int> fdMap;
 public:
 	void read(int pageId, int segmentId, void * data, int len);
 	void write(int pageId, int segmentId, void * data, int len);
-	~FileIOUtil();
-	FileIOUtil();
+	~PageIOUtil();
+	PageIOUtil();
 };
 
 

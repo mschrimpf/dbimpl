@@ -7,7 +7,7 @@ const int PAGE_SIZE_BYTE = 4096;
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
 	this->maxFramesInMemory = pagesInMemory;
-	this->pageIO = new FileIOUtil();
+	this->pageIO = new PageIOUtil();
 	this->replacementStrategy = new TwoQList();
 	this->initCache(this->maxFramesInMemory);
 }
@@ -140,5 +140,6 @@ void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {
 	this->pageIO->read(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
-	//TODO open fd only once, save them and close them at the destructor of Buffermanager?
+	//TODO open fd only once, save them and close them at the destructor of Buffermanager? -> machen wir ja in FileIOUtil
+	//TODO do we open with WRITE-FLAG/READ-FLAG?
 }
