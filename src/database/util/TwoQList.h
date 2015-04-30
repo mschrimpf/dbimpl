@@ -9,7 +9,7 @@
 #include "../buffer/BufferFrame.hpp"
 #include "../buffer/IReplacementStrategy.h"
 
-class TwoQList : IReplacementStrategy{
+class TwoQList : public IReplacementStrategy{
 
     std::set<BufferFrame> FifoSet;
     std::set<BufferFrame> LruSet;

@@ -8,6 +8,7 @@
 #include "BufferFrame.hpp"
 #include "IReplacementStrategy.h"
 #include "../util/FileIOUtil.h"
+#include "IPageIO.h"
 
 class BufferManager {
 public:
@@ -21,11 +22,11 @@ public:
 
 private:
 	uint64_t maxFramesInMemory;
-	IReplacementStrategy replacementStrategy;
+	IReplacementStrategy * replacementStrategy;
 	void *cache;
 	std::map<uint64_t, BufferFrame *> pageFrameMap;
 	std::list <void *> freePages;
-	FileIOUtil pageIO;
+	IPageIO * pageIO;
 	boost::mutex mutex;
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);

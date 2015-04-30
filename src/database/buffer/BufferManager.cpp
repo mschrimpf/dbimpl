@@ -1,18 +1,22 @@
 #include <stdlib.h>
 #include "BufferManager.hpp"
+#include "../util/TwoQList.h"
 
 const int PAGE_SIZE_BYTE = 4096;
 
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
 	this->maxFramesInMemory = pagesInMemory;
+	this->pageIO = new FileIOUtil();
+	this->replacementStrategy = new TwoQList();
 	this->initCache(this->maxFramesInMemory);
 }
 
 /* Writes all dirty frames to disk and free all resources */
 BufferManager::~BufferManager() {
 	this->freeCache();
-	pageIO.~FileIOUtil();
+	delete this->pageIO;
+	delete this->replacementStrategy;
 }
 
 /* Retrieve frames given a page Id and indication whether or not it is exclusive for the thread
@@ -28,21 +32,21 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		if (exclusive || frame->isExclusive()) {
 			throw "Fixing the same page with an exclusive flag is not allowed";
 		}
-		replacementStrategy.onUse(frame);
+		this->replacementStrategy->onUse(frame);
 	}
 		// frame does not exist
 	else {
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			frame = this->createFrame(pageId, segmentId);
-			replacementStrategy.push(frame);
+			this->replacementStrategy->push(frame);
 		} else {
-			frame = replacementStrategy.pop();
-			if(frame == nullptr) {
+			frame = this->replacementStrategy->pop();
+			if (frame == nullptr) {
 				throw "Frame is not swapped in, no space is available and no pages are poppable";
 			}
 			this->writeOutIfNecessary(frame);
 			this->reinitialize(frame, pageId);
-			replacementStrategy.push(frame);
+			this->replacementStrategy->push(frame);
 		}
 		this->loadFromDiskIfExists(frame);
 	}
@@ -70,9 +74,9 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	 * Hence, the data pointer of the frame is not added to the free pages
 	 * because the page data is still occupied although it can be replaced.
 	 */
-	if (frame.getReaderCount() == 0){
+	if (frame.getReaderCount() == 0) {
 		/* if no one is using the frame anymore, we can add it to the queue again */
-		replacementStrategy.push(&frame);
+		this->replacementStrategy->push(&frame);
 	}
 	frame.setDirty(isDirty);
 	frame.setUnfixed(true);
@@ -104,15 +108,16 @@ BufferFrame *BufferManager::createFrame(uint64_t pageId, uint64_t segmentId) {
 	void *page = this->getFreePage();
 	BufferFrame *frame = new BufferFrame(pageId, segmentId, page);
 	this->pageFrameMap[pageId] = frame;
+	return frame;
 }
 
 bool BufferManager::isSpaceAvailable() {
-	return !this->freePages->empty();
+	return !this->freePages.empty();
 }
 
 void *BufferManager::getFreePage() {
-	void *result = this->freePages->front;
-	this->freePages->pop_front();
+	void *result = this->freePages.front();
+	this->freePages.pop_front();
 	return result;
 }
 
@@ -120,7 +125,6 @@ void BufferManager::writeOutIfNecessary(BufferFrame *frame) {
 	if (frame->isDirty()) {
 		if (!frame->isUnfixed()) {
 			throw "Frame is dirty but has not been unfixed";
-			// TODO: is this desired behaviour?
 		} else {
 			this->pageIO->write(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 		}
@@ -128,13 +132,13 @@ void BufferManager::writeOutIfNecessary(BufferFrame *frame) {
 }
 
 void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
-	this->pageIO->write(frame->getPageId(), frame->getSegmentId(), frame->getData());
+	this->pageIO->write(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 	this->pageFrameMap.erase(frame->getPageId());
 	frame->resetFlags();
 	this->pageFrameMap[newPageId] = frame;
 }
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {
-	this->pageIO->load(frame->getPageId(), frame->getSegmentId(), frame->getData());
+	this->pageIO->read(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 	//TODO open fd only once, save them and close them at the destructor of Buffermanager?
 }

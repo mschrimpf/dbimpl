@@ -6,13 +6,14 @@
 #define PROJECT_FILEIOUTIL_H
 
 #include <unordered_map>
+#include "../buffer/IPageIO.h"
 
-class FileIOUtil {
+class FileIOUtil : public IPageIO {
 private:
 	std::unordered_map<int, int> fdMap;
 public:
 	void read(int pageId, int segmentId, void * data, int len);
-	void write(int pageId, int segmentId, void * data);
+	void write(int pageId, int segmentId, void * data, int len);
 	~FileIOUtil();
 	FileIOUtil();
 };
