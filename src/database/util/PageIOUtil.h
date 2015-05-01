@@ -10,7 +10,7 @@
 
 struct PageInfo {
 	int fd;
-	unsigned offset;
+	long offset_bytes;
 };
 
 class PageIOUtil : public IPageIO {
@@ -20,19 +20,18 @@ private:
 
 	PageInfo *getPageInfo(uint64_t pageId);
 
-	void readFd(int fd, unsigned int offset, void *data, unsigned int len);
+	void readFd(int fd, long offset_bytes, void *data, unsigned int len);
+
+	void writeFd(int fd, long offset_bytes, void *data, unsigned int len);
 
 public:
+	void readPage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len);
 
-	void read(uint64_t pageId, uint64_t segmentId, void *data, unsigned len);
-
-	void write(uint64_t pageId, uint64_t segmentId, void *data, unsigned len);
+	void writePage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len);
 
 	~PageIOUtil();
 
 	PageIOUtil();
-
-	void writeFd(int fd, unsigned int offset, void *data, unsigned int len);
 };
 
 

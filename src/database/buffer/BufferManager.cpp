@@ -135,20 +135,20 @@ void BufferManager::writeOutIfNecessary(BufferFrame *frame) {
 		if (!frame->isUnfixed()) {
 			throw "Frame is dirty but has not been unfixed";
 		} else {
-			this->pageIO->write(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
+			this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 		}
 	}
 }
 
 void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
-	this->pageIO->write(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
+	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 	this->pageFrameMap.erase(frame->getPageId());
 	frame->resetFlags();
 	this->pageFrameMap[newPageId] = frame;
 }
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {
-	this->pageIO->read(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
+	this->pageIO->readPage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 	//TODO open fd only once, save them and close them at the destructor of Buffermanager? -> machen wir ja in FileIOUtil
 	//TODO do we open with WRITE-FLAG/READ-FLAG?
 }

@@ -5,9 +5,9 @@
 
 class IPageIO {
 public:
-	virtual void read(uint64_t pageId, uint64_t segmentId, void *data, uint64_t len);
+	virtual void readPage(uint64_t pageId, uint64_t segmentId, void *data, unsigned int len) = 0;
 
-	virtual void write(uint64_t pageId, uint64_t segmentId, void *data, uint64_t len);
+	virtual void writePage(uint64_t pageId, uint64_t segmentId, void *data, unsigned int len) = 0;
 };
 
 #endif //PROJECT_I_PAGE_IO_H

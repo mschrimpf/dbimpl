@@ -9,9 +9,9 @@
 
 class IReplacementStrategy {
 public:
-	virtual void push(BufferFrame * frame);
-	virtual void onUse(BufferFrame * frame);
-	virtual BufferFrame * pop();
+	virtual void push(BufferFrame * frame) = 0;
+	virtual void onUse(BufferFrame * frame) = 0;
+	virtual BufferFrame * pop() = 0;
 };
 
 #endif //PROJECT_IREPLACEMENT_STRATEGY_H
