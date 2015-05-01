@@ -10,4 +10,4 @@ set(SOURCE_FILES
     util/Math.cpp util/Math.h
     util/TwoQList.h util/TwoQList.cpp
     util/PageIOUtil.h util/PageIOUtil.cpp)
-add_executable(database ${SOURCE_FILES})
+add_executable(database ${SOURCE_FILES} util/spinlock.h)

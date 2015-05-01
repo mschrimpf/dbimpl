@@ -1,6 +1,8 @@
 #ifndef PROJECT_BUFFER_FRAME_H
 #define PROJECT_BUFFER_FRAME_H
 
+#include "../util/spinlock.h"
+
 class BufferFrame {
 	const uint8_t DIRTY_FLAG = 0x1; // 001
 	const uint8_t EXCLUSIVE_FLAG = 0x2; // 010
@@ -12,8 +14,7 @@ private:
 	uint64_t segmentId;
 	unsigned int readerCount;
 	uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
-	boost::shared_mutex latch; // TODO: make sure false conflicts are avoided - modulo(sizeof(BufferFrame), cache_line_size_byte = 64) = 0!
-
+	spinlock latch; // TODO: make sure false conflicts are avoided - modulo(sizeof(BufferFrame), cache_line_size_byte = 64) = 0!
 	bool isFlagSet(uint8_t mask);
 
 	void setFlagBool(bool flagSet, uint8_t flag);

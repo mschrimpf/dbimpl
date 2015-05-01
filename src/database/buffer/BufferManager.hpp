@@ -2,7 +2,7 @@
 #define PROJECT_BUFFER_MANAGER_H
 
 #include <stdint.h>
-#include <mutex>
+#include <boost/mutex>
 #include <list>
 #include <map>
 #include "BufferFrame.hpp"
@@ -32,7 +32,7 @@ private:
 	/** synchronized */
 	IPageIO * pageIO;
 
-	boost::mutex mutex;
+	boost::mutex mtx;
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
 
