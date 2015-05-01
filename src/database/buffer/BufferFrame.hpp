@@ -24,10 +24,6 @@ private:
 
 public:
 
-	void unlock();
-
-	void lock(bool exclusive);
-
 	unsigned int getReaderCount();
 
 	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
@@ -52,9 +48,13 @@ public:
 
 	void resetFlags();
 
-	void increaseReaderCount();
+	void latchFlags();
 
-	void decreaseReaderCount();
+	void unlatchFlags();
+
+	void lock();
+
+	void unlock();
 };
 
 #endif //PROJECT_BUFFER_FRAME_H

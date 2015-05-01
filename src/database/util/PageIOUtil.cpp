@@ -2,34 +2,62 @@
 // Created by Daniel on 30.04.2015.
 //
 
-#include <io.h>
+
 #include <fcntl.h>
-#include "PageIOUtil.h.h"
+#include "PageIOUtil.h"
 
-
-void FileIOUtil::read(int pageId, int segmentId, void *data, int len) {
-    int magicCalculation = pageId + segmentId;
-    int fd = -1;
-    if (fdMap.find(magicCalculation) != fdMap.end()){
-        fd = fdMap[magicCalculation];
-    }else{
-        fd = open("address", O_CREAT);
-        fdMap.insert(magicCalculation, fd);
-    }
-    //doReadStuff here
+void PageIOUtil::read(uint64_t pageId, uint64_t segmentId, void *data, unsigned len) {
+	PageInfo *pageInfo = this->getPageInfo(pageId);
+	if (pageInfo != nullptr) {
+		int fd = pageInfo->fd;
+		unsigned offset = pageInfo->offset;
+		this->readFd(fd, offset, data, len);
+	}
 }
 
-void FileIOUtil::write(int pageId, int segmentId, void *data) {
-    //do write stuff here
-}
-
-FileIOUtil::FileIOUtil() {
+void PageIOUtil::readFd(int fd, unsigned offset, void *data, unsigned len) {
 
 }
 
-FileIOUtil::~FileIOUtil() {
-    for (std::pair fd : fdMap){
-        close(fd.second);
-    }
-    fdMap.clear();
+void PageIOUtil::write(uint64_t pageId, uint64_t segmentId, void *data, unsigned len) {
+	int fd;
+	unsigned offset;
+
+	PageInfo *pageInfo = this->getPageInfo(pageId);
+	if (pageInfo != nullptr) {
+		char *segmentIdStr = itoa(segmentId);
+		fd = open(segmentIdStr, O_CREAT | O_TRUNC | O_RDWR);
+		if (this->segmentPagesAmountMap.find(segmentId) != this->segmentPagesAmountMap.end()) {
+			offset = this->segmentPagesAmountMap[segmentId];
+		} else {
+			offset = 0;
+		}
+		this->pageInfoMap[pageId] = {fd, offset};
+
+		this->segmentPagesAmountMap[segmentId] = offset + 1;
+	}
+
+	this->writeFd(fd, offset, data, len);
+}
+
+void PageIOUtil::writeFd(int fd, unsigned int offset, void *data, unsigned int len) {
+
+}
+
+PageInfo *PageIOUtil::getPageInfo(uint64_t pageId) {
+	if (this->pageInfoMap.find(pageId) != this->pageInfoMap.end()) {
+		PageInfo *pageInfo = &this->pageInfoMap[pageId];
+		return pageInfo;
+	}
+	return nullptr;
+}
+
+PageIOUtil::PageIOUtil() {
+
+}
+
+PageIOUtil::~PageIOUtil() {
+	for (auto fdPair : this->pageInfoMap) {
+		close(fdPair.second);
+	}
 }

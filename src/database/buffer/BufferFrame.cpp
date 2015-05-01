@@ -44,11 +44,14 @@ bool BufferFrame::isUnfixed() {
 }
 
 bool BufferFrame::isFlagSet(uint8_t mask) {
-	return (this->state & mask) == mask;
+	this->latchFlags();
+	bool result = (this->state & mask) == mask;
+	this->unlatchFlags();
+	return result;
 }
 
 void BufferFrame::setFlagBool(bool flagSet, uint8_t flag) {
-	if(flagSet) {
+	if (flagSet) {
 		this->setFlag(flag);
 	} else {
 		this->unsetFlag(flag);
@@ -56,30 +59,39 @@ void BufferFrame::setFlagBool(bool flagSet, uint8_t flag) {
 }
 
 void BufferFrame::setFlag(uint8_t flag) {
+	this->latchFlags();
 	this->state |= flag;
+	this->unlatchFlags();
 }
 
 void BufferFrame::unsetFlag(uint8_t flag) {
+	this->latchFlags();
 	this->state &= ~flag;
+	this->unlatchFlags();
 }
 
 void BufferFrame::resetFlags() {
+	this->latchFlags();
 	this->state &= 0x0;
+	this->unlatchFlags();
 }
 
 unsigned int BufferFrame::getReaderCount() {
 	return readerCount;
 }
 
+void BufferFrame::latchFlags() {
+	// TODO: might be unnecessary
+}
+
+void BufferFrame::unlatchFlags() {
+	// TODO: might be unnecessary
+}
+
+void BufferFrame::lock() {
+	// TODO
+}
+
 void BufferFrame::unlock() {
-	latch.unlock();
+	// TODO
 }
-
-void BufferFrame::lock(bool exclusive) {
-	if (exclusive){
-		boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(latch);
-	}else{
-		boost::shared_lock<boost::shared_mutex> lock(latch);
-	}
-}
-

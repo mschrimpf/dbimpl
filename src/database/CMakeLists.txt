@@ -8,5 +8,6 @@ set(SOURCE_FILES
     buffer/IPageIO.h
     buffer/IReplacementStrategy.h
     util/Math.cpp util/Math.h
-    util/TwoQList.h util/TwoQList.cpp)
+    util/TwoQList.h util/TwoQList.cpp
+    util/PageIOUtil.h util/PageIOUtil.cpp)
 add_executable(database ${SOURCE_FILES})

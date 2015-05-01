@@ -22,11 +22,16 @@ public:
 
 private:
 	uint64_t maxFramesInMemory;
-	IReplacementStrategy * replacementStrategy;
 	void *cache;
-	std::map<uint64_t, BufferFrame *> pageFrameMap;
+	/** synchronized */
+	IReplacementStrategy * replacementStrategy;
+	/** synchronized */
+	std::unordered_map<uint64_t, BufferFrame *> pageFrameMap;
+	/** synchronized */
 	std::list <void *> freePages;
+	/** synchronized */
 	IPageIO * pageIO;
+
 	boost::mutex mutex;
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
