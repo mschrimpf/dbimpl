@@ -45,6 +45,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	else {
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			frame = this->createFrame(pageId, segmentId);
+			frame->setExclusive(exclusive);
 			this->replacementStrategy->push(frame);
 		} else {
 			frame = this->replacementStrategy->pop();
@@ -52,6 +53,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 				mutex.unlock();
 				throw "Frame is not swapped in, no space is available and no pages are poppable";
 			}
+			frame->setExclusive(exclusive);
 			frame->lock();
 			mutex.unlock();
 			this->writeOutIfNecessary(frame);
@@ -61,7 +63,6 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			this->replacementStrategy->push(frame);
 		}
 		frame->lock();
-		frame->setExclusive(exclusive);
 		this->loadFromDiskIfExists(frame);
 		frame->unlock();
 	}
