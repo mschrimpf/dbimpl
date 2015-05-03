@@ -24,7 +24,7 @@ BufferManager::~BufferManager() {
 	BufferFrame* frame;
 	do {
 		frame = replacementStrategy->pop();
-		if (frame != nullptr){
+		if (frame != nullptr && frame->isDirty()){
 			writeOut(frame);
 		}
 	}while (frame != nullptr);
@@ -86,11 +86,11 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		frame->lock(exclusive);
 		debug(pageId, "try to lock frame with id: %llu", frame->getPageId());
 		debug(pageId, "Waiting count: %llu", frame->getWaitingCount());
-		//frame->lock(false); // TODO: optimize - only lock if page exists
+		frame->lock(false); // TODO: optimize - only lock if page exists
 		debug(pageId, "frame locked");
 		this->loadFromDiskIfExists(frame);
 		debug(pageId, "tried to load from disk");
-		//frame->unlock();
+		frame->unlock();
 		debug(pageId, "unlocked frame");
 	}
 	this->global_unlock();
