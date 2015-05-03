@@ -2,9 +2,9 @@
 #define PROJECT_BUFFER_MANAGER_H
 
 #include <stdint.h>
-#include <boost/mutex>
 #include <list>
 #include <map>
+#include "../util/spinlock.h"
 #include "BufferFrame.hpp"
 #include "IReplacementStrategy.h"
 #include "../util/PageIOUtil.h"
@@ -32,7 +32,7 @@ private:
 	/** synchronized */
 	IPageIO * pageIO;
 
-	boost::mutex global_mutex;
+	spinlock global_mutex;
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
 
