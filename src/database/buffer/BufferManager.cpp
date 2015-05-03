@@ -3,9 +3,11 @@
 #include "BufferManager.hpp"
 #include "../util/TwoQList.h"
 
+#define DEBUG 0
+
 const unsigned PAGE_SIZE_BYTE = 4096;
-const uint64_t PAGE_MASK = 0xFFFFFFFF;
-const uint64_t SEGMENT_MASK = 0xFFFFFFFF00000000;
+const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
+const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
 
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
@@ -28,48 +30,55 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
+#if DEBUG == 1
 	printf("Page and Segment Id extracted. PageId :%llu, SegmentId :%llu\n", pageId, segmentId);
-
 	printf("trying to get global lock\n");
+#endif
 	this->global_lock();
+#if DEBUG == 1
 	printf("global lock aquired\n");
+#endif
 
 	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
+		frame->increaseUsageCount();
+		this->replacementStrategy->remove(frame);
 		this->global_unlock();
 		frame->lock(exclusive);
-		this->global_lock();
-		this->replacementStrategy->onUse(frame);
 	}
 		// frame does not exist
 	else {
+#if DEBUG == 1
 		printf("Frame for pageId %llu does not exist\n", pageId);
+#endif
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			frame = this->createFrame(pageId, segmentId);
-			frame->setExclusive(exclusive);
-			this->replacementStrategy->push(frame);
+			this->global_unlock();
 		} else {
 			frame = this->replacementStrategy->pop();
 			if (frame == nullptr) {
 				this->global_unlock();
 				throw "Frame is not swapped in, no space is available and no pages are poppable";
 			}
-			frame->setExclusive(exclusive);
-			frame->lock(false);
-			this->global_unlock();
-			this->writeOutIfNecessary(frame);
-			this->global_lock();
-			frame->unlock();
+			// write out if necessary
+			if (frame->isDirty()) {
+				frame->lock(false);
+				this->global_unlock();
+				this->writeOut(frame);
+				this->global_lock();
+				frame->unlock();
+			}
 			this->reinitialize(frame, pageId);
-			this->replacementStrategy->push(frame);
+			this->global_unlock();
 		}
-		frame->lock();
+		frame->lock(true); // TODO: optimize - only lock if page exists
 		this->loadFromDiskIfExists(frame);
 		frame->unlock();
 	}
 
-	this->global_unlock();
+#if DEBUG == 1
 	printf("global lock released\n");
+#endif
 
 	return *frame;
 }
@@ -91,8 +100,10 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	 * because the page data is still occupied although it can be replaced.
 	 */
 	frame.setDirty(isDirty);
-	frame.setUnfixed(true); // TODO set unfixed for multiple readers
-	// TODO: delete from map?
+	frame.decreaseUsageCount();
+	if (!frame.isUsed()) {
+		this->replacementStrategy->push(&frame);
+	}
 	this->global_unlock();
 }
 
@@ -133,14 +144,8 @@ void *BufferManager::getFreePage() {
 	return result;
 }
 
-void BufferManager::writeOutIfNecessary(BufferFrame *frame) {
-	if (frame->isDirty()) {
-		if (!frame->isUnfixed()) {
-			throw "Frame is dirty but has not been unfixed";
-		} else {
-			this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
-		}
-	}
+void BufferManager::writeOut(BufferFrame *frame) {
+	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 }
 
 void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {

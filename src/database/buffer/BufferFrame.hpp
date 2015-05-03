@@ -6,14 +6,12 @@
 
 class BufferFrame {
 	const uint8_t DIRTY_FLAG = 0x1; // 001
-	const uint8_t EXCLUSIVE_FLAG = 0x2; // 010
-	const uint8_t UNFIXED_FLAG = 0x4; // 100
 
 private:
 	void *data;
 	uint64_t pageId;
 	uint64_t segmentId;
-	unsigned readerCount;
+	unsigned usageCount;
 	pthread_rwlock_t rwlock;
 	uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
 	spinlock latch; // TODO: make sure false conflicts are avoided - modulo(sizeof(BufferFrame), cache_line_size_byte = 64) = 0!
@@ -27,8 +25,6 @@ private:
 
 public:
 
-	bool hasReaders();
-
 	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
 
 	void *getData();
@@ -36,14 +32,6 @@ public:
 	void setDirty(bool dirty);
 
 	bool isDirty();
-
-	void setExclusive(bool exclusive);
-
-	bool isExclusive();
-
-	void setUnfixed(bool unfixed);
-
-	bool isUnfixed();
 
 	uint64_t getPageId();
 
@@ -55,9 +43,11 @@ public:
 
 	void unlatchFlags();
 
-	void increaseReaderCount();
+	void increaseUsageCount();
 
-	void decreaseReaderCount();
+	void decreaseUsageCount();
+
+	bool isUsed();
 
 	void lock(bool exclusive);
 
