@@ -71,6 +71,11 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
+   cout << "start buffer-test with args: "
+   << "pagesOnDisk " << argv[1]
+   << " pagesInRam " << argv[2]
+   << " threadCount " << argv[3] << endl;
+
    threadSeed = new unsigned[threadCount];
    for (unsigned i=0; i<threadCount; i++)
       threadSeed[i] = i*97134;
@@ -82,11 +87,13 @@ int main(int argc, char** argv) {
    pthread_attr_init(&pattr);
 
    // set all counters to 0
+   cout <<"start: set all counters to 0" << endl;
    for (unsigned i=0; i<pagesOnDisk; i++) {
       BufferFrame& bf = bm->fixPage(i, true);
       reinterpret_cast<unsigned*>(bf.getData())[0]=0;
       bm->unfixPage(bf, true);
    }
+   cout <<"end: set all counters to 0" << endl;
 
    // start scan thread
    pthread_t scanThread;
