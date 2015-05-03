@@ -48,8 +48,11 @@ static void* readWrite(void *arg) {
 
    uintptr_t count = 0;
    for (unsigned i=0; i<100000/threadCount; i++) {
+      unsigned int pageId = randomPage(threadNum);
       bool isWrite = rand_r(&threadSeed[threadNum])%128<10;
-      BufferFrame& bf = bm->fixPage(randomPage(threadNum), isWrite);
+      cout <<"[Thread#" << threadNum << "] fixing page " << pageId
+            << " (" << (isWrite ? "write" : "read") << ")" << endl;
+      BufferFrame& bf = bm->fixPage(pageId, isWrite);
 
       if (isWrite) {
          count++;
@@ -107,6 +110,7 @@ int main(int argc, char** argv) {
    for (unsigned i=0; i<threadCount; i++)
       pthread_create(&threads[i], &pattr, readWrite, reinterpret_cast<void*>(i));
 
+   cout <<"threads started" << endl;
    // wait for read/write threads
    unsigned totalCount = 0;
    for (unsigned i=0; i<threadCount; i++) {
@@ -114,10 +118,12 @@ int main(int argc, char** argv) {
       pthread_join(threads[i], &ret);
       totalCount+=reinterpret_cast<uintptr_t>(ret);
    }
+   cout <<"threads ended" << endl;
 
    // wait for scan thread
    stop=true;
    pthread_join(scanThread, NULL);
+   cout <<"scan thread ended" << endl;
 
    // restart buffer manager
    delete bm;

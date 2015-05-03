@@ -104,6 +104,7 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	if (!frame.isUsed()) {
 		this->replacementStrategy->push(&frame);
 	}
+	frame.unlock();
 	this->global_unlock();
 }
 
