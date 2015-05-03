@@ -4,8 +4,8 @@
 #include "../util/TwoQList.h"
 
 const unsigned PAGE_SIZE_BYTE = 4096;
-const uint64_t PAGE_MASK = 0x0; // TODO
-const uint64_t SEGMENT_MASK = 0x0; // TODO
+const uint64_t PAGE_MASK = 0xff; // TODO
+const uint64_t SEGMENT_MASK = 0xff; // TODO
 
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
@@ -28,15 +28,15 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
-	printf("Page and Segment Id extracted. PageId %llu, SegmentId %llu\n", pageId, segmentId);
+	printf("Page and Segment Id extracted. PageId :%llu, SegmentId :%llu\n", pageId, segmentId);
 
-	printf("trying to get global lock");
+	printf("trying to get global lock\n");
 	this->global_lock();
-	printf("global lock aquired");
+	printf("global lock aquired\n");
 
 	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
-		printf("Frame for pageId %llu is already in use", pageId);
+		printf("Frame for pageId %llu is already in use\n", pageId);
 		/*
 		 * Since this path is only reached when the frame is already used by some thread,
 		 * it is sufficient to only check for the exclusiveness and not the explicit reader count
@@ -49,7 +49,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	}
 		// frame does not exist
 	else {
-		printf("Frame for pageId %llu does not exist", pageId);
+		printf("Frame for pageId %llu does not exist\n", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			frame = this->createFrame(pageId, segmentId);
 			frame->setExclusive(exclusive);
@@ -75,7 +75,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	}
 
 	this->global_unlock();
-	printf("global lock released");
+	printf("global lock released\n");
 
 	return *frame;
 }
