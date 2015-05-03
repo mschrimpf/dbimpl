@@ -102,6 +102,29 @@ int main(int argc, char** argv) {
       bm->unfixPage(bf, true);
       cout <<"zero'ed counter " << i << "/" << pagesOnDisk -1 << endl;
    }
+
+
+   ///////////////////      ADDED     /////////////////////
+   delete bm;
+   bm = new BufferManager(pagesInRAM);
+   unsigned totalCountOnDiskZero = 0;
+   for (unsigned i=0; i<pagesOnDisk; i++) {
+      BufferFrame& bf = bm->fixPage(i,false);
+      totalCountOnDiskZero+=reinterpret_cast<unsigned*>(bf.getData())[0];
+      bm->unfixPage(bf, false);
+   }
+   if (0==totalCountOnDiskZero) {
+      cout << "test successful" << endl;
+      delete bm;
+      //return 0;
+   } else {
+      cerr << "error: expected " << 0 << " but got " << totalCountOnDiskZero << endl;
+      //delete bm;
+      return 1;
+   }
+   ///////////////////      ADDED     ////////////////////
+
+
    cout <<"end: set all counters to 0" << endl;
 
    // start scan thread

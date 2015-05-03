@@ -9,12 +9,12 @@ class BufferFrame {
 
 private:
 	void *data;
+	bool used = false;
 	uint64_t pageId;
 	uint64_t segmentId;
-	unsigned usageCount;
+	unsigned usageCount = 0;
 	pthread_rwlock_t rwlock;
 	uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
-	spinlock latch; // TODO: make sure false conflicts are avoided - modulo(sizeof(BufferFrame), cache_line_size_byte = 64) = 0!
 	bool isFlagSet(uint8_t mask);
 
 	void setFlagBool(bool flagSet, uint8_t flag);
@@ -24,6 +24,10 @@ private:
 	void unsetFlag(uint8_t flag);
 
 public:
+
+	bool usedBefore();
+
+	void setUsedBefore();
 
 	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
 
@@ -39,10 +43,6 @@ public:
 
 	void resetFlags();
 
-	void latchFlags();
-
-	void unlatchFlags();
-
 	void increaseUsageCount();
 
 	void decreaseUsageCount();
@@ -52,6 +52,10 @@ public:
 	void lock(bool exclusive);
 
 	void unlock();
+
+	unsigned getWaitingCount();
+
+	void setUnusedBefore();
 };
 
 #endif //PROJECT_BUFFER_FRAME_H

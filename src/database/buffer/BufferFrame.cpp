@@ -28,9 +28,7 @@ bool BufferFrame::isDirty() {
 }
 
 bool BufferFrame::isFlagSet(uint8_t mask) {
-	this->latchFlags();
 	bool result = (this->state & mask) == mask;
-	this->unlatchFlags();
 	return result;
 }
 
@@ -43,33 +41,19 @@ void BufferFrame::setFlagBool(bool flagSet, uint8_t flag) {
 }
 
 void BufferFrame::setFlag(uint8_t flag) {
-	this->latchFlags();
 	this->state |= flag;
-	this->unlatchFlags();
 }
 
 void BufferFrame::unsetFlag(uint8_t flag) {
-	this->latchFlags();
 	this->state &= ~flag;
-	this->unlatchFlags();
 }
 
 void BufferFrame::resetFlags() {
-	this->latchFlags();
 	this->state &= 0x0;
-	this->unlatchFlags();
 }
 
 bool BufferFrame::isUsed() {
 	return usageCount > 0;
-}
-
-void BufferFrame::latchFlags() {
-	latch.lock();  //TODO might be unnecessary
-}
-
-void BufferFrame::unlatchFlags() {
-	latch.unlock(); //TODO might be unnecessary
 }
 
 void BufferFrame::lock(bool exclusive) {
@@ -90,4 +74,20 @@ void BufferFrame::increaseUsageCount() {
 
 void BufferFrame::decreaseUsageCount() {
 	usageCount--;
+}
+
+unsigned BufferFrame::getWaitingCount() {
+	return usageCount;
+}
+
+bool BufferFrame::usedBefore() {
+	return used;
+}
+
+void BufferFrame::setUsedBefore() {
+	used = true;
+}
+
+void BufferFrame::setUnusedBefore(){
+	used = false;
 }

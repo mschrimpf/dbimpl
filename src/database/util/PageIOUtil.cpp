@@ -11,6 +11,8 @@
 #include <sstream>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <iostream>
+#include <unistd.h>
 
 void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len) {
 	PageInfo *pageInfo = this->getPageInfo(pageId);
@@ -32,9 +34,7 @@ void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsi
 
 	PageInfo *pageInfo = this->getPageInfo(pageId);
 	if (pageInfo != nullptr) {
-		char segmentIdStr[33];
-		sprintf(segmentIdStr,"%d",(long)segmentId);
-		fd = open(segmentIdStr, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
+		fd = open(std::to_string(segmentId).c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 		if (this->segmentPagesAmountMap.find(segmentId) != this->segmentPagesAmountMap.end()) {
 			offset = this->segmentPagesAmountMap[segmentId];
 		} else {
@@ -56,8 +56,10 @@ void PageIOUtil::writeFd(int fd, long offset_bytes, void *data, unsigned int len
 PageInfo *PageIOUtil::getPageInfo(uint64_t pageId) {
 	if (this->pageInfoMap.find(pageId) != this->pageInfoMap.end()) {
 		PageInfo *pageInfo = &this->pageInfoMap[pageId];
+		printf("Page with id %llu found", pageId);
 		return pageInfo;
 	}
+	printf("Page with id %llu not found", pageId);
 	return nullptr;
 }
 

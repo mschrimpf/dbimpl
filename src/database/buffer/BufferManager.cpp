@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "BufferManager.hpp"
 #include "../util/TwoQList.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 const unsigned PAGE_SIZE_BYTE = 4096;
 const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
@@ -30,56 +31,60 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
-#if DEBUG == 1
-	printf("Page and Segment Id extracted. PageId :%llu, SegmentId :%llu\n", pageId, segmentId);
-	printf("trying to get global lock\n");
-#endif
+	debug(pageId, "Page Id extracted");
+	debug(pageId, "trying to get global lock");
 	this->global_lock();
-#if DEBUG == 1
-	printf("global lock aquired\n");
-#endif
+	debug(pageId, "global lock aquired");
 
 	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
+		//frame exists
+		debug(pageId, "Frame exists in Memory");
 		frame->increaseUsageCount();
 		this->replacementStrategy->remove(frame);
+		frame->setUsedBefore();
 		this->global_unlock();
-		frame->lock(exclusive);
-	}
+		debug(pageId, "global lock released");
+	}else {
 		// frame does not exist
-	else {
-#if DEBUG == 1
-		printf("Frame for pageId %llu does not exist\n", pageId);
-#endif
+		debug(pageId, "Frame for pageId %llu does not exist", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			frame = this->createFrame(pageId, segmentId);
+			frame->setUnusedBefore();
+			debug(pageId, "New frame created");
 			this->global_unlock();
+			debug(pageId, "global unlocked");
 		} else {
 			frame = this->replacementStrategy->pop();
+			debug(pageId, "Popping frame");
 			if (frame == nullptr) {
 				this->global_unlock();
 				throw "Frame is not swapped in, no space is available and no pages are poppable";
 			}
 			// write out if necessary
 			if (frame->isDirty()) {
+				debug(pageId, "locking frame");
 				frame->lock(false);
 				this->global_unlock();
 				this->writeOut(frame);
+				debug(pageId, "written out");
 				this->global_lock();
 				frame->unlock();
 			}
 			this->reinitialize(frame, pageId);
-			this->global_unlock();
+			debug(pageId, "frame reinitialized");
 		}
-		frame->lock(true); // TODO: optimize - only lock if page exists
+		frame->lock(exclusive);
+		debug(pageId, "try to lock frame with id: %llu", frame->getPageId());
+		debug(pageId, "Waiting count: %llu", frame->getWaitingCount());
+		//frame->lock(false); // TODO: optimize - only lock if page exists
+		debug(pageId, "frame locked");
 		this->loadFromDiskIfExists(frame);
-		frame->unlock();
+		debug(pageId, "tried to load from disk");
+		//frame->unlock();
+		debug(pageId, "unlocked frame");
 	}
-
-#if DEBUG == 1
-	printf("global lock released\n");
-#endif
-
+	this->global_unlock();
 	return *frame;
 }
 
@@ -153,6 +158,7 @@ void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
 	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 	this->pageFrameMap.erase(frame->getPageId());
 	frame->resetFlags();
+	frame->setUnusedBefore();
 	this->pageFrameMap[newPageId] = frame;
 }
 
@@ -166,4 +172,23 @@ void BufferManager::global_lock() {
 
 void BufferManager::global_unlock() {
 	this->global_mutex.unlock();
+}
+
+void BufferManager::debug(const char * info) {
+	#if DEBUG == 1
+		printf("%s\n", info);
+	#endif
+}
+
+void BufferManager::debug(uint64_t pageId, const char * fmt, ...){
+	#if DEBUG == 1
+		va_list args;
+		char buf[1000];
+		va_start(args, fmt);
+		vsnprintf(buf, sizeof(buf), fmt, args );
+		va_end(args);
+		printf("Frame[%llu]:", pageId);
+		printf(buf);
+		printf("\n");
+	#endif
 }
