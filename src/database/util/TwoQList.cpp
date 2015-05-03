@@ -3,7 +3,7 @@
 //
 #include "TwoQList.h"
 
-void TwoQList::push(BufferFrame* frame) {
+void TwoQList::push(BufferFrame *frame) {
     FifoQueue.push_back(frame);
     FifoSet.insert(frame);
 }
@@ -25,20 +25,13 @@ BufferFrame* TwoQList::pop() {
     }
 }
 
-void TwoQList::onUse(BufferFrame* frame){
+void TwoQList::remove(BufferFrame *frame){
     if (FifoSet.find(frame) != FifoSet.end()){
         /* Elem in Fifo-Set -> Remove and add to LRU */
         FifoSet.erase(frame);
         FifoQueue.remove(frame);
-        LruQueue.push_back(frame);
-        LruSet.insert(frame);
     }else if (LruSet.find(frame) != LruSet.end()) {
         /* Elem in LRU -> remove and add at the end */
         LruQueue.remove(frame);
-        LruQueue.push_back(frame);
-    }else{
-        /* Elem neither in Fifo nor in LRU -> Add to Fifo*/
-        FifoSet.insert(frame);
-        FifoQueue.push_back(frame);
     }
 }

@@ -27,22 +27,6 @@ bool BufferFrame::isDirty() {
 	return this->isFlagSet(DIRTY_FLAG);
 }
 
-void BufferFrame::setExclusive(bool exclusive) {
-	this->setFlagBool(exclusive, EXCLUSIVE_FLAG);
-}
-
-bool BufferFrame::isExclusive() {
-	return this->isFlagSet(EXCLUSIVE_FLAG);
-}
-
-void BufferFrame::setUnfixed(bool unfixed) {
-	this->setFlagBool(unfixed, UNFIXED_FLAG);
-}
-
-bool BufferFrame::isUnfixed() {
-	return this->isFlagSet(UNFIXED_FLAG);
-}
-
 bool BufferFrame::isFlagSet(uint8_t mask) {
 	this->latchFlags();
 	bool result = (this->state & mask) == mask;
@@ -76,8 +60,8 @@ void BufferFrame::resetFlags() {
 	this->unlatchFlags();
 }
 
-bool BufferFrame::hasReaders() {
-	return readerCount > 0;
+bool BufferFrame::isUsed() {
+	return usageCount > 0;
 }
 
 void BufferFrame::latchFlags() {
@@ -100,10 +84,10 @@ void BufferFrame::unlock() {
 	pthread_rwlock_unlock(&rwlock);
 }
 
-void BufferFrame::increaseReaderCount() {
-	readerCount++;
+void BufferFrame::increaseUsageCount() {
+	usageCount++;
 }
 
-void BufferFrame::decreaseReaderCount() {
-	readerCount--;
+void BufferFrame::decreaseUsageCount() {
+	usageCount--;
 }

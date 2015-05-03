@@ -19,8 +19,8 @@ class TwoQList : public IReplacementStrategy{
     std::list<BufferFrame*> FifoQueue;
     std::list<BufferFrame*> LruQueue;
 public:
-    void push(BufferFrame* frame);
-    void onUse(BufferFrame* frame);
+    void push(BufferFrame *frame);
+    void remove(BufferFrame *frame);
     BufferFrame* pop();
 private:
 

@@ -23,11 +23,11 @@ public:
 private:
 	uint64_t maxFramesInMemory;
 	void *cache;
-	/** synchronized */
+	/** has to be synchronized */
 	IReplacementStrategy * replacementStrategy;
-	/** synchronized */
+	/** has to be synchronized */
 	std::unordered_map<uint64_t, BufferFrame *> pageFrameMap;
-	/** synchronized */
+	/** has to be synchronized */
 	std::list <void *> freePages;
 	/** synchronized */
 	IPageIO * pageIO;
@@ -50,7 +50,7 @@ private:
 
 	void reinitialize(BufferFrame *frame, uint64_t newPageId);
 
-	void writeOutIfNecessary(BufferFrame *frame);
+	void writeOut(BufferFrame *frame);
 
 	void loadFromDiskIfExists(BufferFrame *frame);
 
