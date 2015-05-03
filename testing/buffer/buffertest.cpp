@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
       BufferFrame& bf = bm->fixPage(i, true);
       reinterpret_cast<unsigned*>(bf.getData())[0]=0;
       bm->unfixPage(bf, true);
+      cout <<"zero'ed counter " << i << "/" << pagesOnDisk -1 << endl;
    }
    cout <<"end: set all counters to 0" << endl;
 
