@@ -71,6 +71,10 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
+   if (pagesOnDisk < 11){
+      cerr << "pages on disk has to be bigger than 10" <<endl;
+   }
+
    cout << "start buffer-test with args: "
    << "pagesOnDisk " << argv[1]
    << " pagesInRam " << argv[2]

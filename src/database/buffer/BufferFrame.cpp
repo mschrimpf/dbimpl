@@ -76,8 +76,8 @@ void BufferFrame::resetFlags() {
 	this->unlatchFlags();
 }
 
-unsigned int BufferFrame::getReaderCount() {
-	return readerCount;
+bool BufferFrame::hasReaders() {
+	return readerCount > 0;
 }
 
 void BufferFrame::latchFlags() {
@@ -88,10 +88,22 @@ void BufferFrame::unlatchFlags() {
 	latch.unlock(); //TODO might be unnecessary
 }
 
-void BufferFrame::lock() {
-	latch.lock();
+void BufferFrame::lock(bool exclusive) {
+	if(exclusive) {
+		pthread_rwlock_wrlock(&rwlock);
+	} else {
+		pthread_rwlock_rdlock(&rwlock);
+	}
 }
 
 void BufferFrame::unlock() {
-	latch.unlock();
+	pthread_rwlock_unlock(&rwlock);
+}
+
+void BufferFrame::increaseReaderCount() {
+	readerCount++;
+}
+
+void BufferFrame::decreaseReaderCount() {
+	readerCount--;
 }

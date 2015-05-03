@@ -4,8 +4,8 @@
 #include "../util/TwoQList.h"
 
 const unsigned PAGE_SIZE_BYTE = 4096;
-const uint64_t PAGE_MASK = 0xff; // TODO
-const uint64_t SEGMENT_MASK = 0xff; // TODO
+const uint64_t PAGE_MASK = 0xFFFFFFFF;
+const uint64_t SEGMENT_MASK = 0xFFFFFFFF00000000;
 
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
@@ -36,15 +36,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 
 	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
-		printf("Frame for pageId %llu is already in use\n", pageId);
-		/*
-		 * Since this path is only reached when the frame is already used by some thread,
-		 * it is sufficient to only check for the exclusiveness and not the explicit reader count
-		 */
-		if (exclusive || frame->isExclusive()) {
-			this->global_unlock();
-			throw "Fixing the same page with an exclusive flag is not allowed";
-		}
+		this->global_unlock();
+		frame->lock(exclusive);
+		this->global_lock();
 		this->replacementStrategy->onUse(frame);
 	}
 		// frame does not exist
@@ -61,7 +55,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 				throw "Frame is not swapped in, no space is available and no pages are poppable";
 			}
 			frame->setExclusive(exclusive);
-			frame->lock();
+			frame->lock(false);
 			this->global_unlock();
 			this->writeOutIfNecessary(frame);
 			this->global_lock();

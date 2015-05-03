@@ -1,6 +1,6 @@
 project(database)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -lto")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -lto -g")
 
 set(SOURCE_FILES
     buffer/BufferFrame.cpp buffer/BufferFrame.hpp

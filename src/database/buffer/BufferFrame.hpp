@@ -2,6 +2,7 @@
 #define PROJECT_BUFFER_FRAME_H
 
 #include "../util/spinlock.h"
+#include "pthread.h"
 
 class BufferFrame {
 	const uint8_t DIRTY_FLAG = 0x1; // 001
@@ -12,7 +13,8 @@ private:
 	void *data;
 	uint64_t pageId;
 	uint64_t segmentId;
-	unsigned int readerCount;
+	unsigned readerCount;
+	pthread_rwlock_t rwlock;
 	uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
 	spinlock latch; // TODO: make sure false conflicts are avoided - modulo(sizeof(BufferFrame), cache_line_size_byte = 64) = 0!
 	bool isFlagSet(uint8_t mask);
@@ -25,7 +27,7 @@ private:
 
 public:
 
-	unsigned int getReaderCount();
+	bool hasReaders();
 
 	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
 
@@ -53,7 +55,11 @@ public:
 
 	void unlatchFlags();
 
-	void lock();
+	void increaseReaderCount();
+
+	void decreaseReaderCount();
+
+	void lock(bool exclusive);
 
 	void unlock();
 };
