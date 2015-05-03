@@ -76,6 +76,7 @@ int main(int argc, char** argv) {
 
    if (pagesOnDisk < 11){
       cerr << "pages on disk has to be bigger than 10" <<endl;
+      exit(1);
    }
 
    cout << "start buffer-test with args: "
@@ -122,6 +123,7 @@ int main(int argc, char** argv) {
 
    // wait for scan thread
    stop=true;
+   cout << "waiting for scan thread" << endl;
    pthread_join(scanThread, NULL);
    cout <<"scan thread ended" << endl;
 
