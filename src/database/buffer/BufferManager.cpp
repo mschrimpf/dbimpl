@@ -20,6 +20,15 @@ BufferManager::BufferManager(uint64_t pagesInMemory) {
 
 /* Writes all dirty frames to disk and free all resources */
 BufferManager::~BufferManager() {
+	/* write back all frames */
+	BufferFrame* frame;
+	do {
+		frame = replacementStrategy->pop();
+		if (frame != nullptr){
+			writeOut(frame);
+		}
+	}while (frame != nullptr);
+
 	this->freeCache();
 	delete this->pageIO;
 	delete this->replacementStrategy;
