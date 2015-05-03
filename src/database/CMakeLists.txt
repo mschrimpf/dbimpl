@@ -9,5 +9,6 @@ set(SOURCE_FILES
     buffer/IReplacementStrategy.h
     util/Math.cpp util/Math.h
     util/TwoQList.h util/TwoQList.cpp
+    util/spinlock.h
     util/PageIOUtil.h util/PageIOUtil.cpp)
-add_executable(database ${SOURCE_FILES})
+add_executable(database ${SOURCE_FILES} util/spinlock.h)

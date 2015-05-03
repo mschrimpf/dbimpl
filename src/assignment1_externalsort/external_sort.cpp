@@ -3,7 +3,9 @@
 #include <algorithm>
 
 #ifdef _WIN32
+
 #include <io.h>
+
 #else
 #include <unistd.h>
 #endif
@@ -193,7 +195,7 @@ void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint6
 	remove(tempFileDir.c_str());
 }
 
-int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data) {
+int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> &data) {
 	std::string fdsTempName = getTempFileName(fileprefix, i);
 	int flags = O_CREAT | O_TRUNC | O_RDWR;
 #ifdef _WIN32

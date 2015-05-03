@@ -1,8 +1,11 @@
 #include <iostream>
+#include <vector>
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
 #include <pthread.h>
+#include "../../src/database/buffer/BufferManager.hpp"
+#include "../../src/database/buffer/BufferFrame.hpp"
 
 using namespace std;
 
@@ -23,9 +26,7 @@ unsigned randomPage(unsigned threadNum) {
 
 static void* scan(void *arg) {
    // scan all pages and check if the counters are not decreasing
-   unsigned counters[pagesOnDisk];
-   for (unsigned i=0; i<pagesOnDisk; i++)
-      counters[i]=0;
+   vector<unsigned> counters(pagesOnDisk, 0);
 
    while (!stop) {
       unsigned start = random()%(pagesOnDisk-10);
@@ -76,7 +77,7 @@ int main(int argc, char** argv) {
 
    bm = new BufferManager(pagesInRAM);
 
-   pthread_t threads[threadCount];
+   vector<pthread_t> threads(threadCount);
    pthread_attr_t pattr;
    pthread_attr_init(&pattr);
 

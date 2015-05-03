@@ -27,7 +27,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
-	mutex.lock();
+	this->global_lock();
 
 	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
@@ -36,7 +36,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		 * it is sufficient to only check for the exclusiveness and not the explicit reader count
 		 */
 		if (exclusive || frame->isExclusive()) {
-			mutex.unlock();
+			this->global_unlock();
 			throw "Fixing the same page with an exclusive flag is not allowed";
 		}
 		this->replacementStrategy->onUse(frame);
@@ -50,14 +50,14 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		} else {
 			frame = this->replacementStrategy->pop();
 			if (frame == nullptr) {
-				mutex.unlock();
+				this->global_unlock();
 				throw "Frame is not swapped in, no space is available and no pages are poppable";
 			}
 			frame->setExclusive(exclusive);
 			frame->lock();
-			mutex.unlock();
+			this->global_unlock();
 			this->writeOutIfNecessary(frame);
-			mutex.lock();
+			this->global_lock();
 			frame->unlock();
 			this->reinitialize(frame, pageId);
 			this->replacementStrategy->push(frame);
@@ -67,7 +67,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		frame->unlock();
 	}
 
-	mutex.unlock();
+	this->global_unlock();
 
 	return *frame;
 }
@@ -79,7 +79,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
  * but must not write it back before unfixPage is called.
  */
 void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
-	mutex.lock();
+	this->global_lock();
 
 	/*
 	 * Only set the dirty flag.
@@ -91,7 +91,7 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	frame.setDirty(isDirty);
 	frame.setUnfixed(true); // TODO set unfixed for multiple readers
 	// TODO: delete from map?
-	mutex.unlock();
+	this->global_unlock();
 }
 
 void BufferManager::extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId) {
@@ -150,6 +150,12 @@ void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {
 	this->pageIO->readPage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
-	//TODO open fd only once, save them and close them at the destructor of Buffermanager? -> machen wir ja in FileIOUtil
-	//TODO do we open with WRITE-FLAG/READ-FLAG?
+}
+
+void BufferManager::global_lock() {
+	this->global_mutex.lock();
+}
+
+void BufferManager::global_unlock() {
+	this->global_mutex.unlock();
 }

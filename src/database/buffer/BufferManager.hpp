@@ -2,7 +2,7 @@
 #define PROJECT_BUFFER_MANAGER_H
 
 #include <stdint.h>
-#include <mutex>
+#include <boost/mutex>
 #include <list>
 #include <map>
 #include "BufferFrame.hpp"
@@ -32,7 +32,7 @@ private:
 	/** synchronized */
 	IPageIO * pageIO;
 
-	boost::mutex mutex;
+	boost::mutex global_mutex;
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
 
@@ -53,6 +53,10 @@ private:
 	void writeOutIfNecessary(BufferFrame *frame);
 
 	void loadFromDiskIfExists(BufferFrame *frame);
+
+	void global_lock();
+
+	void global_unlock();
 };
 
 

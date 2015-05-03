@@ -11,14 +11,14 @@
 
 class TwoQList : public IReplacementStrategy{
 
-    std::set<BufferFrame> FifoSet;
-    std::set<BufferFrame> LruSet;
-    std::list<BufferFrame> FifoQueue;
-    std::list<BufferFrame> LruQueue;
+    std::set<BufferFrame*> FifoSet;
+    std::set<BufferFrame*> LruSet;
+    std::list<BufferFrame*> FifoQueue;
+    std::list<BufferFrame*> LruQueue;
 public:
-    void push(BufferFrame frame);
-    void onUse(BufferFrame frame);
-    BufferFrame *pop();
+    void push(BufferFrame* frame);
+    void onUse(BufferFrame* frame);
+    BufferFrame* pop();
 private:
 
 };

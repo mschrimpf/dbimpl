@@ -1,0 +1,3 @@
+docker start -i admiring_hypatia
+
+# docker run -i -t -v /c/Users/Martin/Google\ Drive/Uni/SEmester_2/Datenbankimplementierung/dbimpl:/var/dbimpl meash/dbimpl:latest

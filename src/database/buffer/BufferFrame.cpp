@@ -81,17 +81,17 @@ unsigned int BufferFrame::getReaderCount() {
 }
 
 void BufferFrame::latchFlags() {
-	// TODO: might be unnecessary
+	latch.lock();  //TODO might be unnecessary
 }
 
 void BufferFrame::unlatchFlags() {
-	// TODO: might be unnecessary
+	latch.unlock(); //TODO might be unnecessary
 }
 
 void BufferFrame::lock() {
-	// TODO
+	latch.lock();
 }
 
 void BufferFrame::unlock() {
-	// TODO
+	latch.unlock();
 }
