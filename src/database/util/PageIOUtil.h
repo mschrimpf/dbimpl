@@ -7,6 +7,7 @@
 
 #include <unordered_map>
 #include "../buffer/IPageIO.h"
+#include <stdint.h>
 
 struct PageInfo {
 	int fd;

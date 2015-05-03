@@ -14,7 +14,7 @@ class BufferManager {
 public:
 	BufferManager(uint64_t pagesInMemory);
 
-	BufferManager::~BufferManager();
+	~BufferManager();
 
 	BufferFrame &fixPage(uint64_t pageAndSegmentId, bool exclusive);
 

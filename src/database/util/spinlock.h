@@ -5,6 +5,7 @@
 #ifndef PROJECT_SPINLOCK_H
 #define PROJECT_SPINLOCK_H
 #include <atomic>
+#include <stdint.h>
 
 class spinlock {
 private:

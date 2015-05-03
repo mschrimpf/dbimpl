@@ -1,10 +1,6 @@
 //
 // Created by Daniel on 29.04.2015.
 //
-
-#include <bits/stl_list.h>
-#include <streambuf>
-#include <bits/stl_set.h>
 #include "TwoQList.h"
 
 void TwoQList::push(BufferFrame* frame) {

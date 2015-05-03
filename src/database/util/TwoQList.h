@@ -8,6 +8,9 @@
 
 #include "../buffer/BufferFrame.hpp"
 #include "../buffer/IReplacementStrategy.h"
+#include <stdint.h>
+#include <set>
+#include <list>
 
 class TwoQList : public IReplacementStrategy{
 

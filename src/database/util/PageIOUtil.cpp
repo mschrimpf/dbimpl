@@ -5,8 +5,12 @@
 
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "PageIOUtil.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sstream>
+#include <unistd.h>
+#include <sys/stat.h>
 
 void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len) {
 	PageInfo *pageInfo = this->getPageInfo(pageId);
@@ -29,8 +33,8 @@ void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsi
 	PageInfo *pageInfo = this->getPageInfo(pageId);
 	if (pageInfo != nullptr) {
 		char segmentIdStr[33];
-		itoa(segmentId, segmentIdStr, 10);
-		fd = open(segmentIdStr, O_CREAT | O_TRUNC | O_RDWR);
+		sprintf(segmentIdStr,"%d",(long)segmentId);
+		fd = open(segmentIdStr, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
 		if (this->segmentPagesAmountMap.find(segmentId) != this->segmentPagesAmountMap.end()) {
 			offset = this->segmentPagesAmountMap[segmentId];
 		} else {
@@ -63,6 +67,7 @@ PageIOUtil::PageIOUtil() {
 
 PageIOUtil::~PageIOUtil() {
 	for (auto fdPair : this->pageInfoMap) {
-		close(fdPair.second);
+		close(fdPair.second.fd);
 	}
 }
+
