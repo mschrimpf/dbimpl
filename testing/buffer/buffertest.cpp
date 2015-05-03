@@ -108,6 +108,7 @@ int main(int argc, char** argv) {
    for (unsigned i=0; i<threadCount; i++)
       pthread_create(&threads[i], &pattr, readWrite, reinterpret_cast<void*>(i));
 
+   cout << "waiting for read/write threads" << endl;
    // wait for read/write threads
    unsigned totalCount = 0;
    for (unsigned i=0; i<threadCount; i++) {
@@ -118,6 +119,7 @@ int main(int argc, char** argv) {
 
    // wait for scan thread
    stop=true;
+   cout << "waiting for scan thread" << endl;
    pthread_join(scanThread, NULL);
 
    // restart buffer manager
