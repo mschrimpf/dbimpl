@@ -22,6 +22,7 @@ BufferManager::~BufferManager() {
 	/* write back all frames */
 	BufferFrame *frame;
 	while ((frame = replacementStrategy->pop()) != nullptr) {
+		debug(frame->getPageId(), "checking frame dirtyness (%s)", frame->isDirty() ? "true" : "false");
 		if (frame->isDirty()) {
 			writeOut(frame);
 		}
@@ -55,7 +56,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		frame->lock(exclusive);
 	} else {
 		// frame does not exist
-		debug(pageId, "Frame for pageId %llu does not exist", pageId);
+		debug(pageId, "Frame for pageId %"
+		PRId64
+		" does not exist", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
@@ -66,8 +69,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		} else {
 			debug(pageId, "no space available -> replace");
 			frame = this->replacementStrategy->pop();
-			debug(pageId, "Popping frame with page id %llu",
-				  frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
+			debug(pageId, "Popping frame with page id %"
+			PRId64,
+					frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
 			if (frame == nullptr) {
 				this->global_unlock();
 				throw "Frame is not swapped in, no space is available and no pages are poppable";
@@ -81,10 +85,13 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 				debug(pageId, "written out");
 				this->global_lock();
 				frame->unlock();
+			} else {
+				debug(pageId, "Not writing out since not dirty");
 			}
 			this->reinitialize(frame, pageId);
 			debug(pageId, "frame reinitialized");
 		}
+		frame->increaseUsageCount(); // TODO: can we get rid of all these usage counts
 		debug(pageId, "Lock frame to load from disk");
 		frame->lock(true); // TODO: optimize - only lock if page exists
 		debug(pageId, "frame locked");
@@ -92,10 +99,13 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		debug(pageId, "loaded from disk");
 		frame->unlock();
 		debug(pageId, "unlocked frame");
-		debug(pageId, "try to lock frame with id: %llu | exclusive: %s", frame->getPageId(),
-			  exclusive ? "true" : "false");
+		debug(pageId, "try to lock frame with id: %"
+		PRId64
+		" | exclusive: %s", frame->getPageId(),
+				exclusive ? "true" : "false");
 		frame->lock(exclusive);
-		debug(pageId, "Waiting count: %llu", frame->getWaitingCount());
+		debug(pageId, "Waiting count: %"
+		PRId64, frame->getWaitingCount());
 	}
 	this->global_unlock();
 	return *frame;
@@ -109,7 +119,6 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
  */
 void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	this->global_lock();
-
 	/*
 	 * Only set the dirty flag.
 	 * The frame will be swapped out when it is replaced in memory
@@ -119,7 +128,13 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	 */
 	frame.setDirty(isDirty);
 	frame.decreaseUsageCount();
+
+	debug(frame.getPageId(), "Unfix - dirty: %s | used: %s | usage count: %i",
+		  isDirty ? "true" : "false",
+		  frame.isUsed() ? "true" : "false",
+		  frame.getWaitingCount());
 	if (!frame.isUsed()) {
+		debug(frame.getPageId(), "Add frame to replacement strategy");
 		this->replacementStrategy->push(&frame);
 	}
 	frame.unlock();
@@ -132,9 +147,10 @@ void BufferManager::extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t 
 }
 
 void BufferManager::initCache(uint64_t pages) {
-	this->cache = malloc((size_t) (pages * PAGE_SIZE_BYTE));
+	this->cache = (char *) malloc((size_t) (pages * PAGE_SIZE_BYTE));
 	for (int i = 0; i < pages; ++i) {
-		this->freePages.push_back(this->cache + i * PAGE_SIZE_BYTE);
+		char *page_ptr = this->cache + i * PAGE_SIZE_BYTE;
+		this->freePages.push_back(page_ptr);
 	}
 }
 

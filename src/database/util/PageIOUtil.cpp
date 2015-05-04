@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <iostream>
 #include <unistd.h>
+#include <inttypes.h>
 
 void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len) {
 	PageInfo *pageInfo = this->getPageInfo(pageId);
@@ -21,50 +22,66 @@ void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsig
 		long offset = pageInfo->offset_bytes;
 		this->readFd(fd, offset, data, len);
 	}
+	// else nothing to read
 }
 
 void PageIOUtil::readFd(int fd, long offset_bytes, void *data, unsigned len) {
-	lseek(fd, offset_bytes, SEEK_SET);
-	read(fd, data, len);
+	if(0 >= pread(fd, data, len, offset_bytes)) {
+		perror("Could not read data");
+	}
 }
 
 void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len) {
 	int fd;
 	long offset;
 
+	printf("Writing page %" PRId64 " | segment %" PRId64 "\n", pageId, segmentId);
 	PageInfo *pageInfo = this->getPageInfo(pageId);
-	if (pageInfo != nullptr) {
-		fd = open(std::to_string(segmentId).c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-		if (this->segmentPagesAmountMap.find(segmentId) != this->segmentPagesAmountMap.end()) {
-			offset = this->segmentPagesAmountMap[segmentId];
-		} else {
+	if (pageInfo == nullptr) {
+		SegmentInfo * segmentInfo = this->getSegmentInfo(segmentId);
+		if(segmentInfo == nullptr) {
+			printf("Create file %s\n", std::to_string(segmentId).c_str());
+			fd = open(std::to_string(segmentId).c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 			offset = 0;
+			this->segmentInfoMap[segmentId] = {fd, 0};
+		} else {
+			fd = this->segmentInfoMap[segmentId].fd;
+			offset = this->segmentInfoMap[segmentId].total_offset_bytes;
 		}
 		this->pageInfoMap[pageId] = {fd, offset};
-
-		this->segmentPagesAmountMap[segmentId] = offset + len;
+		this->segmentInfoMap[segmentId].total_offset_bytes = offset + len;
+	} else {
+		fd = pageInfo->fd;
+		offset = pageInfo->offset_bytes;
 	}
 
 	this->writeFd(fd, offset, data, len);
 }
 
 void PageIOUtil::writeFd(int fd, long offset_bytes, void *data, unsigned int len) {
-	lseek(fd, offset_bytes, SEEK_SET);
-	write(fd, data, len);
+	if(0 >= pwrite(fd, data, len, offset_bytes)) {
+		perror("Could not write data");
+	}
 }
 
 PageInfo *PageIOUtil::getPageInfo(uint64_t pageId) {
 	if (this->pageInfoMap.find(pageId) != this->pageInfoMap.end()) {
 		PageInfo *pageInfo = &this->pageInfoMap[pageId];
-		printf("Page with id %llu found", pageId);
+		printf("Page with id %" PRId64 " found on disk\n", pageId);
 		return pageInfo;
 	}
-	printf("Page with id %llu not found", pageId);
+	printf("Page with id %" PRId64 " not found on disk\n", pageId);
 	return nullptr;
 }
 
-PageIOUtil::PageIOUtil() {
-
+SegmentInfo *PageIOUtil::getSegmentInfo(uint64_t segmentId) {
+	if (this->segmentInfoMap.find(segmentId) != this->segmentInfoMap.end()) {
+		SegmentInfo *segmentInfo = &this->segmentInfoMap[segmentId];
+		printf("Segment with id %" PRId64 " found on disk\n", segmentId);
+		return segmentInfo;
+	}
+	printf("Segment with id %" PRId64 " not found on disk\n", segmentId);
+	return nullptr;
 }
 
 PageIOUtil::~PageIOUtil() {

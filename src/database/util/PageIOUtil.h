@@ -14,12 +14,19 @@ struct PageInfo {
 	long offset_bytes;
 };
 
+struct SegmentInfo {
+	int fd;
+	long total_offset_bytes;
+};
+
 class PageIOUtil : public IPageIO {
 private:
 	std::unordered_map<uint64_t, PageInfo> pageInfoMap;
-	std::unordered_map<uint64_t, unsigned> segmentPagesAmountMap;
+	std::unordered_map<uint64_t, SegmentInfo> segmentInfoMap;
 
 	PageInfo *getPageInfo(uint64_t pageId);
+
+	SegmentInfo *getSegmentInfo(uint64_t segmentId);
 
 	void readFd(int fd, long offset_bytes, void *data, unsigned int len);
 
@@ -31,8 +38,6 @@ public:
 	void writePage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len);
 
 	~PageIOUtil();
-
-	PageIOUtil();
 };
 
 

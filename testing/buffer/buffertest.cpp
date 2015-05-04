@@ -100,11 +100,12 @@ int main(int argc, char** argv) {
       BufferFrame& bf = bm->fixPage(i, true);
       reinterpret_cast<unsigned*>(bf.getData())[0]=0;
       bm->unfixPage(bf, true);
-      cout <<"zero'ed counter " << i << "/" << pagesOnDisk -1 << endl;
+      cout <<"zero'ed data " << i << "/" << pagesOnDisk -1 << endl;
    }
 
 
    ///////////////////      ADDED     /////////////////////
+   cout << "ZERO TEST" << endl;
    delete bm;
    bm = new BufferManager(pagesInRAM);
    unsigned totalCountOnDiskZero = 0;
@@ -114,9 +115,9 @@ int main(int argc, char** argv) {
       bm->unfixPage(bf, false);
    }
    if (0==totalCountOnDiskZero) {
-      cout << "zero count test successful" << endl;
+      cout << "[ZERO TEST] successful" << endl;
    } else {
-      cerr << "error: expected " << 0 << " but got " << totalCountOnDiskZero << endl;
+      cerr << "[ZERO TEST] error: expected " << 0 << " but got " << totalCountOnDiskZero << endl;
       delete bm;
       return 1;
    }

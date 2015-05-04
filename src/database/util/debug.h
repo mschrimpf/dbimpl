@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #define DEBUG 1
 
@@ -24,7 +25,7 @@ void debug(uint64_t pageId, const char *fmt, ...) {
 	va_start(args, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
-	printf("Frame[%llu]:", pageId);
+	printf("Page[%" PRId64 "]: ", pageId);
 	printf(buf);
 	printf("\n");
 #endif

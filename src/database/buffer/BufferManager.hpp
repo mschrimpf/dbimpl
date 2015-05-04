@@ -22,13 +22,13 @@ public:
 
 private:
 	uint64_t maxFramesInMemory;
-	void *cache;
+	char *cache;
 	/** has to be synchronized */
 	IReplacementStrategy * replacementStrategy;
 	/** has to be synchronized */
 	std::unordered_map<uint64_t, BufferFrame *> pageFrameMap;
 	/** has to be synchronized */
-	std::list <void *> freePages;
+	std::list <char *> freePages;
 	/** synchronized */
 	IPageIO * pageIO;
 
