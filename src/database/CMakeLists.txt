@@ -1,6 +1,6 @@
 project(database)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -lto -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -lto -g") # TODO: remove -g flag
 
 set(SOURCE_FILES
     buffer/BufferFrame.cpp buffer/BufferFrame.hpp
@@ -10,5 +10,6 @@ set(SOURCE_FILES
     util/Math.cpp util/Math.h
     util/TwoQList.h util/TwoQList.cpp
     util/spinlock.h
+    util/debug.h
     util/PageIOUtil.h util/PageIOUtil.cpp)
-add_executable(database ${SOURCE_FILES} util/spinlock.h)
+add_executable(database ${SOURCE_FILES})

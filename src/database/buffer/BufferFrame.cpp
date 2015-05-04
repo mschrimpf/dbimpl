@@ -5,6 +5,7 @@ BufferFrame::BufferFrame(uint64_t pageId, uint64_t segmentId, void *data) {
 	this->pageId = pageId;
 	this->segmentId = segmentId;
 	this->data = data;
+	pthread_rwlock_init(&rwlock, nullptr);
 }
 
 void *BufferFrame::getData() {

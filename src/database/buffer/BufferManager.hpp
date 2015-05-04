@@ -57,9 +57,6 @@ private:
 	void global_lock();
 
 	void global_unlock();
-
-	void debug(const char * info);
-	void debug(uint64_t pageId, const char  * format, ...);
 };
 
 

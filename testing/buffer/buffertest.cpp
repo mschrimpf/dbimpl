@@ -114,12 +114,10 @@ int main(int argc, char** argv) {
       bm->unfixPage(bf, false);
    }
    if (0==totalCountOnDiskZero) {
-      cout << "test successful" << endl;
-      delete bm;
-      //return 0;
+      cout << "zero count test successful" << endl;
    } else {
       cerr << "error: expected " << 0 << " but got " << totalCountOnDiskZero << endl;
-      //delete bm;
+      delete bm;
       return 1;
    }
    ///////////////////      ADDED     ////////////////////
@@ -152,9 +150,10 @@ int main(int argc, char** argv) {
    cout <<"scan thread ended" << endl;
 
    // restart buffer manager
+   cout << "restart buffer manager" << endl;
    delete bm;
    bm = new BufferManager(pagesInRAM);
-   
+
    // check counter
    unsigned totalCountOnDisk = 0;
    for (unsigned i=0; i<pagesOnDisk; i++) {
