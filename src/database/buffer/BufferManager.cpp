@@ -47,8 +47,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
-	debug(pageId, "Extracted: PageId %i , SegmentId %i", pageId, segmentId);
-	debug(pageId, "trying to get global lock");
+	debug(pageId, "trying to get global lock after extracting page and segment id");
 	this->global_lock();
 	debug(pageId, "global lock aquired");
 
@@ -85,7 +84,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 					frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
 			if (frame == nullptr) {
 				this->global_unlock();
-				throw "Frame is not swapped in, no space is available and no pages are poppable";
+				throw std::runtime_error("Frame is not swapped in, no space is available and no pages are poppable");
 			}
 			// write out if necessary
 			if (frame->isDirty()) {

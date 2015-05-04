@@ -31,7 +31,8 @@ void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsig
 }
 
 void PageIOUtil::readFd(int fd, long offset_bytes, void *data, unsigned len) {
-	if(0 >= pread(fd, data, len, offset_bytes)) {
+	int read_bytes = pread(fd, data, len, offset_bytes);
+	if(read_bytes != len) {
 		perror("Could not read data");
 	}
 }
@@ -59,8 +60,11 @@ void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsi
 }
 
 void PageIOUtil::writeFd(int fd, long offset_bytes, void *data, unsigned int len) {
-	if(0 >= pwrite(fd, data, len, offset_bytes)) {
+	int written_bytes = pwrite(fd, data, len, offset_bytes);
+	if(written_bytes != len) {
 		perror("Could not write data");
+	} else {
+		printf("Wrote %d bytes\n", written_bytes);
 	}
 }
 
