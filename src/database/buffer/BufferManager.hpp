@@ -48,7 +48,7 @@ private:
 
 	bool isSpaceAvailable();
 
-	void reinitialize(BufferFrame *frame, uint64_t newPageId);
+	void reinitialize(BufferFrame *frame, uint64_t newPageId, uint64_t newSegmentId);
 
 	void writeOut(BufferFrame *frame);
 

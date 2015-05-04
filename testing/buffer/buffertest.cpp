@@ -74,11 +74,6 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
-   if (pagesOnDisk < 11){
-      cerr << "pages on disk has to be bigger than 10" <<endl;
-      exit(1);
-   }
-
    cout << "start buffer-test with args: "
    << "pagesOnDisk " << argv[1]
    << " pagesInRam " << argv[2]
@@ -111,7 +106,9 @@ int main(int argc, char** argv) {
    unsigned totalCountOnDiskZero = 0;
    for (unsigned i=0; i<pagesOnDisk; i++) {
       BufferFrame& bf = bm->fixPage(i,false);
-      totalCountOnDiskZero+=reinterpret_cast<unsigned*>(bf.getData())[0];
+      unsigned int pageValue = reinterpret_cast<unsigned*>(bf.getData())[0];
+      cout << "Read value " << pageValue << " from page " << i << endl;
+      totalCountOnDiskZero+= pageValue;
       bm->unfixPage(bf, false);
    }
    if (0==totalCountOnDiskZero) {
@@ -125,6 +122,11 @@ int main(int argc, char** argv) {
 
 
    cout <<"end: set all counters to 0" << endl;
+
+   if (pagesOnDisk < 11){
+      cerr << "pages on disk has to be bigger than 10" <<endl;
+      exit(1);
+   }
 
    // start scan thread
    pthread_t scanThread;

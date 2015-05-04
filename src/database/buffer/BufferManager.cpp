@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "BufferManager.hpp"
 #include "../util/TwoQList.h"
 #include "../util/debug.h"
@@ -22,8 +23,8 @@ BufferManager::~BufferManager() {
 	/* write back all frames */
 	BufferFrame *frame;
 	while ((frame = replacementStrategy->pop()) != nullptr) {
-		debug(frame->getPageId(), "checking frame dirtyness (%s)", frame->isDirty() ? "true" : "false");
 		if (frame->isDirty()) {
+			debug(frame->getPageId(), "writing out in destructor");
 			writeOut(frame);
 		}
 	}
@@ -56,9 +57,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		frame->lock(exclusive);
 	} else {
 		// frame does not exist
-		debug(pageId, "Frame for pageId %"
-		PRId64
-		" does not exist", pageId);
+		debug(pageId, "Frame for pageId %" PRId64 " does not exist", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
@@ -69,8 +68,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		} else {
 			debug(pageId, "no space available -> replace");
 			frame = this->replacementStrategy->pop();
-			debug(pageId, "Popping frame with page id %"
-			PRId64,
+			debug(pageId, "Popping frame with page id %" PRId64,
 					frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
 			if (frame == nullptr) {
 				this->global_unlock();
@@ -88,7 +86,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			} else {
 				debug(pageId, "Not writing out since not dirty");
 			}
-			this->reinitialize(frame, pageId);
+			this->reinitialize(frame, pageId, segmentId);
 			debug(pageId, "frame reinitialized");
 		}
 		frame->increaseUsageCount(); // TODO: can we get rid of all these usage counts
@@ -99,13 +97,10 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		debug(pageId, "loaded from disk");
 		frame->unlock();
 		debug(pageId, "unlocked frame");
-		debug(pageId, "try to lock frame with id: %"
-		PRId64
-		" | exclusive: %s", frame->getPageId(),
+		debug(pageId, "try to lock frame with id: %" PRId64 " | exclusive: %s", frame->getPageId(),
 				exclusive ? "true" : "false");
 		frame->lock(exclusive);
-		debug(pageId, "Waiting count: %"
-		PRId64, frame->getWaitingCount());
+		debug(pageId, "Waiting count: %" PRId64, frame->getWaitingCount());
 	}
 	this->global_unlock();
 	return *frame;
@@ -180,16 +175,18 @@ void *BufferManager::getFreePage() {
 	return result;
 }
 
-void BufferManager::writeOut(BufferFrame *frame) {
-	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
-}
-
-void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId) {
-	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
+void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId, uint64_t newSegmentId) {
+	this->writeOut(frame);
 	this->pageFrameMap.erase(frame->getPageId());
 	frame->resetFlags();
 	frame->setUnusedBefore();
+	frame->setPageId(newPageId);
+	frame->setSegmentId(newSegmentId);
 	this->pageFrameMap[newPageId] = frame;
+}
+
+void BufferManager::writeOut(BufferFrame *frame) {
+	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
 }
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {

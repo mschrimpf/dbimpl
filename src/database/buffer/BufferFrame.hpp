@@ -37,7 +37,11 @@ public:
 
 	bool isDirty();
 
+	void setPageId(uint64_t pageId);
+
 	uint64_t getPageId();
+
+	void setSegmentId(uint64_t segmentId);
 
 	uint64_t getSegmentId();
 

@@ -12,8 +12,16 @@ void *BufferFrame::getData() {
 	return this->data;
 }
 
+void BufferFrame::setPageId(uint64_t pageId) {
+	this->pageId = pageId;
+}
+
 uint64_t BufferFrame::getPageId() {
 	return this->pageId;
+}
+
+void BufferFrame::setSegmentId(uint64_t segmentId) {
+	this->segmentId = segmentId;
 }
 
 uint64_t BufferFrame::getSegmentId() {

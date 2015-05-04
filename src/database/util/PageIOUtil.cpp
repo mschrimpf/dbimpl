@@ -35,7 +35,7 @@ void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsi
 	int fd;
 	long offset;
 
-	printf("Writing page %" PRId64 " | segment %" PRId64 "\n", pageId, segmentId);
+	printf("Attempting to write page %" PRId64 " on segment %" PRId64 "\n", pageId, segmentId);
 	PageInfo *pageInfo = this->getPageInfo(pageId);
 	if (pageInfo == nullptr) {
 		SegmentInfo * segmentInfo = this->getSegmentInfo(segmentId);
