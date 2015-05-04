@@ -40,7 +40,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
-	debug(pageId, "Page Id extracted");
+	debug(pageId, "Extracted: PageId %i , SegmentId %i", pageId, segmentId);
 	debug(pageId, "trying to get global lock");
 	this->global_lock();
 	debug(pageId, "global lock aquired");
@@ -51,17 +51,23 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		debug(pageId, "Frame exists in Memory");
 		frame->increaseUsageCount();
 		this->replacementStrategy->remove(frame);
+		/* set used as we get the frame FROM the replacement strategy and therefore it has to be inserted in LRU next time */
 		frame->setUsedBefore();
 		this->global_unlock();
 		debug(pageId, "global lock released");
+		debug(pageId, "try to get frame lock");
 		frame->lock(exclusive);
+		debug(pageId, "framelock aquired");
 	} else {
 		// frame does not exist
 		debug(pageId, "Frame for pageId %" PRId64 " does not exist", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
+
+			/* set unused as we create a new frame and therefore it has to be inserted in FIFO */
 			frame->setUnusedBefore();
+
 			debug(pageId, "New frame created");
 			this->global_unlock();
 			debug(pageId, "global unlocked");
@@ -77,19 +83,19 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			// write out if necessary
 			if (frame->isDirty()) {
 				debug(pageId, "locking frame for dirty write out");
-				frame->lock(false);
 				this->global_unlock();
+				frame->lock(false);
 				this->writeOut(frame);
 				debug(pageId, "written out");
-				this->global_lock();
 				frame->unlock();
+				this->global_lock();
 			} else {
 				debug(pageId, "Not writing out since not dirty");
 			}
 			this->reinitialize(frame, pageId, segmentId);
 			debug(pageId, "frame reinitialized");
 		}
-		frame->increaseUsageCount(); // TODO: can we get rid of all these usage counts
+		frame->increaseUsageCount(); // TODO: can we get rid of all these usage counts - i dont think so
 		debug(pageId, "Lock frame to load from disk");
 		frame->lock(true); // TODO: optimize - only lock if page exists
 		debug(pageId, "frame locked");

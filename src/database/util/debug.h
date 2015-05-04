@@ -6,29 +6,9 @@
 #define PROJECT_DEBUG_H
 
 #include <stdint.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <inttypes.h>
 
-#define DEBUG 1
+void debug(const char *info);
 
-void debug(const char *info) {
-#if DEBUG == 1
-	printf("%s\n", info);
-#endif
-}
-
-void debug(uint64_t pageId, const char *fmt, ...) {
-#if DEBUG == 1
-	va_list args;
-	char buf[1000];
-	va_start(args, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, args);
-	va_end(args);
-	printf("Page[%" PRId64 "]: ", pageId);
-	printf(buf);
-	printf("\n");
-#endif
-}
+void debug(uint64_t pageId, const char *fmt, ...);
 
 #endif //PROJECT_DEBUG_H

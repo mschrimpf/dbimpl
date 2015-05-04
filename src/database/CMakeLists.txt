@@ -11,5 +11,6 @@ set(SOURCE_FILES
     util/TwoQList.h util/TwoQList.cpp
     util/spinlock.h
     util/debug.h
+    util/debug.cpp
     util/PageIOUtil.h util/PageIOUtil.cpp)
 add_executable(database ${SOURCE_FILES})

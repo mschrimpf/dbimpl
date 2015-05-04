@@ -9,22 +9,13 @@
 #include "../buffer/IPageIO.h"
 #include <stdint.h>
 
-struct PageInfo {
-	int fd;
-	long offset_bytes;
-};
-
 struct SegmentInfo {
 	int fd;
-	long total_offset_bytes;
 };
 
 class PageIOUtil : public IPageIO {
 private:
-	std::unordered_map<uint64_t, PageInfo> pageInfoMap;
 	std::unordered_map<uint64_t, SegmentInfo> segmentInfoMap;
-
-	PageInfo *getPageInfo(uint64_t pageId);
 
 	SegmentInfo *getSegmentInfo(uint64_t segmentId);
 
