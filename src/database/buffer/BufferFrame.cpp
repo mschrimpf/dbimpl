@@ -8,6 +8,10 @@ BufferFrame::BufferFrame(uint64_t pageId, uint64_t segmentId, void *data) {
 	pthread_rwlock_init(&rwlock, nullptr);
 }
 
+BufferFrame::~BufferFrame() {
+	pthread_rwlock_destroy(&rwlock);
+}
+
 void *BufferFrame::getData() {
 	return this->data;
 }

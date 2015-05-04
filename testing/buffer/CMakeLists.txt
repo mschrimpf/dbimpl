@@ -1,6 +1,6 @@
 project(buffer_test)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread") #TODO O3
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread -g") #TODO O3, lto
 
 set(SOURCE_FILES
     buffertest.cpp

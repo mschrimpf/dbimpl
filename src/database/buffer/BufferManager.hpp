@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <list>
 #include <map>
-#include "../util/spinlock.h"
+#include "pthread.h"
 #include "BufferFrame.hpp"
 #include "IReplacementStrategy.h"
 #include "../util/PageIOUtil.h"
@@ -32,7 +32,7 @@ private:
 	/** synchronized */
 	IPageIO * pageIO;
 
-	spinlock global_mutex;
+	pthread_mutex_t global_mutex;
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
 

@@ -4,8 +4,6 @@
 #include <inttypes.h>
 #include "debug.h"
 
-#define DEBUG 1
-
 void debug(const char *info) {
     #if DEBUG == 1
     printf("%s\n", info);

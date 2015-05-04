@@ -10,6 +10,7 @@
 using namespace std;
 
 BufferManager* bm;
+int total_runs = 100; //100000;
 unsigned pagesOnDisk;
 unsigned pagesInRAM;
 unsigned threadCount;
@@ -47,7 +48,7 @@ static void* readWrite(void *arg) {
    uintptr_t threadNum = reinterpret_cast<uintptr_t>(arg);
 
    uintptr_t count = 0;
-   for (unsigned i=0; i<100000/threadCount; i++) {
+   for (unsigned i=0; i< total_runs /threadCount; i++) {
       unsigned int pageId = randomPage(threadNum);
       bool isWrite = rand_r(&threadSeed[threadNum])%128<10;
 #if DEBUG == 1
@@ -66,7 +67,7 @@ static void* readWrite(void *arg) {
    return reinterpret_cast<void*>(count);
 }
 
-int testZeroingBuffer(int argc, char** argv){
+int testZeroingBuffer() {
    BufferManager* bufferManager = new BufferManager(10);
    unsigned totalCountOnDiskZero = 0;
    for (unsigned i=0; i<pagesOnDisk; i++) {
@@ -86,53 +87,57 @@ int testZeroingBuffer(int argc, char** argv){
    }
 }
 
-int testSingleInsertion(int argc, char** argv){
+int testSingleInsertion() {
    BufferManager* bufferManager = new BufferManager(10);
    BufferFrame& bf = bufferManager->fixPage(1, true);
-   unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
-   *pageValue = 42;
+   unsigned *page_ptr = reinterpret_cast<unsigned *> (bf.getData());
+   *page_ptr = 42;
    bufferManager->unfixPage(bf, true);
    delete bufferManager;
 
    bufferManager = new BufferManager(10);
    BufferFrame& bf2 = bufferManager->fixPage(1, false);
-   pageValue = reinterpret_cast<unsigned *> (bf2.getData());
-   if (*pageValue == 42){
+   page_ptr = reinterpret_cast<unsigned *> (bf2.getData());
+   unsigned page_value = *page_ptr;
+   bufferManager->unfixPage(bf2, false);
+   if (page_value == 42){
       cout << "[SingleInsertion TEST] successful" <<endl;
       delete(bufferManager);
    }else{
-      cerr << "[SingleInsertion TEST] error: expected " << 42 << " but got " << *pageValue << endl;
+      cerr << "[SingleInsertion TEST] error: expected " << 42 << " but got " << page_value << endl;
       delete bufferManager;
       assert(false);
    }
 }
 
-int testSameFrame(int argc, char** argv){
+int testSameFrame() {
    BufferManager* bufferManager = new BufferManager(10);
    BufferFrame& bf = bufferManager->fixPage(1, true);
-   unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
-   *pageValue = 42;
+   unsigned *page_ptr = reinterpret_cast<unsigned *> (bf.getData());
+   *page_ptr = 42;
    bufferManager->unfixPage(bf, true);
    BufferFrame& bf2 = bufferManager->fixPage(1, false);
-   pageValue = reinterpret_cast<unsigned *> (bf2.getData());
-   (*pageValue)++;
+   page_ptr = reinterpret_cast<unsigned *> (bf2.getData());
+   (*page_ptr)++;
    bufferManager->unfixPage(bf2, true);
    delete(bufferManager);
 
    bufferManager = new BufferManager(10);
    BufferFrame& bf3 = bufferManager->fixPage(1, false);
-   pageValue = reinterpret_cast<unsigned *> (bf3.getData());
-   if (*pageValue == 43){
+   page_ptr = reinterpret_cast<unsigned *> (bf3.getData());
+   unsigned page_value = *page_ptr;
+   bufferManager->unfixPage(bf3, false);
+   if (page_value == 43){
       cout << "[testSameFrame TEST] successful" <<endl;
       delete(bufferManager);
    }else{
-      cerr << "[testSameFrame TEST] error: expected " << 43 << " but got " << *pageValue << endl;
+      cerr << "[testSameFrame TEST] error: expected " << 43 << " but got " << page_value << endl;
       delete bufferManager;
       assert(false);
    }
 }
 
-int testMultipleFrames(int argc, char** argv){
+int testMultipleFrames() {
    BufferManager* bufferManager = new BufferManager(5);
    for (int i = 0; i < 10; i++){
       BufferFrame& bf = bufferManager->fixPage(i, true);
@@ -150,12 +155,13 @@ int testMultipleFrames(int argc, char** argv){
          delete bufferManager;
          assert(false);
       }
+      bufferManager->unfixPage(bf, false);
    }
    cout << "[testMultipleFrames TEST] successful" <<endl;
    delete bufferManager;
 }
 
-int testMultipleModifyFrames(int argc, char** argv){
+int testMultipleModifyFrames() {
    BufferManager* bufferManager = new BufferManager(5);
    for (int i = 0; i < 10; i++){
       BufferFrame& bf = bufferManager->fixPage(i, true);
@@ -177,6 +183,7 @@ int testMultipleModifyFrames(int argc, char** argv){
          delete bufferManager;
          assert(false);
       }
+      bufferManager->unfixPage(bf, false);
    }
    cout << "[testMultipleModifyFrames TEST] successful" <<endl;
    delete bufferManager;
@@ -269,10 +276,10 @@ int testMain(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-   testZeroingBuffer(argc, argv);
-   testSingleInsertion(argc, argv);
-   testSameFrame(argc, argv);
-   testMultipleFrames(argc, argv);
-   testMultipleModifyFrames(argc, argv);
+   testZeroingBuffer();
+   testSingleInsertion();
+   testSameFrame();
+   testMultipleFrames();
+   testMultipleModifyFrames();
    testMain(argc, argv);
 }

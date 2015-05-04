@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#define DEBUG 1
+
 void debug(const char *info);
 
 void debug(uint64_t pageId, const char *fmt, ...);

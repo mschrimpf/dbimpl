@@ -1,8 +1,8 @@
 #ifndef PROJECT_BUFFER_FRAME_H
 #define PROJECT_BUFFER_FRAME_H
 
-#include "../util/spinlock.h"
-#include "pthread.h"
+#include <pthread.h>
+#include <stdint.h>
 
 class BufferFrame {
 	const uint8_t DIRTY_FLAG = 0x1; // 001
@@ -25,11 +25,13 @@ private:
 
 public:
 
+	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
+
+	~BufferFrame();
+
 	bool usedBefore();
 
 	void setUsedBefore();
-
-	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
 
 	void *getData();
 

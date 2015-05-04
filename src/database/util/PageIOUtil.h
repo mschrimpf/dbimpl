@@ -29,6 +29,8 @@ public:
 	void writePage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len);
 
 	~PageIOUtil();
+
+	SegmentInfo getOrCreateSegmentInfo(uint64_t segmentId);
 };
 
 

@@ -1,16 +1,18 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <stdexcept>
 #include "BufferManager.hpp"
 #include "../util/TwoQList.h"
 #include "../util/debug.h"
 
-const unsigned PAGE_SIZE_BYTE = 16384; // ~16kb per page
-const uint64_t SEGMENT_MASK = 0xFFFF000000000000; // ~first 16 bits for segment
-const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
+const unsigned PAGE_SIZE_BYTE = 1024;
+const uint64_t SEGMENT_MASK = 0xFFFF000000000000; // MSB: first 16 bits for segment
+const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF; // LSB: last 48 bits for page
 
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
+	pthread_mutex_init(&this->global_mutex, nullptr);
 	this->maxFramesInMemory = pagesInMemory;
 	this->pageIO = new PageIOUtil();
 	this->replacementStrategy = new TwoQList();
@@ -30,15 +32,16 @@ BufferManager::~BufferManager() {
 	}
 
 	/* clean frames */
-	for (auto pair : pageFrameMap){
-		if (pair.second != nullptr){
-			delete(pair.second);
+	for (auto pageFramePair : pageFrameMap){
+		if (pageFramePair.second != nullptr){
+			delete(pageFramePair.second);
 		}
 	}
 
 	this->freeCache();
 	delete this->pageIO;
 	delete this->replacementStrategy;
+	pthread_mutex_destroy(&this->global_mutex);
 }
 
 /* Retrieve frames given a page Id and indication whether or not it is exclusive for the thread
@@ -48,19 +51,13 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
 
 	debug(pageId, "Extracted: PageId %i , SegmentId %i", pageId, segmentId);
-	debug(pageId, "trying to get global lock");
 	this->global_lock();
 	debug(pageId, "global lock aquired");
 
 	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
 		//frame exists
-		debug(pageId, "Frame exists in Memory");
-		//this->global_unlock();
-		debug(pageId, "global lock released");
-		debug(pageId, "try to get frame lock");
-		//frame->lock(exclusive);
-		debug(pageId, "framelock aquired");
+		debug(pageId, "Frame exists in Memory - remove from replacement strategy"); // TODO why remove from strategy?
 		this->replacementStrategy->remove(frame);
 		/* set used as we get the frame FROM the replacement strategy and therefore it has to be inserted in LRU next time */
 		frame->setUsedBefore();
@@ -71,8 +68,6 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
 			debug(pageId, "New frame created");
-			//this->global_unlock();
-			debug(pageId, "global unlocked");
 			/* set unused as we create a new frame and therefore it has to be inserted in FIFO */
 			frame->setUnusedBefore();
 		} else {
@@ -82,39 +77,25 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 					frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
 			if (frame == nullptr) {
 				this->global_unlock();
-				throw "Frame is not swapped in, no space is available and no pages are poppable";
+				throw std::overflow_error("Frame is not swapped in, no space is available and no pages are poppable");
 			}
 			// write out if necessary
 			if (frame->isDirty()) {
-				debug(pageId, "locking frame for dirty write out");
-				//this->global_unlock();
-				//frame->lock(false);
+				debug(pageId, "write out frame");
 				this->writeOut(frame);
 				debug(pageId, "written out");
-				//frame->unlock();
-				//this->global_lock();
 			} else {
 				debug(pageId, "Not writing out since not dirty");
 			}
 			this->reinitialize(frame, pageId, segmentId);
 			debug(pageId, "frame reinitialized");
-			//this->global_unlock();
 		}
-		debug(pageId, "Lock frame to load from disk");
-		//frame->lock(true);
-		debug(pageId, "frame locked");
+		debug(pageId, "Load from disk");
 		this->loadFromDiskIfExists(frame);
-		debug(pageId, "loaded from disk");
-		//frame->unlock(); // TODO Downgrade to read-lock or keep write-lock
-		//debug(pageId, "unlocked frame");
-		debug(pageId, "try to lock frame with id: %" PRId64 " | exclusive: %s", frame->getPageId(),
-				exclusive ? "true" : "false");
-		//frame->lock(exclusive);
-		debug(pageId, "Waiting count: %" PRId64, frame->getWaitingCount());
-		//this->global_unlock();
+		debug(pageId, "loaded from disk | Waiting count: %" PRId64, frame->getWaitingCount());
 	}
 	frame->increaseUsageCount();
-	this->global_unlock();
+	this->global_unlock(); // TODO order
 	frame->lock(exclusive);
 	return *frame;
 }
@@ -145,6 +126,7 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 		debug(frame.getPageId(), "Add frame to replacement strategy");
 		this->replacementStrategy->push(&frame);
 	}
+	debug(frame.getPageId(), "unlock frame");
 	frame.unlock();
 	this->global_unlock();
 }
@@ -207,9 +189,9 @@ void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {
 }
 
 void BufferManager::global_lock() {
-	this->global_mutex.lock();
+	pthread_mutex_lock(&this->global_mutex);
 }
 
 void BufferManager::global_unlock() {
-	this->global_mutex.unlock();
+	pthread_mutex_unlock(&this->global_mutex);
 }
