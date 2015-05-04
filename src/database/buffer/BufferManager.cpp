@@ -29,6 +29,13 @@ BufferManager::~BufferManager() {
 		}
 	}
 
+	/* clean frames */
+	for (auto pair : pageFrameMap){
+		if (pair.second != nullptr){
+			delete(pair.second);
+		}
+	}
+
 	this->freeCache();
 	delete this->pageIO;
 	delete this->replacementStrategy;
