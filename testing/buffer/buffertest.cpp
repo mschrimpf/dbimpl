@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include "../../src/database/buffer/BufferManager.hpp"
 #include "../../src/database/buffer/BufferFrame.hpp"
-
+#include "../../src/database/util/debug.h"
 using namespace std;
 
 BufferManager* bm;
@@ -50,8 +50,10 @@ static void* readWrite(void *arg) {
    for (unsigned i=0; i<100000/threadCount; i++) {
       unsigned int pageId = randomPage(threadNum);
       bool isWrite = rand_r(&threadSeed[threadNum])%128<10;
-      cout <<"[Thread#" << threadNum << "] fixing page " << pageId
-            << " (" << (isWrite ? "write" : "read") << ")" << endl;
+#if DEBUG == 1
+         cout <<"[Thread#" << threadNum << "] fixing page " << pageId
+               << " (" << (isWrite ? "write" : "read") << ")   :"  << i << "/" << 100000/threadCount << endl;
+      #endif
       BufferFrame& bf = bm->fixPage(pageId, isWrite);
 
       if (isWrite) {
@@ -130,8 +132,55 @@ int testSameFrame(int argc, char** argv){
    }
 }
 
+int testMultipleFrames(int argc, char** argv){
+   BufferManager* bufferManager = new BufferManager(5);
+   for (int i = 0; i < 10; i++){
+      BufferFrame& bf = bufferManager->fixPage(i, true);
+      unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
+      *pageValue = 42;
+      bufferManager->unfixPage(bf, true);
+   }
+   delete(bufferManager);
+   bufferManager = new BufferManager(10);
+   for (int i = 0; i < 10; i++){
+      BufferFrame& bf = bufferManager->fixPage(i, true);
+      unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
+      if (*pageValue != 42){
+         cerr << "[testMultipleFrames TEST] error: expected " << 42 << " but got " << *pageValue << endl;
+         delete bufferManager;
+         assert(false);
+      }
+   }
+   cout << "[testMultipleFrames TEST] successful" <<endl;
+   delete bufferManager;
+}
 
-
+int testMultipleModifyFrames(int argc, char** argv){
+   BufferManager* bufferManager = new BufferManager(5);
+   for (int i = 0; i < 10; i++){
+      BufferFrame& bf = bufferManager->fixPage(i, true);
+      unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
+      *pageValue = 42;
+      bufferManager->unfixPage(bf, true);
+      BufferFrame& bf2 = bufferManager->fixPage(i, false);
+      pageValue = reinterpret_cast<unsigned *> (bf2.getData());
+      (*pageValue)++;
+      bufferManager->unfixPage(bf2, true);
+   }
+   delete(bufferManager);
+   bufferManager = new BufferManager(10);
+   for (int i = 0; i < 10; i++){
+      BufferFrame& bf = bufferManager->fixPage(i, true);
+      unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
+      if (*pageValue != 43){
+         cerr << "[testMultipleModifyFrames TEST] error: expected " << 43 << " but got " << *pageValue << endl;
+         delete bufferManager;
+         assert(false);
+      }
+   }
+   cout << "[testMultipleModifyFrames TEST] successful" <<endl;
+   delete bufferManager;
+}
 
 int testMain(int argc, char** argv) {
    if (argc == 4) {
@@ -164,9 +213,7 @@ int testMain(int argc, char** argv) {
       BufferFrame &bf = bm->fixPage(i, true);
       reinterpret_cast<unsigned *>(bf.getData())[0] = 0;
       bm->unfixPage(bf, true);
-      cout << "zero'ed data " << i << "/" << pagesOnDisk - 1 << endl;
    }
-
    cout << "end: set all counters to 0" << endl;
 
    if (pagesOnDisk < 11) {
@@ -225,5 +272,7 @@ int main(int argc, char** argv) {
    testZeroingBuffer(argc, argv);
    testSingleInsertion(argc, argv);
    testSameFrame(argc, argv);
+   testMultipleFrames(argc, argv);
+   testMultipleModifyFrames(argc, argv);
    testMain(argc, argv);
 }
