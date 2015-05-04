@@ -5,8 +5,8 @@
 #include "../util/TwoQList.h"
 #include "../util/debug.h"
 
-const unsigned PAGE_SIZE_BYTE = 4096;
-const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
+const unsigned PAGE_SIZE_BYTE = 16384; // ~16kb per page
+const uint64_t SEGMENT_MASK = 0xFFFF000000000000; // ~first 16 bits for segment
 const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
 
 /* Keeps up to size frames in main memory*/
@@ -56,28 +56,25 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	if (frame != nullptr) {
 		//frame exists
 		debug(pageId, "Frame exists in Memory");
-		frame->increaseUsageCount();
-		this->replacementStrategy->remove(frame);
-		/* set used as we get the frame FROM the replacement strategy and therefore it has to be inserted in LRU next time */
-		frame->setUsedBefore();
 		this->global_unlock();
 		debug(pageId, "global lock released");
 		debug(pageId, "try to get frame lock");
 		frame->lock(exclusive);
 		debug(pageId, "framelock aquired");
+		this->replacementStrategy->remove(frame);
+		/* set used as we get the frame FROM the replacement strategy and therefore it has to be inserted in LRU next time */
+		frame->setUsedBefore();
 	} else {
 		// frame does not exist
 		debug(pageId, "Frame for pageId %" PRId64 " does not exist", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
-
-			/* set unused as we create a new frame and therefore it has to be inserted in FIFO */
-			frame->setUnusedBefore();
-
 			debug(pageId, "New frame created");
 			this->global_unlock();
 			debug(pageId, "global unlocked");
+			/* set unused as we create a new frame and therefore it has to be inserted in FIFO */
+			frame->setUnusedBefore();
 		} else {
 			debug(pageId, "no space available -> replace");
 			frame = this->replacementStrategy->pop();
@@ -101,21 +98,22 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			}
 			this->reinitialize(frame, pageId, segmentId);
 			debug(pageId, "frame reinitialized");
+			this->global_unlock();
 		}
-		frame->increaseUsageCount(); // TODO: can we get rid of all these usage counts - i dont think so
 		debug(pageId, "Lock frame to load from disk");
-		frame->lock(true); // TODO: optimize - only lock if page exists
+		frame->lock(true);
 		debug(pageId, "frame locked");
 		this->loadFromDiskIfExists(frame);
 		debug(pageId, "loaded from disk");
-		frame->unlock();
-		debug(pageId, "unlocked frame");
+		//frame->unlock(); // TODO Downgrade to read-lock or keep write-lock
+		//debug(pageId, "unlocked frame");
 		debug(pageId, "try to lock frame with id: %" PRId64 " | exclusive: %s", frame->getPageId(),
 				exclusive ? "true" : "false");
-		frame->lock(exclusive);
+		//frame->lock(exclusive);
 		debug(pageId, "Waiting count: %" PRId64, frame->getWaitingCount());
+		this->global_unlock();
 	}
-	this->global_unlock();
+	frame->increaseUsageCount();
 	return *frame;
 }
 
