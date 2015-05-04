@@ -56,10 +56,10 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	if (frame != nullptr) {
 		//frame exists
 		debug(pageId, "Frame exists in Memory");
-		this->global_unlock();
+		//this->global_unlock();
 		debug(pageId, "global lock released");
 		debug(pageId, "try to get frame lock");
-		frame->lock(exclusive);
+		//frame->lock(exclusive);
 		debug(pageId, "framelock aquired");
 		this->replacementStrategy->remove(frame);
 		/* set used as we get the frame FROM the replacement strategy and therefore it has to be inserted in LRU next time */
@@ -71,7 +71,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
 			debug(pageId, "New frame created");
-			this->global_unlock();
+			//this->global_unlock();
 			debug(pageId, "global unlocked");
 			/* set unused as we create a new frame and therefore it has to be inserted in FIFO */
 			frame->setUnusedBefore();
@@ -87,21 +87,21 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			// write out if necessary
 			if (frame->isDirty()) {
 				debug(pageId, "locking frame for dirty write out");
-				this->global_unlock();
-				frame->lock(false);
+				//this->global_unlock();
+				//frame->lock(false);
 				this->writeOut(frame);
 				debug(pageId, "written out");
-				frame->unlock();
-				this->global_lock();
+				//frame->unlock();
+				//this->global_lock();
 			} else {
 				debug(pageId, "Not writing out since not dirty");
 			}
 			this->reinitialize(frame, pageId, segmentId);
 			debug(pageId, "frame reinitialized");
-			this->global_unlock();
+			//this->global_unlock();
 		}
 		debug(pageId, "Lock frame to load from disk");
-		frame->lock(true);
+		//frame->lock(true);
 		debug(pageId, "frame locked");
 		this->loadFromDiskIfExists(frame);
 		debug(pageId, "loaded from disk");
@@ -111,9 +111,11 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 				exclusive ? "true" : "false");
 		//frame->lock(exclusive);
 		debug(pageId, "Waiting count: %" PRId64, frame->getWaitingCount());
-		this->global_unlock();
+		//this->global_unlock();
 	}
 	frame->increaseUsageCount();
+	this->global_unlock();
+	frame->lock(exclusive);
 	return *frame;
 }
 
