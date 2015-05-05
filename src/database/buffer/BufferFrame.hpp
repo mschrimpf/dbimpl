@@ -53,13 +53,13 @@ public:
 
 	void decreaseUsageCount();
 
-	bool isUsed();
+	bool isInUsage();
 
 	void lock(bool exclusive);
 
 	void unlock();
 
-	unsigned getWaitingCount();
+	unsigned getInUseCount();
 
 	void setUnusedBefore();
 };

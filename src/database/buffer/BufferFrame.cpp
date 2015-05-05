@@ -65,10 +65,6 @@ void BufferFrame::resetFlags() {
 	this->state &= 0x0;
 }
 
-bool BufferFrame::isUsed() {
-	return usageCount > 0;
-}
-
 void BufferFrame::lock(bool exclusive) {
 	if(exclusive) {
 		pthread_rwlock_wrlock(&rwlock);
@@ -89,8 +85,12 @@ void BufferFrame::decreaseUsageCount() {
 	usageCount--;
 }
 
-unsigned BufferFrame::getWaitingCount() {
+unsigned BufferFrame::getInUseCount() {
 	return usageCount;
+}
+
+bool BufferFrame::isInUsage() {
+	return usageCount > 0;
 }
 
 bool BufferFrame::usedBefore() {

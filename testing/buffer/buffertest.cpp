@@ -10,7 +10,7 @@
 using namespace std;
 
 BufferManager* bm;
-int total_runs = 100; //100000;
+int total_runs = 100000;
 unsigned pagesOnDisk;
 unsigned pagesInRAM;
 unsigned threadCount;
@@ -34,6 +34,9 @@ static void* scan(void *arg) {
       for (unsigned page=start; page<start+10; page++) {
          BufferFrame& bf = bm->fixPage(page, false);
          unsigned newcount = reinterpret_cast<unsigned*>(bf.getData())[0];
+         if(counters[page]>newcount) {
+            cout << "ERROR: counters[" << page << "] = " << counters[page] << " > " << newcount << " (newcount)" << endl;
+         }
          assert(counters[page]<=newcount);
          counters[page]=newcount;
          bm->unfixPage(bf, false);
@@ -223,6 +226,17 @@ int testMain(int argc, char** argv) {
    }
    cout << "end: set all counters to 0" << endl;
 
+   // ADDED
+   for (unsigned i = 0; i < pagesOnDisk; i++) {
+      BufferFrame &bf = bm->fixPage(i, true);
+      unsigned val = reinterpret_cast<unsigned *>(bf.getData())[0];
+      if(val != 0) {
+         cout << "ERROR: Page " << i << " is not set to zero" << endl;
+      }
+      bm->unfixPage(bf, true);
+   }
+   // DEDDA
+
    if (pagesOnDisk < 11) {
       cerr << "pages on disk has to be bigger than 10" << endl;
       exit(1);
@@ -276,10 +290,10 @@ int testMain(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-   testZeroingBuffer();
-   testSingleInsertion();
-   testSameFrame();
-   testMultipleFrames();
-   testMultipleModifyFrames();
+//   testZeroingBuffer();
+//   testSingleInsertion();
+//   testSameFrame();
+//   testMultipleFrames();
+//   testMultipleModifyFrames();
    testMain(argc, argv);
 }

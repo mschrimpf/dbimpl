@@ -4,9 +4,15 @@
 #include <inttypes.h>
 #include "debug.h"
 
-void debug(const char *info) {
+void debug(const char *fmt, ...) {
     #if DEBUG == 1
-    printf("%s\n", info);
+    va_list args;
+    char buf[1000];
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    printf(buf);
+    printf("\n");
     #endif
 }
 

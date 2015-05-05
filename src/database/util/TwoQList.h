@@ -14,9 +14,6 @@
 #include "../util/spinlock.h"
 
 class TwoQList : public IReplacementStrategy{
-    spinlock lock;
-    std::set<BufferFrame*> FifoSet;
-    std::set<BufferFrame*> LruSet;
     std::list<BufferFrame*> FifoQueue;
     std::list<BufferFrame*> LruQueue;
 public:
