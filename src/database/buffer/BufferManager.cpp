@@ -20,6 +20,7 @@ BufferManager::BufferManager(uint64_t pagesInMemory) {
 /* Writes all dirty frames to disk and free all resources */
 BufferManager::~BufferManager() {
 	debug("tear down\n");
+	this->global_lock();
 	/* write back all frames */
 	BufferFrame *frame;
 	while ((frame = replacementStrategy->pop()) != nullptr) {
@@ -30,8 +31,8 @@ BufferManager::~BufferManager() {
 	}
 
 	/* clean frames */
-	for (auto pair : pageFrameMap){
-		if (pair.second != nullptr){
+	for (auto pair : pageFrameMap) {
+		if (pair.second != nullptr) {
 			delete(pair.second);
 		}
 	}
@@ -39,6 +40,7 @@ BufferManager::~BufferManager() {
 	this->freeCache();
 	delete this->pageIO;
 	delete this->replacementStrategy;
+	this->global_unlock();
 }
 
 /* Retrieve frames given a page Id and indication whether or not it is exclusive for the thread
@@ -89,7 +91,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			// write out if necessary
 			if (frame->isDirty()) {
 				debug(pageId, "locking frame for dirty write out");
-				this->global_unlock();
+				this->global_unlock(); // TODO: we're running into concurency issues here - but if we swap the order, we do so as well
 				frame->lock(false);
 				this->writeOut(frame);
 				debug(pageId, "written out");
@@ -101,7 +103,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			this->reinitialize(frame, pageId, segmentId);
 			debug(pageId, "frame reinitialized");
 		}
-		frame->increaseUsageCount(); // TODO: can we get rid of all these usage counts - i dont think so
+		frame->increaseUsageCount();
 		debug(pageId, "Lock frame to load from disk");
 		frame->lock(true); // TODO: optimize - only lock if page exists
 		debug(pageId, "frame locked");
@@ -133,17 +135,15 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	 * Hence, the data pointer of the frame is not added to the free pages
 	 * because the page data is still occupied although it can be replaced.
 	 */
-	frame.setDirty(isDirty);
+	frame.setDirty(frame.isDirty() || isDirty);
 	frame.decreaseUsageCount();
 
 	debug(frame.getPageId(), "Unfix - dirty: %s | used: %s | usage count: %i",
 		  isDirty ? "true" : "false",
 		  frame.isUsed() ? "true" : "false",
 		  frame.getWaitingCount());
-	if (!frame.isUsed()) {
-		debug(frame.getPageId(), "Add frame to replacement strategy");
-		this->replacementStrategy->push(&frame);
-	}
+	debug(frame.getPageId(), "Add frame to replacement strategy");
+	this->replacementStrategy->push(&frame);
 	frame.unlock();
 	this->global_unlock();
 }

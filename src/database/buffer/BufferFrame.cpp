@@ -90,13 +90,13 @@ unsigned BufferFrame::getWaitingCount() {
 }
 
 bool BufferFrame::usedBefore() {
-	return used;
+	return this->isFlagSet(USED_FLAG);
 }
 
 void BufferFrame::setUsedBefore() {
-	used = true;
+	this->setFlag(USED_FLAG);
 }
 
 void BufferFrame::setUnusedBefore(){
-	used = false;
+	this->unsetFlag(USED_FLAG);
 }

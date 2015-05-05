@@ -6,10 +6,10 @@
 
 class BufferFrame {
 	const uint8_t DIRTY_FLAG = 0x1; // 001
+	const uint8_t USED_FLAG = 0x2; // 010
 
 private:
 	void *data;
-	bool used = false;
 	uint64_t pageId;
 	uint64_t segmentId;
 	unsigned usageCount = 0;

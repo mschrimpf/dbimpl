@@ -48,11 +48,8 @@ static void* readWrite(void *arg) {
 
    uintptr_t count = 0;
    for (unsigned i=0; i<100000/threadCount; i++) {
-      unsigned int pageId = randomPage(threadNum);
       bool isWrite = rand_r(&threadSeed[threadNum])%128<10;
-      cout <<"[Thread#" << threadNum << "] fixing page " << pageId
-            << " (" << (isWrite ? "write" : "read") << ")" << endl;
-      BufferFrame& bf = bm->fixPage(pageId, isWrite);
+      BufferFrame& bf = bm->fixPage(randomPage(threadNum), isWrite);
 
       if (isWrite) {
          count++;
@@ -64,77 +61,8 @@ static void* readWrite(void *arg) {
    return reinterpret_cast<void*>(count);
 }
 
-int testZeroingBuffer(int argc, char** argv){
-   BufferManager* bufferManager = new BufferManager(10);
-   unsigned totalCountOnDiskZero = 0;
-   for (unsigned i=0; i<pagesOnDisk; i++) {
-      BufferFrame& bf = bufferManager->fixPage(i,false);
-      unsigned int pageValue = reinterpret_cast<unsigned*>(bf.getData())[0];
-      cout << "Read value " << pageValue << " from page " << i << endl;
-      totalCountOnDiskZero+= pageValue;
-      bufferManager->unfixPage(bf, false);
-   }
-   if (0==totalCountOnDiskZero) {
-      cout << "[ZERO TEST] successful" << endl;
-      delete(bufferManager);
-   } else {
-      cerr << "[ZERO TEST] error: expected " << 0 << " but got " << totalCountOnDiskZero << endl;
-      delete bufferManager;
-      assert(false);
-   }
-}
-
-int testSingleInsertion(int argc, char** argv){
-   BufferManager* bufferManager = new BufferManager(10);
-   BufferFrame& bf = bufferManager->fixPage(1, true);
-   unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
-   *pageValue = 42;
-   bufferManager->unfixPage(bf, true);
-   delete bufferManager;
-
-   bufferManager = new BufferManager(10);
-   BufferFrame& bf2 = bufferManager->fixPage(1, false);
-   pageValue = reinterpret_cast<unsigned *> (bf2.getData());
-   if (*pageValue == 42){
-      cout << "[SingleInsertion TEST] successful" <<endl;
-      delete(bufferManager);
-   }else{
-      cerr << "[SingleInsertion TEST] error: expected " << 42 << " but got " << *pageValue << endl;
-      delete bufferManager;
-      assert(false);
-   }
-}
-
-int testSameFrame(int argc, char** argv){
-   BufferManager* bufferManager = new BufferManager(10);
-   BufferFrame& bf = bufferManager->fixPage(1, true);
-   unsigned * pageValue = reinterpret_cast<unsigned *> (bf.getData());
-   *pageValue = 42;
-   bufferManager->unfixPage(bf, true);
-   BufferFrame& bf2 = bufferManager->fixPage(1, false);
-   pageValue = reinterpret_cast<unsigned *> (bf2.getData());
-   (*pageValue)++;
-   bufferManager->unfixPage(bf2, true);
-   delete(bufferManager);
-
-   bufferManager = new BufferManager(10);
-   BufferFrame& bf3 = bufferManager->fixPage(1, false);
-   pageValue = reinterpret_cast<unsigned *> (bf3.getData());
-   if (*pageValue == 43){
-      cout << "[testSameFrame TEST] successful" <<endl;
-      delete(bufferManager);
-   }else{
-      cerr << "[testSameFrame TEST] error: expected " << 43 << " but got " << *pageValue << endl;
-      delete bufferManager;
-      assert(false);
-   }
-}
-
-
-
-
-int testMain(int argc, char** argv) {
-   if (argc == 4) {
+int main(int argc, char** argv) {
+   if (argc==4) {
       pagesOnDisk = atoi(argv[1]);
       pagesInRAM = atoi(argv[2]);
       threadCount = atoi(argv[3]);
@@ -143,14 +71,9 @@ int testMain(int argc, char** argv) {
       exit(1);
    }
 
-   cout << "start buffer-test with args: "
-   << "pagesOnDisk " << argv[1]
-   << " pagesInRam " << argv[2]
-   << " threadCount " << argv[3] << endl;
-
    threadSeed = new unsigned[threadCount];
-   for (unsigned i = 0; i < threadCount; i++)
-      threadSeed[i] = i * 97134;
+   for (unsigned i=0; i<threadCount; i++)
+      threadSeed[i] = i*97134;
 
    bm = new BufferManager(pagesInRAM);
 
@@ -159,19 +82,10 @@ int testMain(int argc, char** argv) {
    pthread_attr_init(&pattr);
 
    // set all counters to 0
-   cout << "start: set all counters to 0" << endl;
-   for (unsigned i = 0; i < pagesOnDisk; i++) {
-      BufferFrame &bf = bm->fixPage(i, true);
-      reinterpret_cast<unsigned *>(bf.getData())[0] = 0;
+   for (unsigned i=0; i<pagesOnDisk; i++) {
+      BufferFrame& bf = bm->fixPage(i, true);
+      reinterpret_cast<unsigned*>(bf.getData())[0]=0;
       bm->unfixPage(bf, true);
-      cout << "zero'ed data " << i << "/" << pagesOnDisk - 1 << endl;
-   }
-
-   cout << "end: set all counters to 0" << endl;
-
-   if (pagesOnDisk < 11) {
-      cerr << "pages on disk has to be bigger than 10" << endl;
-      exit(1);
    }
 
    // start scan thread
@@ -179,38 +93,33 @@ int testMain(int argc, char** argv) {
    pthread_create(&scanThread, &pattr, scan, NULL);
 
    // start read/write threads
-   for (unsigned i = 0; i < threadCount; i++)
-      pthread_create(&threads[i], &pattr, readWrite, reinterpret_cast<void *>(i));
+   for (unsigned i=0; i<threadCount; i++)
+      pthread_create(&threads[i], &pattr, readWrite, reinterpret_cast<void*>(i));
 
-   cout << "threads started" << endl;
    // wait for read/write threads
    unsigned totalCount = 0;
-   for (unsigned i = 0; i < threadCount; i++) {
+   for (unsigned i=0; i<threadCount; i++) {
       void *ret;
       pthread_join(threads[i], &ret);
-      totalCount += reinterpret_cast<uintptr_t>(ret);
+      totalCount+=reinterpret_cast<uintptr_t>(ret);
    }
-   cout << "threads ended" << endl;
 
    // wait for scan thread
-   stop = true;
-   cout << "waiting for scan thread" << endl;
+   stop=true;
    pthread_join(scanThread, NULL);
-   cout << "scan thread ended" << endl;
 
    // restart buffer manager
-   cout << "restart buffer manager" << endl;
    delete bm;
    bm = new BufferManager(pagesInRAM);
 
    // check counter
    unsigned totalCountOnDisk = 0;
-   for (unsigned i = 0; i < pagesOnDisk; i++) {
-      BufferFrame &bf = bm->fixPage(i, false);
-      totalCountOnDisk += reinterpret_cast<unsigned *>(bf.getData())[0];
+   for (unsigned i=0; i<pagesOnDisk; i++) {
+      BufferFrame& bf = bm->fixPage(i,false);
+      totalCountOnDisk+=reinterpret_cast<unsigned*>(bf.getData())[0];
       bm->unfixPage(bf, false);
    }
-   if (totalCount == totalCountOnDisk) {
+   if (totalCount==totalCountOnDisk) {
       cout << "test successful" << endl;
       delete bm;
       return 0;
@@ -219,11 +128,4 @@ int testMain(int argc, char** argv) {
       delete bm;
       return 1;
    }
-}
-
-int main(int argc, char** argv) {
-   testZeroingBuffer(argc, argv);
-   testSingleInsertion(argc, argv);
-   testSameFrame(argc, argv);
-   testMain(argc, argv);
 }

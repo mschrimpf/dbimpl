@@ -21,7 +21,7 @@ void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsig
 	long offset = pageId * len;
 	SegmentInfo * segmentInfo = this->getSegmentInfo(segmentId);
 	if(segmentInfo == nullptr) {
-		printf("Create file %s\n", std::to_string(segmentId).c_str());
+		debug("Create file %s\n", std::to_string(segmentId).c_str());
 		fd = open(std::to_string(segmentId).c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 		this->segmentInfoMap[segmentId] = {fd};
 	} else {
@@ -41,10 +41,10 @@ void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsi
 	int fd;
 	long offset = pageId * len;
 
-	printf("Attempting to write page %" PRId64 " on segment %" PRId64 "\n", pageId, segmentId);
+	debug("Attempting to write page %" PRId64 " on segment %" PRId64 "\n", pageId, segmentId);
 	SegmentInfo * segmentInfo = this->getSegmentInfo(segmentId);
 	if(segmentInfo == nullptr) {
-		printf("Create/Open file %s\n", std::to_string(segmentId).c_str());
+		debug("Create/Open file %s\n", std::to_string(segmentId).c_str());
 		fd = open(std::to_string(segmentId).c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 		this->segmentInfoMap[segmentId] = {fd};
 	} else {
@@ -64,7 +64,7 @@ void PageIOUtil::writeFd(int fd, long offset_bytes, void *data, unsigned int len
 	if(written_bytes != len) {
 		perror("Could not write data");
 	} else {
-		printf("Wrote %d bytes\n", written_bytes);
+		debug("Wrote %d bytes\n", written_bytes);
 	}
 }
 
@@ -72,10 +72,10 @@ void PageIOUtil::writeFd(int fd, long offset_bytes, void *data, unsigned int len
 SegmentInfo *PageIOUtil::getSegmentInfo(uint64_t segmentId) {
 	if (this->segmentInfoMap.find(segmentId) != this->segmentInfoMap.end()) {
 		SegmentInfo *segmentInfo = &this->segmentInfoMap[segmentId];
-		printf("Segment with id %" PRId64 " found on disk\n", segmentId);
+		debug("Segment with id %" PRId64 " found on disk\n", segmentId);
 		return segmentInfo;
 	}
-	printf("Segment with id %" PRId64 " not found on disk\n", segmentId);
+	debug("Segment with id %" PRId64 " not found on disk\n", segmentId);
 	return nullptr;
 }
 

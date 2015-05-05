@@ -32,7 +32,7 @@ BufferFrame *TwoQList::pop() {
 
 void TwoQList::remove(BufferFrame *frame) {
 	//ADDED
-	if (frame->isUsed()) {
+	if (frame->usedBefore()) {
 		LruQueue.remove(frame);
 	} else {
 		FifoQueue.remove(frame);
