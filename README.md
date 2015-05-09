@@ -23,3 +23,5 @@ Please follow these shell commands.
     
     # run
     ./assignment1 ../../resources/test_data ../../resources/test_data_sorted 10
+
+## Assignment 3
