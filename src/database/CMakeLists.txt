@@ -13,4 +13,4 @@ set(SOURCE_FILES
     util/debug.h
     util/debug.cpp
     util/PageIOUtil.h util/PageIOUtil.cpp)
-add_executable(database ${SOURCE_FILES})
+add_executable(database ${SOURCE_FILES} slotted_pages/SlottedPage.hpp relations/parser/main.cpp slotted_pages/RecordStorage.cpp slotted_pages/RecordStorage.h)

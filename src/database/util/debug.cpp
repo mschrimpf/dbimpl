@@ -6,6 +6,8 @@
 
 #define DEBUG 0
 
+// TODO: make thread-safe
+
 void debug(const char *fmt, ...) {
     #if DEBUG == 1
     va_list args;
