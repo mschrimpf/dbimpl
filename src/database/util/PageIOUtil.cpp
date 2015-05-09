@@ -60,9 +60,12 @@ void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsi
 }
 
 void PageIOUtil::writeFd(int fd, long offset_bytes, void *data, unsigned int len) {
-	int written_bytes = pwrite(fd, data, len, offset_bytes);
-	if(written_bytes != len) {
-		perror("Could not write data");
+	int written_bytes = 0;
+	while (written_bytes < len){
+		written_bytes += pwrite(fd, data, len - written_bytes, offset_bytes + written_bytes);
+	}
+	if(written_bytes > len) {
+		perror("Too many bytes were written!");
 	} else {
 		debug("Wrote %d bytes\n", written_bytes);
 	}
