@@ -1,8 +1,8 @@
 #ifndef PROJECT_BUFFER_FRAME_H
 #define PROJECT_BUFFER_FRAME_H
 
-#include "../util/spinlock.h"
 #include "pthread.h"
+#include <stdint.h>
 
 class BufferFrame {
 	const uint8_t DIRTY_FLAG = 0x1; // 001
@@ -12,7 +12,6 @@ private:
 	void *data;
 	uint64_t pageId;
 	uint64_t segmentId;
-	unsigned usageCount = 0;
 	pthread_rwlock_t rwlock;
 	uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
 	bool isFlagSet(uint8_t mask);
@@ -23,6 +22,7 @@ private:
 
 	void unsetFlag(uint8_t flag);
 
+
 public:
 
 	bool usedBefore();
@@ -30,6 +30,8 @@ public:
 	void setUsedBefore();
 
 	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
+
+	~BufferFrame();
 
 	void *getData();
 
@@ -47,19 +49,13 @@ public:
 
 	void resetFlags();
 
-	void increaseUsageCount();
-
-	void decreaseUsageCount();
-
-	bool isUsed();
-
 	void lock(bool exclusive);
 
 	void unlock();
 
-	unsigned getWaitingCount();
-
 	void setUnusedBefore();
+
+	bool tryLock(bool exclusive);
 };
 
 #endif //PROJECT_BUFFER_FRAME_H

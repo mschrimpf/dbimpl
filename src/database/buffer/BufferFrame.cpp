@@ -1,4 +1,4 @@
-#include <stdint.h>
+
 #include "BufferFrame.hpp"
 
 BufferFrame::BufferFrame(uint64_t pageId, uint64_t segmentId, void *data) {
@@ -6,6 +6,10 @@ BufferFrame::BufferFrame(uint64_t pageId, uint64_t segmentId, void *data) {
 	this->segmentId = segmentId;
 	this->data = data;
 	pthread_rwlock_init(&rwlock, nullptr);
+}
+
+BufferFrame::~BufferFrame(){
+	pthread_rwlock_destroy(&rwlock);
 }
 
 void *BufferFrame::getData() {
@@ -61,9 +65,6 @@ void BufferFrame::resetFlags() {
 	this->state &= 0x0;
 }
 
-bool BufferFrame::isUsed() {
-	return usageCount > 0;
-}
 
 void BufferFrame::lock(bool exclusive) {
 	if(exclusive) {
@@ -77,17 +78,6 @@ void BufferFrame::unlock() {
 	pthread_rwlock_unlock(&rwlock);
 }
 
-void BufferFrame::increaseUsageCount() {
-	usageCount++;
-}
-
-void BufferFrame::decreaseUsageCount() {
-	usageCount--;
-}
-
-unsigned BufferFrame::getWaitingCount() {
-	return usageCount;
-}
 
 bool BufferFrame::usedBefore() {
 	return this->isFlagSet(USED_FLAG);
@@ -99,4 +89,14 @@ void BufferFrame::setUsedBefore() {
 
 void BufferFrame::setUnusedBefore(){
 	this->unsetFlag(USED_FLAG);
+}
+
+bool BufferFrame::tryLock(bool exclusive) {
+	int result;
+	if (exclusive){
+		result = pthread_rwlock_trywrlock(&rwlock);
+	}else{
+		result = pthread_rwlock_tryrdlock(&rwlock);
+	}
+	return result == 0;
 }

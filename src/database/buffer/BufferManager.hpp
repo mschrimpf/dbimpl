@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <list>
 #include <map>
-#include "../util/spinlock.h"
+#include <condition_variable>
+#include "mutex"
 #include "BufferFrame.hpp"
 #include "IReplacementStrategy.h"
 #include "../util/PageIOUtil.h"
@@ -21,6 +22,7 @@ public:
 	void unfixPage(BufferFrame &frame, bool isDirty);
 
 private:
+	std::condition_variable replacementAccessed;
 	uint64_t maxFramesInMemory;
 	char *cache;
 	/** has to be synchronized */
@@ -32,7 +34,7 @@ private:
 	/** synchronized */
 	IPageIO * pageIO;
 
-	spinlock global_mutex;
+	std::mutex global_mutex;
 
 	void extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId);
 

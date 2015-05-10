@@ -31,9 +31,14 @@ void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsig
 }
 
 void PageIOUtil::readFd(int fd, long offset_bytes, void *data, unsigned len) {
-	int read_bytes = pread(fd, data, len, offset_bytes);
-	if(read_bytes != len) {
-		perror("Could not read data");
+	size_t read_bytes = 0;
+	while (read_bytes < len){
+		read_bytes += pread(fd, (uint8_t*)data + read_bytes, len - read_bytes, offset_bytes + read_bytes);
+	}
+	if(read_bytes > len) {
+		perror("Too many bytes were read");
+	}else{
+		debug("Read %d bytes\n", read_bytes);
 	}
 }
 
@@ -60,9 +65,9 @@ void PageIOUtil::writePage(uint64_t pageId, uint64_t segmentId, void *data, unsi
 }
 
 void PageIOUtil::writeFd(int fd, long offset_bytes, void *data, unsigned int len) {
-	int written_bytes = 0;
+	size_t written_bytes = 0;
 	while (written_bytes < len){
-		written_bytes += pwrite(fd, data, len - written_bytes, offset_bytes + written_bytes);
+		written_bytes += pwrite(fd, (uint8_t*)data + written_bytes, len - written_bytes, offset_bytes + written_bytes);
 	}
 	if(written_bytes > len) {
 		perror("Too many bytes were written!");

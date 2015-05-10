@@ -9,7 +9,6 @@ set(SOURCE_FILES
     buffer/IReplacementStrategy.h
     util/Math.cpp util/Math.h
     util/TwoQList.h util/TwoQList.cpp
-    util/spinlock.h
     util/debug.h
     util/debug.cpp
     util/PageIOUtil.h util/PageIOUtil.cpp)

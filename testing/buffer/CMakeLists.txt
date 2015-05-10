@@ -9,7 +9,6 @@ set(SOURCE_FILES
     ../../src/database/buffer/IReplacementStrategy.h
     ../../src/database/util/Math.cpp ../../src/database/util/Math.h
     ../../src/database/util/TwoQList.h ../../src/database/util/TwoQList.cpp
-    ../../src/database/util/spinlock.h
     ../../src/database/util/debug.h
     ../../src/database/util/debug.cpp
     ../../src/database/util/PageIOUtil.h ../../src/database/util/PageIOUtil.cpp)
