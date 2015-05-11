@@ -1,8 +1,8 @@
 project(database)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -lto -g") # TODO: remove -g flag
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -O3 -g") # TODO: remove -g flag
 
-set(SOURCE_FILES
+set(BUFFER_SOURCE_FILES
     buffer/BufferFrame.cpp buffer/BufferFrame.hpp
     buffer/BufferManager.cpp buffer/BufferManager.hpp
     buffer/IPageIO.h
@@ -12,4 +12,10 @@ set(SOURCE_FILES
     util/debug.h
     util/debug.cpp
     util/PageIOUtil.h util/PageIOUtil.cpp)
-add_executable(database ${SOURCE_FILES} slotted_pages/SlottedPage.hpp relations/parser/main.cpp slotted_pages/RecordStorage.cpp slotted_pages/RecordStorage.h)
+set(SLOTTED_PAGES_SOURCE_FILES
+    slotted_pages/SlottedPage.hpp
+    slotted_pages/Record.hpp)
+set(RELATIONS_SOURCE_FILES
+    relations/parser/Parser.cpp
+    relations/parser/Schema.cpp)
+add_library(database ${BUFFER_SOURCE_FILES} ${SLOTTED_PAGES_SOURCE_FILES} ${RELATIONS_SOURCE_FILES})
