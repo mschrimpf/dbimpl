@@ -6,10 +6,6 @@
 #include "../util/TwoQList.h"
 #include "../util/debug.h"
 
-const unsigned PAGE_SIZE_BYTE = 4096;
-const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
-const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
-
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
 	this->maxFramesInMemory = pagesInMemory;
@@ -80,7 +76,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			debug(pageId, "New frame created");
 			this->global_unlock();
 			debug(pageId, "global unlocked");
-		} else {
+		} else { // TODO: might need a while here
 			debug(pageId, "no space available -> replace");
 			frame = this->replacementStrategy->pop();
 			debug(pageId, "Popping frame with page id %" PRId64,
@@ -114,6 +110,8 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 			}
 			this->reinitialize(frame, pageId, segmentId);
 			debug(pageId, "frame reinitialized");
+
+			// TODO: use another mutex for downgrade
 		}
 		debug(pageId, "Lock frame to load from disk");
 		frame->lock(true); // TODO: optimize - only lock if page exists
@@ -151,6 +149,7 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	debug(frame.getPageId(), "Unfix - dirty: %s",
 		  isDirty ? "true" : "false");
 	debug(frame.getPageId(), "Add frame to replacement strategy");
+	this->global_lock();
 	this->replacementStrategy->push(&frame);
 	frame.unlock();
 }
@@ -196,7 +195,6 @@ void *BufferManager::getFreePage() {
 }
 
 void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId, uint64_t newSegmentId) {
-	this->writeOut(frame);
 	this->pageFrameMap.erase(frame->getPageId());
 	frame->resetFlags();
 	frame->setUnusedBefore();

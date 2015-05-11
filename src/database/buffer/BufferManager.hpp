@@ -11,6 +11,10 @@
 #include "../util/PageIOUtil.h"
 #include "IPageIO.h"
 
+const unsigned PAGE_SIZE_BYTE = 4096;
+const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
+const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
+
 class BufferManager {
 public:
 	BufferManager(uint64_t pagesInMemory);
