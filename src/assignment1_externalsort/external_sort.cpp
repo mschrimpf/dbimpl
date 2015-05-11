@@ -38,10 +38,6 @@ struct CompareQueuePrio {
 };
 
 
-int write_chunk(std::string fileprefix, unsigned int i, std::vector<uint64_t> data);
-
-std::string getTempFileName(std::string &tempFilePrefix, unsigned int i);
-
 void external_sort(int fdInput, uint64_t number_of_elements, int fdOutput, uint64_t mem_size_mb) {
 	uint64_t mem_size_byte = mem_size_mb * 1024 * 1024;
 	size_t element_size_byte = sizeof(uint64_t);
