@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "../../src/database/slotted_pages/SlottedPage.hpp"
+#include "../../src/database/slotted_pages/SPSegment.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -49,6 +50,10 @@ TEST(SlottedPageTest, SizeMatchesPageSize) {
 
 
 // see https://code.google.com/p/googletest/source/browse/trunk/samples/sample10_unittest.cc
+TEST(SlotDataTest, LengthSizeMatchesSlotLengthSize) {
+	EXPECT_EQ(sizeof(SlottedPage::Slot::length), sizeof(SPSegment::SlotData::length));
+}
+
 int main(int argc, char **argv) {
 	InitGoogleTest(&argc, argv);
 
