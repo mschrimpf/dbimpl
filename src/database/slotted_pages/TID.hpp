@@ -5,4 +5,11 @@
 #ifndef PROJECT_TID_HPP
 #define PROJECT_TID_HPP
 
+#include <stdint.h>
+
+struct TID {
+	uint16_t slotOffset;
+	uint64_t pageId : 48 /* use only 48 bit */;
+};
+
 #endif //PROJECT_TID_HPP
