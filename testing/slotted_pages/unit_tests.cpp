@@ -2,7 +2,6 @@
 // Created by Martin on 11.05.2015.
 //
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "gtest/gtest.h"
 #include "../../src/database/slotted_pages/SlottedPage.hpp"
@@ -17,33 +16,7 @@ using ::testing::TestInfo;
 using ::testing::TestPartResult;
 using ::testing::UnitTest;
 
-#include "../../src/database/slotted_pages/SlottedPage.hpp"
 
-
-namespace {
-	// The fixture for testing class Foo.
-	class FooTest : public ::testing::Test {
-	};
-
-	class SlottedPageTest : public ::testing::Test {
-
-	};
-
-	TEST(SlottedPageTest, Positive){
-		EXPECT_TRUE(sizeof(SlottedPage) == PAGE_SIZE_BYTE);
-	}
-
-	// Tests that the Foo::Bar() method does Abc.
-	TEST(FooTest, MethodBarDoesAbc) {
-		EXPECT_EQ(0, 0);
-	}
-
-	// Tests that Foo does Xyz.
-	TEST(FooTest, DoesXyz) {
-		// Exercises the Xyz feature of Foo.
-	}
-
-}  // namespace
 TEST(SlottedPageTest, SizeMatchesPageSize) {
 	EXPECT_EQ(PAGE_SIZE_BYTE, sizeof(SlottedPage));
 }

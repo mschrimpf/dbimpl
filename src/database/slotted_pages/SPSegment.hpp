@@ -15,16 +15,18 @@
 // lookup: no lock
 
 class SPSegment {
+public:
+	struct SlotData {
+		uint16_t length;
+		char *ptr;
+	};
+
 private:
 	std::unordered_map<uint64_t, SlottedPage *> pageIdSlottedPageMap;
 
 	SPSegment::SlotData lookupData(TID tid);
 
 public:
-	struct SlotData {
-		uint16_t length;
-		char *ptr;
-	};
 
 	TID insert(const Record &record);
 
