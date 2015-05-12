@@ -13,7 +13,10 @@ set(BUFFER_SOURCE_FILES
     util/debug.cpp
     util/PageIOUtil.h util/PageIOUtil.cpp)
 set(SLOTTED_PAGES_SOURCE_FILES
+    slotted_pages/TID.hpp
     slotted_pages/SlottedPage.hpp
+    slotted_pages/SPSegment.hpp
+    slotted_pages/SPSegment.cpp
     slotted_pages/Record.hpp)
 set(RELATIONS_SOURCE_FILES
     relations/parser/Parser.cpp
