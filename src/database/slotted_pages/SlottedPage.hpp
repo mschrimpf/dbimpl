@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#include <bits/unordered_map.h>
+#include <unordered_map>
 #include "../buffer/BufferManager.hpp"
 
 struct Tid {
@@ -15,12 +15,11 @@ struct Tid {
 	uint64_t pageId : 48 /* use only 48 bit */;
 };
 
-struct SPSegment {
-	std::unordered_map<uint64_t, SlottedPage *> pageIdSlottedPageMap;
-};
-
 // TODO: might have to implement redirects
 // (initial implementation could be to just throw an exception when the page is full)
+/**
+ * If we did everything right: sizeof(SlottedPage) = PAGE_SIZE
+ */
 struct SlottedPage {
 	struct SPHeader {
 		uint64_t LSN;
@@ -62,5 +61,9 @@ struct SlottedPage {
 
 // insert and lookup: copy record - otherwise pointer invalid
 // lookup: no lock
+
+struct SPSegment {
+	std::unordered_map<uint64_t, SlottedPage *> pageIdSlottedPageMap;
+};
 
 #endif //PROJECT_SLOTTEDPAGE_H
