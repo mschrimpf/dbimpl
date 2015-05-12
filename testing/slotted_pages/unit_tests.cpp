@@ -3,23 +3,11 @@
 //
 
 #include "gtest/gtest.h"
+#include "../../src/database/slotted_pages/SlottedPage.hpp"
 
-namespace {
-	// The fixture for testing class Foo.
-	class FooTest : public ::testing::Test {
-	};
-
-	// Tests that the Foo::Bar() method does Abc.
-	TEST(FooTest, MethodBarDoesAbc) {
-		EXPECT_EQ(0, 0);
-	}
-
-	// Tests that Foo does Xyz.
-	TEST(FooTest, DoesXyz) {
-		// Exercises the Xyz feature of Foo.
-	}
-
-}  // namespace
+TEST(SlottedPageTest, SizeMatchesPageSize) {
+	EXPECT_EQ(PAGE_SIZE_BYTE, sizeof(SlottedPage));
+}
 
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);
