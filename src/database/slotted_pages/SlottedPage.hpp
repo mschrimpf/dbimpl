@@ -16,7 +16,7 @@ struct Tid {
 };
 
 struct SPSegment {
-	std::unordered_map<uint64_t, SlottedPage *> pageIdSlottedPageMap;
+	//std::unordered_map<uint64_t, SlottedPage *> pageIdSlottedPageMap;
 };
 
 // TODO: might have to implement redirects

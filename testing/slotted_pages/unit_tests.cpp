@@ -75,6 +75,6 @@ int main(int argc, char **argv) {
 		// We don't need to worry about deleting the new listener later, as
 		// Google Test will do it.
 		//listeners.Append(new LeakChecker);
-		return RUN_ALL_TESTS();
 	}
+	return RUN_ALL_TESTS();
 }
