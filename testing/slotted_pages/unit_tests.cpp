@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "gtest/gtest.h"
+#include "../../src/database/slotted_pages/SlottedPage.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -42,6 +43,9 @@ namespace {
 	}
 
 }  // namespace
+TEST(SlottedPageTest, SizeMatchesPageSize) {
+	EXPECT_EQ(PAGE_SIZE_BYTE, sizeof(SlottedPage));
+}
 
 
 // see https://code.google.com/p/googletest/source/browse/trunk/samples/sample10_unittest.cc
