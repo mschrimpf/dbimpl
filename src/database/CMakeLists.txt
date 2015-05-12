@@ -15,6 +15,7 @@ set(BUFFER_SOURCE_FILES
 set(SLOTTED_PAGES_SOURCE_FILES
     slotted_pages/TID.hpp
     slotted_pages/SlottedPage.hpp
+    slotted_pages/SlottedPage.cpp
     slotted_pages/SPSegment.hpp
     slotted_pages/SPSegment.cpp
     slotted_pages/Record.hpp)

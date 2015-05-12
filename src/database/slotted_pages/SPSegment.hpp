@@ -15,18 +15,22 @@
 // lookup: no lock
 
 class SPSegment {
+private:
+	BufferManager &bufferManager;
+	/** Page count or max page (equivalent) */
+	uint64_t pageCount;
+
 public:
 	struct SlotData {
 		uint16_t length;
 		char *ptr;
 	};
-
 private:
-	std::unordered_map<uint64_t, SlottedPage *> pageIdSlottedPageMap;
-
 	SPSegment::SlotData lookupData(TID tid);
 
 public:
+
+	void SPSegment(BufferManager &bufferManager);
 
 	TID insert(const Record &record);
 
@@ -35,6 +39,8 @@ public:
 	Record lookup(TID tid);
 
 	bool update(TID tid, const Record &record);
+
+	BufferFrame &findOrCreatePage(size_t data_size);
 };
 
 #endif //PROJECT_SPSEGMENT_H

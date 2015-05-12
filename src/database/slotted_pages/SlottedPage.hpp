@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <unordered_map>
 #include "../buffer/BufferManager.hpp"
+#include "TID.hpp"
 
 // TODO: might have to implement redirects
 // (initial implementation could be to just throw an exception when the page is full)
@@ -18,6 +19,10 @@
 struct SlottedPage {
 	struct SPHeader {
 		uint64_t LSN;
+		/**
+		 * Size of the slot array.
+		 * Unless the very last slot is deleted, this value only grows, but never decreases.
+		 */
 		unsigned slotCount;
 		char *firstFreeSlot;
 		char *dataStart;
@@ -29,10 +34,24 @@ struct SlottedPage {
 		unsigned fragmentedSpace;
 	} header;
 
-	struct Slot {
-		uint16_t length;
-		uint16_t is_tid : 1;
-		uint16_t offset : 15;
+	/**
+	 * 8-byte control structure.
+	 * T | S | O | O | O | L | L | L
+	 */
+	class Slot {
+	private:
+		uint8_t T;
+		uint8_t S;
+		uint32_t O : 24;
+		uint32_t L : 24;
+	public:
+		bool isTid();
+
+		bool wasRedirect();
+
+		uint32_t getOffset();
+
+		uint32_t getLength();
 	};
 
 	union {
@@ -45,6 +64,8 @@ struct SlottedPage {
 		Slot slots[(PAGE_SIZE_BYTE - sizeof(SPHeader)) / sizeof(Slot)];
 		char data[PAGE_SIZE_BYTE - sizeof(SPHeader)];
 	};
+
+	TID createAndWriteSlot(const char *data, size_t data_size);
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H

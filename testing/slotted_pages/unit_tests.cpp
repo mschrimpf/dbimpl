@@ -17,12 +17,18 @@ using ::testing::TestPartResult;
 using ::testing::UnitTest;
 
 
+TEST(TidTest, SizeIs8Byte) {
+	EXPECT_EQ(8, sizeof(TID));
+}
+
+TEST(SlotTest, SizeIs8Byte) {
+	EXPECT_EQ(8, sizeof(SlottedPage::Slot));
+}
+
 TEST(SlottedPageTest, SizeMatchesPageSize) {
 	EXPECT_EQ(PAGE_SIZE_BYTE, sizeof(SlottedPage));
 }
 
-
-// see https://code.google.com/p/googletest/source/browse/trunk/samples/sample10_unittest.cc
 TEST(SlotDataTest, LengthSizeMatchesSlotLengthSize) {
 	EXPECT_EQ(sizeof(SlottedPage::Slot::length), sizeof(SPSegment::SlotData::length));
 }
