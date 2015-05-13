@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <mutex>
+#include <inttypes.h>
 #include "BufferManager.hpp"
 #include "../util/TwoQList.h"
 #include "../util/debug.h"

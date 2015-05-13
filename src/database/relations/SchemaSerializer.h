@@ -7,8 +7,8 @@
 
 #include "Schema.hpp"
 
-void storeSchema(Schema* schema);
-Schema* loadSchema();
+void storeSchema(Schema schema, int fd);
+Schema loadSchema(int fd);
 size_t size_of_schema(Schema schema);
 
 #endif //PROJECT_SCHEMASERIALIZER_H
