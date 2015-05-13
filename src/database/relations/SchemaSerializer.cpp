@@ -48,6 +48,7 @@ Schema loadSchema(int fd) {
     relations.reserve(number_of_relations);
 
     Schema schema = Schema();
+    schema.relations = relations;
 
     for (size_t r = 0; r < number_of_relations; ++r){
         // read length of relation name
