@@ -21,6 +21,8 @@ public:
 
 	~BufferManager();
 
+	BufferFrame &fixPage(uint64_t segmentId, uint64_t pageId, bool exclusive);
+
 	BufferFrame &fixPage(uint64_t pageAndSegmentId, bool exclusive);
 
 	void unfixPage(BufferFrame &frame, bool isDirty);

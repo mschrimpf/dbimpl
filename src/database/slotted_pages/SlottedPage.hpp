@@ -38,20 +38,18 @@ struct SlottedPage {
 	 * 8-byte control structure.
 	 * T | S | O | O | O | L | L | L
 	 */
-	class Slot {
-	private:
+	struct Slot {
 		uint8_t T;
 		uint8_t S;
+		/** Memory address */
 		uint32_t O : 24;
 		uint32_t L : 24;
-	public:
+
 		bool isTid();
 
 		bool wasRedirect();
 
-		uint32_t getOffset();
-
-		uint32_t getLength();
+		void nullTS();
 	};
 
 	union {
@@ -65,7 +63,13 @@ struct SlottedPage {
 		char data[PAGE_SIZE_BYTE - sizeof(SPHeader)];
 	};
 
-	TID createAndWriteSlot(const char *data, size_t data_size);
+	uint16_t createAndWriteSlot(const char *data, size_t data_size);
+
+	bool hasSpaceAtDataFront(size_t data_size);
+
+	bool canMakeSpace(size_t necessary_space);
+
+	size_t spaceBetweenSlotsAndData() const;
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H

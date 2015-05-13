@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include <inttypes.h>
 #include <mutex>
 #include "BufferManager.hpp"
 #include "../util/TwoQList.h"
@@ -47,6 +46,10 @@ BufferManager::~BufferManager() {
 BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 	uint64_t pageId, segmentId;
 	this->extractPageAndSegmentId(pageAndSegmentId, pageId, segmentId);
+	return this->fixPage(segmentId, pageId, exclusive);
+}
+
+BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool exclusive) {
 	global_lock();
 
 	debug(pageId, "trying to get global lock after extracting page and segment id");
@@ -65,7 +68,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		debug(pageId, "framelock aquired");
 	} else {
 		// frame does not exist
-		debug(pageId, "Frame for pageId %" PRId64 " does not exist", pageId);
+		debug(pageId, "Frame for pageId %"
+		PRId64
+		" does not exist", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
@@ -79,7 +84,8 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		} else { // TODO: might need a while here
 			debug(pageId, "no space available -> replace");
 			frame = this->replacementStrategy->pop();
-			debug(pageId, "Popping frame with page id %" PRId64,
+			debug(pageId, "Popping frame with page id %"
+			PRId64,
 					frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
 			if (frame == nullptr) {
 				this->global_unlock();
@@ -97,9 +103,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 				this->global_lock();
 
 				if (frame->tryLock(true)) {
-					if (frame->isDirty()){
+					if (frame->isDirty()) {
 						frame->unlock();
-					}else{
+					} else {
 						frame->unlock();
 						replacementStrategy->remove(frame);
 					}
@@ -120,7 +126,9 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 		debug(pageId, "loaded from disk");
 		frame->unlock();
 		debug(pageId, "unlocked frame");
-		debug(pageId, "try to lock frame with id: %" PRId64 " | exclusive: %s", frame->getPageId(),
+		debug(pageId, "try to lock frame with id: %"
+		PRId64
+		" | exclusive: %s", frame->getPageId(),
 				exclusive ? "true" : "false");
 		frame->lock(exclusive);
 	}
@@ -142,7 +150,7 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	 * Hence, the data pointer of the frame is not added to the free pages
 	 * because the page data is still occupied although it can be replaced.
 	 */
-	if (isDirty){
+	if (isDirty) {
 		frame.setDirty(true);
 	}
 

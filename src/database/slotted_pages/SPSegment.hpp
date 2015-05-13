@@ -17,20 +17,13 @@
 class SPSegment {
 private:
 	BufferManager &bufferManager;
+	uint64_t segmentId;
 	/** Page count or max page (equivalent) */
 	uint64_t pageCount;
 
 public:
-	struct SlotData {
-		uint16_t length;
-		char *ptr;
-	};
-private:
-	SPSegment::SlotData lookupData(TID tid);
-
-public:
-
-	void SPSegment(BufferManager &bufferManager);
+	SPSegment(BufferManager &bufferManager, uint64_t segmentId)
+			: bufferManager(bufferManager), segmentId(segmentId) { };
 
 	TID insert(const Record &record);
 

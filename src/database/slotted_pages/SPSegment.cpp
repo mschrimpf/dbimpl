@@ -6,18 +6,15 @@
 #include <stdexcept>
 #include "SPSegment.hpp"
 
-// TODO: when should we use & ?
-
-SPSegment::SPSegment(BufferManager &bufferManager) : bufferManager(bufferManager) {
-}
+using SlottedPage::Slot;
 
 TID SPSegment::insert(const Record &record) {
 	size_t data_size = record.getLen();
 	BufferFrame frame = this->findOrCreatePage(data_size);
 	SlottedPage page = *reinterpret_cast<SlottedPage *>(&frame);
-	TID tid = page.createAndWriteSlot(record.getData(), data_size);
+	uint16_t slotId = page.createAndWriteSlot(record.getData(), data_size);
 	this->bufferManager.unfixPage(frame, true);
-	return tid;
+	return TID((uint16_t) frame.getPageId(), slotId);
 
 	// when we redirect, append the 8 byte TID in front of the actual data.
 	// needed for a full table scan, where we scan over memory
@@ -25,44 +22,39 @@ TID SPSegment::insert(const Record &record) {
 
 bool SPSegment::update(TID tid, const Record &record) {
 	// TODO: we might have to reorder the data
+	return false;
 }
 
 Record SPSegment::lookup(TID tid) {
-	SPSegment::SlotData data = this->lookupData(tid);
-	Record record(data.length, data.ptr);
-	return record;
-}
-
-SPSegment::SlotData SPSegment::lookupData(TID tid) {
 	uint64_t pageId = tid.pageId;
 	uint16_t slotOffset = tid.slotOffset;
 
-	SlottedPage *page = this->pageIdSlottedPageMap[pageId];
-	SlottedPage::Slot slot = page->slots[slotOffset];
-	char *dataPtr = page->header.dataStart + slot.offset;
-	uint16_t length = slot.length;
-	if (slot.is_tid == 1) {
-		TID redirectTid;
-		memcpy(&redirectTid, dataPtr, (size_t) length);
-		return lookupData(redirectTid);
+	BufferFrame frame = this->bufferManager.fixPage(this->segmentId, pageId, false);
+	SlottedPage page = *reinterpret_cast<SlottedPage *>(&frame);
+	SlottedPage::Slot slot = page.slots[slotOffset];
+	if (slot.isTid()) {
+		TID redirectTid(0, 0);
+		memcpy(&redirectTid, &slot, sizeof(Slot));
+		return lookup(redirectTid);
 	}
 
-	SlotData data;
-	data.length = length;
-	data.ptr = dataPtr;
-	return data;
+	char *dataPtr = (char *) slot.O;
+	uint32_t length = slot.L;
+	this->bufferManager.unfixPage(frame, false);
+	Record record(length, dataPtr);
+	return record;
 }
 
 BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
 	for (unsigned i(0); i < this->pageCount; i++) {
 		BufferFrame frame = this->bufferManager.fixPage(i, true);
 		SlottedPage page = *reinterpret_cast<SlottedPage *>(&frame);
-		if (page.hasSpaceAtDataFront()) {
+		if (page.hasSpaceAtDataFront(data_size)) {
 			return frame;
 		}
 
 		if (page.canMakeSpace(data_size)) {
-			page.fragment();
+			page.compactify();
 			return frame;
 		}
 
@@ -74,4 +66,8 @@ BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
 	BufferFrame frame = this->bufferManager.fixPage(this->pageCount + 1, true);
 	this->pageCount++;
 	return frame;
+}
+
+bool SPSegment::remove(TID tid) {
+	return false;
 }

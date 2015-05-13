@@ -17,19 +17,19 @@ public:
 	Record(Record &t) = delete;
 
 	// Move Constructor
-	Record(Record &&t);
+	inline Record(Record &&t);
 
 	// Constructor
-	Record(unsigned len, const char *const ptr);
+	inline Record(unsigned len, const char *const ptr);
 
 	// Destructor
-	~Record();
+	inline ~Record();
 
 	// Get pointer to data
-	const char *getData() const;
+	inline const char *getData() const;
 
 	// Get data size in bytes
-	unsigned getLen() const;
+	inline unsigned getLen() const;
 };
 
 Record::Record(Record &&t) : len(t.len), data(t.data) {
