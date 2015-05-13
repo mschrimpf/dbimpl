@@ -2,8 +2,15 @@
 #include <stdint.h>
 #include <mutex>
 #include "BufferManager.hpp"
-#include "../util/TwoQList.h"
+#include "TwoQList.h"
 #include "../util/debug.h"
+#include "PageIOUtil.h"
+
+#ifdef _WIN32
+#define PRId64 "llu"
+#else
+#include <inttypes.h>
+#endif
 
 /* Keeps up to size frames in main memory*/
 BufferManager::BufferManager(uint64_t pagesInMemory) {
@@ -68,9 +75,7 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 		debug(pageId, "framelock aquired");
 	} else {
 		// frame does not exist
-		debug(pageId, "Frame for pageId %"
-		PRId64
-		" does not exist", pageId);
+		debug(pageId, "Frame for pageId %" PRId64 " does not exist", pageId);
 		if (this->isSpaceAvailable()) { // don't have to replace anything
 			debug(pageId, "space available -> create frame");
 			frame = this->createFrame(pageId, segmentId);
@@ -84,9 +89,8 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 		} else { // TODO: might need a while here
 			debug(pageId, "no space available -> replace");
 			frame = this->replacementStrategy->pop();
-			debug(pageId, "Popping frame with page id %"
-			PRId64,
-					frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
+			debug(pageId, "Popping frame with page id %" PRId64,
+				  frame != nullptr ? frame->getPageId() : (unsigned long long) -1);
 			if (frame == nullptr) {
 				this->global_unlock();
 				throw std::runtime_error("Frame is not swapped in, no space is available and no pages are poppable");
@@ -126,10 +130,8 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 		debug(pageId, "loaded from disk");
 		frame->unlock();
 		debug(pageId, "unlocked frame");
-		debug(pageId, "try to lock frame with id: %"
-		PRId64
-		" | exclusive: %s", frame->getPageId(),
-				exclusive ? "true" : "false");
+		debug(pageId, "try to lock frame with id: %" PRId64 " | exclusive: %s", frame->getPageId(),
+			  exclusive ? "true" : "false");
 		frame->lock(exclusive);
 	}
 	this->global_unlock();

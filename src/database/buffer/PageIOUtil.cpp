@@ -2,11 +2,10 @@
 // Created by Daniel on 30.04.2015.
 //
 
-
 #include <fcntl.h>
 #include <stdio.h>
 #include "PageIOUtil.h"
-#include "debug.h"
+#include "../util/debug.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
@@ -15,6 +14,12 @@
 #include <iostream>
 #include <unistd.h>
 #include <inttypes.h>
+
+#ifdef _WIN32
+#define PRId64 "llu"
+#else
+#include <inttypes.h>
+#endif
 
 void PageIOUtil::readPage(uint64_t pageId, uint64_t segmentId, void *data, unsigned len) {
 	int fd;

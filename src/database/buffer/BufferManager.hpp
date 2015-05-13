@@ -8,7 +8,7 @@
 #include "mutex"
 #include "BufferFrame.hpp"
 #include "IReplacementStrategy.h"
-#include "../util/PageIOUtil.h"
+#include "PageIOUtil.h"
 #include "IPageIO.h"
 
 const unsigned PAGE_SIZE_BYTE = 4096;
