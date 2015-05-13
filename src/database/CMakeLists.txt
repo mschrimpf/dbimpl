@@ -20,6 +20,8 @@ set(SLOTTED_PAGES_SOURCE_FILES
     slotted_pages/SPSegment.cpp
     slotted_pages/Record.hpp)
 set(RELATIONS_SOURCE_FILES
+    relations/Schema.hpp
+    relations/Types.hpp
     relations/parser/Parser.cpp
     relations/parser/Schema.cpp)
-add_library(database ${BUFFER_SOURCE_FILES} ${SLOTTED_PAGES_SOURCE_FILES} ${RELATIONS_SOURCE_FILES})
+add_library(database ${BUFFER_SOURCE_FILES} ${SLOTTED_PAGES_SOURCE_FILES} ${RELATIONS_SOURCE_FILES} relations/SchemaSerializer.cpp relations/SchemaSerializer.h)
