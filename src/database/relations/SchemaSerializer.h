@@ -9,5 +9,6 @@
 
 void storeSchema(Schema* schema);
 Schema* loadSchema();
+size_t size_of_schema(Schema schema);
 
 #endif //PROJECT_SCHEMASERIALIZER_H
