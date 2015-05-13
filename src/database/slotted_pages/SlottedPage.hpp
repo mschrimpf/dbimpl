@@ -24,7 +24,7 @@ struct SlottedPage {
 		 * Unless the very last slot is deleted, this value only grows, but never decreases.
 		 */
 		unsigned slotCount;
-		char *firstFreeSlot;
+		uint16_t firstFreeSlot = 0;
 		char *dataStart;
 		/**
 		 * This will always be zero when data is inserted one after another.
@@ -39,17 +39,21 @@ struct SlottedPage {
 	 * T | S | O | O | O | L | L | L
 	 */
 	struct Slot {
-		uint8_t T;
-		uint8_t S;
+		uint32_t T : 8;
 		/** Memory address */
 		uint32_t O : 24;
 		uint32_t L : 24;
+		uint32_t S : 8;
 
 		bool isTid();
 
 		bool wasRedirect();
 
 		void nullTS();
+
+		bool isFree();
+
+		bool isEmptyData();
 	};
 
 	union {
@@ -67,9 +71,15 @@ struct SlottedPage {
 
 	bool hasSpaceAtDataFront(size_t data_size);
 
-	bool canMakeSpace(size_t necessary_space);
+	bool canMakeEnoughSpace(size_t necessary_space);
 
 	size_t spaceBetweenSlotsAndData() const;
+
+	void compactify(char *pageEndPtr);
+
+	char *getSlotData(Slot &slot);
+
+	void setSlotOffset(SlottedPage::Slot &slot, char *data_ptr);
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H

@@ -2,11 +2,10 @@
 // Created by Martin on 12.05.2015.
 //
 
+#include "SPSegment.hpp"
 #include <stdint.h>
 #include <stdexcept>
-#include "SPSegment.hpp"
-
-using SlottedPage::Slot;
+#include <cstring> // memcpy
 
 TID SPSegment::insert(const Record &record) {
 	size_t data_size = record.getLen();
@@ -20,6 +19,10 @@ TID SPSegment::insert(const Record &record) {
 	// needed for a full table scan, where we scan over memory
 }
 
+bool SPSegment::remove(TID tid) {
+	return false;
+}
+
 bool SPSegment::update(TID tid, const Record &record) {
 	// TODO: we might have to reorder the data
 	return false;
@@ -29,16 +32,16 @@ Record SPSegment::lookup(TID tid) {
 	uint64_t pageId = tid.pageId;
 	uint16_t slotOffset = tid.slotOffset;
 
-	BufferFrame frame = this->bufferManager.fixPage(this->segmentId, pageId, false);
+	BufferFrame& frame = this->bufferManager.fixPage(this->segmentId, pageId, false);
 	SlottedPage page = *reinterpret_cast<SlottedPage *>(&frame);
 	SlottedPage::Slot slot = page.slots[slotOffset];
 	if (slot.isTid()) {
 		TID redirectTid(0, 0);
-		memcpy(&redirectTid, &slot, sizeof(Slot));
+		std::memcpy(&redirectTid, &slot, sizeof(SlottedPage::Slot));
 		return lookup(redirectTid);
 	}
 
-	char *dataPtr = (char *) slot.O;
+	char *dataPtr = page.getSlotData(slot);
 	uint32_t length = slot.L;
 	this->bufferManager.unfixPage(frame, false);
 	Record record(length, dataPtr);
@@ -46,15 +49,16 @@ Record SPSegment::lookup(TID tid) {
 }
 
 BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
-	for (unsigned i(0); i < this->pageCount; i++) {
-		BufferFrame frame = this->bufferManager.fixPage(i, true);
+	for (unsigned pageId(0); pageId < this->pageCount; pageId++) {
+		BufferFrame& frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
 		SlottedPage page = *reinterpret_cast<SlottedPage *>(&frame);
 		if (page.hasSpaceAtDataFront(data_size)) {
 			return frame;
 		}
 
-		if (page.canMakeSpace(data_size)) {
-			page.compactify();
+		if (page.canMakeEnoughSpace(data_size)) {
+			char *pageEndPtr = (char *) &page + sizeof(SlottedPage);
+			page.compactify(pageEndPtr);
 			return frame;
 		}
 
@@ -63,11 +67,7 @@ BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
 	}
 
 	// no page found -> create new
-	BufferFrame frame = this->bufferManager.fixPage(this->pageCount + 1, true);
+	BufferFrame& frame = this->bufferManager.fixPage(this->segmentId, this->pageCount + 1, true);
 	this->pageCount++;
 	return frame;
-}
-
-bool SPSegment::remove(TID tid) {
-	return false;
 }

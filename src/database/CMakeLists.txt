@@ -1,17 +1,17 @@
 project(database)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -O3 -g") # TODO: remove -g flag
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread") # TODO: O3
 
 set(BUFFER_SOURCE_FILES
     buffer/BufferFrame.cpp buffer/BufferFrame.hpp
     buffer/BufferManager.cpp buffer/BufferManager.hpp
-    buffer/IPageIO.h
     buffer/IReplacementStrategy.h
+    buffer/TwoQList.h buffer/TwoQList.cpp
+    buffer/IPageIO.h
+    buffer/PageIOUtil.h buffer/PageIOUtil.cpp
     util/Math.cpp util/Math.h
-    util/TwoQList.h util/TwoQList.cpp
     util/debug.h
-    util/debug.cpp
-    util/PageIOUtil.h util/PageIOUtil.cpp)
+    util/debug.cpp)
 set(SLOTTED_PAGES_SOURCE_FILES
     slotted_pages/TID.hpp
     slotted_pages/SlottedPage.hpp
