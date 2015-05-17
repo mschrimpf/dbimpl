@@ -34,6 +34,8 @@ public:
 	bool update(TID tid, const Record &record);
 
 	BufferFrame &findOrCreatePage(size_t data_size);
+
+	SlottedPage * toSlottedPage(BufferFrame &frame) const;
 };
 
 #endif //PROJECT_SPSEGMENT_H

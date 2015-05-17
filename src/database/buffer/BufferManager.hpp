@@ -11,12 +11,11 @@
 #include "PageIOUtil.h"
 #include "IPageIO.h"
 
-const unsigned PAGE_SIZE_BYTE = 4096;
-const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
-const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
-
 class BufferManager {
 public:
+	static const unsigned FRAME_SIZE_BYTE = 4 * 1024;
+	static const unsigned DATA_SIZE_BYTE = FRAME_SIZE_BYTE - sizeof(BufferFrame::Header);
+
 	BufferManager(uint64_t pagesInMemory);
 
 	~BufferManager();
@@ -28,17 +27,20 @@ public:
 	void unfixPage(BufferFrame &frame, bool isDirty);
 
 private:
+	static const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
+	static const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
+
 	std::condition_variable replacementAccessed;
 	uint64_t maxFramesInMemory;
 	char *cache;
 	/** has to be synchronized */
-	IReplacementStrategy * replacementStrategy;
+	IReplacementStrategy *replacementStrategy;
 	/** has to be synchronized */
 	std::unordered_map<uint64_t, BufferFrame *> pageFrameMap;
 	/** has to be synchronized */
-	std::list <char *> freePages;
+	std::list<char *> freePages;
 	/** synchronized */
-	IPageIO * pageIO;
+	IPageIO *pageIO;
 
 	std::mutex global_mutex;
 
@@ -52,7 +54,7 @@ private:
 
 	BufferFrame *createFrame(uint64_t pageId, uint64_t segmentId);
 
-	void * getFreePage();
+	void *getFreePage();
 
 	bool isSpaceAvailable();
 

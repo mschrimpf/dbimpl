@@ -175,10 +175,10 @@ void BufferManager::extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t 
 }
 
 void BufferManager::initCache(uint64_t pages) {
-	pageFrameMap.reserve(pages);
-	this->cache = (char *) malloc((size_t) (pages * PAGE_SIZE_BYTE));
+	pageFrameMap.reserve((size_t) pages);
+	this->cache = (char *) calloc((size_t) pages, FRAME_SIZE_BYTE);
 	for (int i = 0; i < pages; ++i) {
-		char *page_ptr = this->cache + i * PAGE_SIZE_BYTE;
+		char *page_ptr = this->cache + i * FRAME_SIZE_BYTE;
 		this->freePages.push_back(page_ptr);
 	}
 }
@@ -219,11 +219,11 @@ void BufferManager::reinitialize(BufferFrame *frame, uint64_t newPageId, uint64_
 }
 
 void BufferManager::writeOut(BufferFrame *frame) {
-	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
+	this->pageIO->writePage(frame->getPageId(), frame->getSegmentId(), frame->getData(), FRAME_SIZE_BYTE);
 }
 
 void BufferManager::loadFromDiskIfExists(BufferFrame *frame) {
-	this->pageIO->readPage(frame->getPageId(), frame->getSegmentId(), frame->getData(), PAGE_SIZE_BYTE);
+	this->pageIO->readPage(frame->getPageId(), frame->getSegmentId(), frame->getData(), FRAME_SIZE_BYTE);
 }
 
 void BufferManager::global_lock() {

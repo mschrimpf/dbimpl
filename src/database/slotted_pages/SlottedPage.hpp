@@ -13,9 +13,6 @@
 
 // TODO: might have to implement redirects
 // (initial implementation could be to just throw an exception when the page is full)
-/**
- * If we did everything right: sizeof(SlottedPage) = PAGE_SIZE
- */
 struct SlottedPage {
 	struct SPHeader {
 		uint64_t LSN;
@@ -24,7 +21,7 @@ struct SlottedPage {
 		 * Unless the very last slot is deleted, this value only grows, but never decreases.
 		 */
 		unsigned slotCount;
-		uint16_t firstFreeSlot = 0;
+		uint16_t firstFreeSlot;
 		char *dataStart;
 		/**
 		 * This will always be zero when data is inserted one after another.
@@ -32,6 +29,10 @@ struct SlottedPage {
 		 * and fragment our total available space.
 		 */
 		unsigned fragmentedSpace;
+
+		SPHeader() : LSN(0), slotCount(0), firstFreeSlot(0),
+					 dataStart(nullptr),
+					 fragmentedSpace(0) { }
 	} header;
 
 	/**
@@ -63,9 +64,11 @@ struct SlottedPage {
 		 * this variable can be used as the offset within the struct
 		 * using reinterpret_cast.
 		 */
-		Slot slots[(PAGE_SIZE_BYTE - sizeof(SPHeader)) / sizeof(Slot)];
-		char data[PAGE_SIZE_BYTE - sizeof(SPHeader)];
+		Slot slots[(BufferManager::DATA_SIZE_BYTE - sizeof(SPHeader)) / sizeof(Slot)];
+		char data[BufferManager::DATA_SIZE_BYTE - sizeof(SPHeader)];
 	};
+
+	SlottedPage();
 
 	uint16_t createAndWriteSlot(const char *data, size_t data_size);
 
@@ -80,6 +83,10 @@ struct SlottedPage {
 	char *getSlotData(Slot &slot);
 
 	void setSlotOffset(SlottedPage::Slot &slot, char *data_ptr);
+
+	void init() const;
+
+	void init();
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H
