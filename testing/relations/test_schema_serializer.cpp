@@ -53,6 +53,7 @@ TEST(SchemaSerializer, SameSchema) {
 
 void Equals(Schema firstSchema, Schema secondSchema){
     EXPECT_EQ(firstSchema.relations.size(), secondSchema.relations.size());
+    EXPECT_EQ(firstSchema.toString(), secondSchema.toString());
     for (int r = 0; r < firstSchema.relations.size(); ++r) {
         Schema::Relation relationWrite = firstSchema.relations[r];
         Schema::Relation relationRead = secondSchema.relations[r];
