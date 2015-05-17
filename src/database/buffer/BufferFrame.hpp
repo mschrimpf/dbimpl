@@ -2,6 +2,7 @@
 #define PROJECT_BUFFER_FRAME_H
 
 #include "pthread.h"
+//#include "BufferManager.hpp"
 #include <stdint.h>
 
 class BufferFrame {
@@ -9,11 +10,6 @@ class BufferFrame {
 	const uint8_t USED_FLAG = 0x2; // 010
 
 private:
-	void *data;
-	uint64_t pageId;
-	uint64_t segmentId;
-	pthread_rwlock_t rwlock;
-	uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
 	bool isFlagSet(uint8_t mask);
 
 	void setFlagBool(bool flagSet, uint8_t flag);
@@ -22,8 +18,14 @@ private:
 
 	void unsetFlag(uint8_t flag);
 
-
 public:
+	struct Header {
+		void *data;
+		uint64_t pageId;
+		uint64_t segmentId;
+		pthread_rwlock_t rwlock;
+		uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
+	} header; // TODO: private
 
 	bool usedBefore();
 

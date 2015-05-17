@@ -2,34 +2,34 @@
 #include "BufferFrame.hpp"
 
 BufferFrame::BufferFrame(uint64_t pageId, uint64_t segmentId, void *data) {
-	this->pageId = pageId;
-	this->segmentId = segmentId;
-	this->data = data;
-	pthread_rwlock_init(&rwlock, nullptr);
+	this->header.pageId = pageId;
+	this->header.segmentId = segmentId;
+	this->header.data = data;
+	pthread_rwlock_init(&header.rwlock, nullptr);
 }
 
 BufferFrame::~BufferFrame(){
-	pthread_rwlock_destroy(&rwlock);
+	pthread_rwlock_destroy(&header.rwlock);
 }
 
 void *BufferFrame::getData() {
-	return this->data;
+	return this->header.data;
 }
 
 void BufferFrame::setPageId(uint64_t pageId) {
-	this->pageId = pageId;
+	this->header.pageId = pageId;
 }
 
 uint64_t BufferFrame::getPageId() {
-	return this->pageId;
+	return this->header.pageId;
 }
 
 void BufferFrame::setSegmentId(uint64_t segmentId) {
-	this->segmentId = segmentId;
+	this->header.segmentId = segmentId;
 }
 
 uint64_t BufferFrame::getSegmentId() {
-	return this->segmentId;
+	return this->header.segmentId;
 }
 
 void BufferFrame::setDirty(bool dirty) {
@@ -41,7 +41,7 @@ bool BufferFrame::isDirty() {
 }
 
 bool BufferFrame::isFlagSet(uint8_t mask) {
-	bool result = (this->state & mask) == mask;
+	bool result = (this->header.state & mask) == mask;
 	return result;
 }
 
@@ -54,28 +54,28 @@ void BufferFrame::setFlagBool(bool flagSet, uint8_t flag) {
 }
 
 void BufferFrame::setFlag(uint8_t flag) {
-	this->state |= flag;
+	this->header.state |= flag;
 }
 
 void BufferFrame::unsetFlag(uint8_t flag) {
-	this->state &= ~flag;
+	this->header.state &= ~flag;
 }
 
 void BufferFrame::resetFlags() {
-	this->state &= 0x0;
+	this->header.state &= 0x0;
 }
 
 
 void BufferFrame::lock(bool exclusive) {
 	if(exclusive) {
-		pthread_rwlock_wrlock(&rwlock);
+		pthread_rwlock_wrlock(&header.rwlock);
 	} else {
-		pthread_rwlock_rdlock(&rwlock);
+		pthread_rwlock_rdlock(&header.rwlock);
 	}
 }
 
 void BufferFrame::unlock() {
-	pthread_rwlock_unlock(&rwlock);
+	pthread_rwlock_unlock(&header.rwlock);
 }
 
 
@@ -94,9 +94,9 @@ void BufferFrame::setUnusedBefore(){
 bool BufferFrame::tryLock(bool exclusive) {
 	int result;
 	if (exclusive){
-		result = pthread_rwlock_trywrlock(&rwlock);
+		result = pthread_rwlock_trywrlock(&header.rwlock);
 	}else{
-		result = pthread_rwlock_tryrdlock(&rwlock);
+		result = pthread_rwlock_tryrdlock(&header.rwlock);
 	}
 	return result == 0;
 }
