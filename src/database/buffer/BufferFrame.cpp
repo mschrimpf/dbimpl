@@ -32,14 +32,6 @@ uint64_t BufferFrame::getSegmentId() {
 	return this->header.segmentId;
 }
 
-void BufferFrame::setDirty(bool dirty) {
-	this->setFlagBool(dirty, DIRTY_FLAG);
-}
-
-bool BufferFrame::isDirty() {
-	return this->isFlagSet(DIRTY_FLAG);
-}
-
 bool BufferFrame::isFlagSet(uint8_t mask) {
 	bool result = (this->header.state & mask) == mask;
 	return result;
@@ -78,6 +70,14 @@ void BufferFrame::unlock() {
 	pthread_rwlock_unlock(&header.rwlock);
 }
 
+
+void BufferFrame::setDirty(bool dirty) {
+	this->setFlagBool(dirty, DIRTY_FLAG);
+}
+
+bool BufferFrame::isDirty() {
+	return this->isFlagSet(DIRTY_FLAG);
+}
 
 bool BufferFrame::usedBefore() {
 	return this->isFlagSet(USED_FLAG);

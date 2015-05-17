@@ -4,30 +4,35 @@
 #include "TwoQList.h"
 
 void TwoQList::push(BufferFrame *frame) {
+	if(frame->isFlagSet(BufferFrame::IN_FIFO_QUEUE)) {
+		FifoQueue.remove(frame);
+	} else if(frame->isFlagSet(BufferFrame::IN_LRU_QUEUE)) {
+		LruQueue.remove(frame);
+	}
+
 	if (frame->usedBefore()) {
 		//LruSet.insert(frame);
 		LruQueue.push_back(frame);
+		frame->setFlag(BufferFrame::IN_LRU_QUEUE);
 	} else {
 		FifoQueue.push_back(frame);
 		//FifoSet.insert(frame);
+		frame->setFlag(BufferFrame::IN_FIFO_QUEUE);
 	}
 }
 
 BufferFrame *TwoQList::pop() {
+	BufferFrame *frame = nullptr;
 	if (FifoQueue.size() > 0) {
-		BufferFrame *front = FifoQueue.front();
+		frame = FifoQueue.front();
 		FifoQueue.pop_front();
-		//FifoSet.erase(front);
-		return front;
+		frame->unsetFlag(BufferFrame::IN_FIFO_QUEUE);
 	} else if (LruQueue.size() > 0) {
-		BufferFrame *front = LruQueue.front();
+		frame = LruQueue.front();
 		LruQueue.pop_front();
-		//LruSet.erase(front);
-		return front;
-	} else {
-		//no frame in List
-		return nullptr;
+		frame->unsetFlag(BufferFrame::IN_LRU_QUEUE);
 	}
+	return frame;
 }
 
 void TwoQList::remove(BufferFrame *frame) {

@@ -6,19 +6,14 @@
 #include <stdint.h>
 
 class BufferFrame {
-	const uint8_t DIRTY_FLAG = 0x1; // 001
-	const uint8_t USED_FLAG = 0x2; // 010
-
 private:
-	bool isFlagSet(uint8_t mask);
-
-	void setFlagBool(bool flagSet, uint8_t flag);
-
-	void setFlag(uint8_t flag);
-
-	void unsetFlag(uint8_t flag);
+	static const uint8_t DIRTY_FLAG = 0x1; // 0000 0001
+	static const uint8_t USED_FLAG = 0x2; // 0000 0010
 
 public:
+	static const uint8_t IN_LRU_QUEUE = 0x4; // 0000 0100
+	static const uint8_t IN_FIFO_QUEUE = 0x8; // 0000 1000
+
 	struct Header {
 		void *data;
 		uint64_t pageId;
@@ -27,19 +22,13 @@ public:
 		uint8_t state; // combine dirty and exclusive flag - see chapter 2, slide 17
 	} header; // TODO: private
 
-	bool usedBefore();
-
-	void setUsedBefore();
-
 	BufferFrame(uint64_t pageId, uint64_t segmentId, void *data);
 
 	~BufferFrame();
 
 	void *getData();
 
-	void setDirty(bool dirty);
-
-	bool isDirty();
+	/* Page and Segment */
 
 	void setPageId(uint64_t pageId);
 
@@ -49,15 +38,35 @@ public:
 
 	uint64_t getSegmentId();
 
-	void resetFlags();
+	/* Latching */
 
 	void lock(bool exclusive);
 
 	void unlock();
 
+	bool tryLock(bool exclusive);
+
+	/* Flagging */
+
+	void setFlag(uint8_t flag);
+
+	bool isFlagSet(uint8_t mask);
+
+	void setFlagBool(bool flagSet, uint8_t flag);
+
+	void unsetFlag(uint8_t flag);
+
+	void setDirty(bool dirty);
+
+	bool isDirty();
+
+	bool usedBefore();
+
+	void setUsedBefore();
+
 	void setUnusedBefore();
 
-	bool tryLock(bool exclusive);
+	void resetFlags();
 };
 
 #endif //PROJECT_BUFFER_FRAME_H
