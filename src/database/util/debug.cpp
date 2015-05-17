@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include "debug.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 
 // TODO: make thread-safe
 

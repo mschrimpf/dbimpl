@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <mutex>
 #include <inttypes.h>
+#include <stdio.h>
 #include "BufferManager.hpp"
 #include "TwoQList.h"
 #include "../util/debug.h"
@@ -58,7 +59,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 }
 
 BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool exclusive) {
-	global_lock();
+	this->global_lock();
 
 	debug(pageId, "trying to get global lock after extracting page and segment id");
 
@@ -107,14 +108,16 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 				frame->unlock();
 				this->global_lock();
 
-				if (frame->tryLock(true)) {
-					if (frame->isDirty()) {
-						frame->unlock();
-					} else {
-						frame->unlock();
-						replacementStrategy->remove(frame);
-					}
-				}
+//				if (frame->tryLock(true)) {
+//					if (frame->isDirty()) {
+//						frame->unlock();
+//					} else {
+//						frame->unlock();
+//						replacementStrategy->remove(frame);
+//					}
+//				} else {
+//					// TODO
+//				}
 			} else {
 				debug(pageId, "Not writing out since not dirty");
 				frame->unlock();
@@ -123,6 +126,7 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 			debug(pageId, "frame reinitialized");
 
 			// TODO: use another mutex for downgrade
+			this->global_unlock();
 		}
 		debug(pageId, "Lock frame to load from disk");
 		frame->lock(true); // TODO: optimize - only lock if page exists
@@ -135,7 +139,6 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 			  exclusive ? "true" : "false");
 		frame->lock(exclusive);
 	}
-	this->global_unlock();
 	return *frame;
 }
 
@@ -163,6 +166,7 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	this->global_lock();
 	this->replacementStrategy->push(&frame);
 	frame.unlock();
+	this->global_unlock();
 }
 
 void BufferManager::extractPageAndSegmentId(uint64_t pageAndSegmentId, uint64_t &pageId, uint64_t &segmentId) {
