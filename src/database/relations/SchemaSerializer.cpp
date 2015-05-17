@@ -33,12 +33,13 @@ Schema loadSchema(int fd) {
 
     // read size of schema
     char * sizeBuffer = new char[sizeof(size_t)];
-    pread(fd, sizeBuffer, sizeof(size_t), 0);
-    size_t size_of_schema = *reinterpret_cast<size_t*>(sizeBuffer);
+    read(fd, sizeBuffer, sizeof(size_t));
+    size_t size_of_schema = *reinterpret_cast<size_t *>(&sizeBuffer);
+
 
     //* read whole schema into buffer
     char * buffer = new char[size_of_schema];
-    pread(fd, buffer, size_of_schema, sizeof(size_t));
+    read(fd, buffer, size_of_schema);
 
     //* create vector of relations
     size_t number_of_relations = *reinterpret_cast<size_t*> (buffer);
@@ -115,10 +116,11 @@ Schema loadSchema(int fd) {
 
 
 void storeSchema(Schema schema, int fd) {
-    size_t buffer_size = size_of_schema(schema);
-    char *buffer = new char[buffer_size + sizeof(size_t)]; //size_t is for storing the length of the schema
+    size_t schema_size = size_of_schema(schema);
+    size_t buffer_size = schema_size + sizeof(size_t);
+    char *buffer = new char[buffer_size]; //size_t is for storing the length of the schema
 
-    memcpy(buffer, &buffer_size, sizeof(size_t)); //copy size of schema
+    memcpy(buffer, &schema_size, sizeof(size_t)); //copy size of schema
     buffer += sizeof(size_t);
     size_t used_bytes = sizeof(size_t);
 
@@ -139,7 +141,8 @@ void storeSchema(Schema schema, int fd) {
         buffer += relation.name.size();
         used_bytes += relation.name.size();
 
-        memcpy(buffer, (char *) relation.attributes.size(), sizeof(size_t)); //copy number of attributes
+        size_t relation_attribute_size = relation.attributes.size();
+        memcpy(buffer, &relation_attribute_size, sizeof(size_t)); //copy number of attributes
         buffer += sizeof(size_t);
         used_bytes += sizeof(size_t);
 
@@ -169,26 +172,25 @@ void storeSchema(Schema schema, int fd) {
             memcpy(buffer, &notnull, sizeof(notnull)); //copy not null
             buffer += sizeof(notnull);
             used_bytes += sizeof(notnull);
+        }
+        size_t primary_keys_size = relation.primaryKey.size();
+        memcpy(buffer, &primary_keys_size, sizeof(size_t)); //copy number of primary keys
+        buffer += sizeof(size_t);
+        used_bytes += sizeof(size_t);
 
-            size_t primary_keys_size = relation.primaryKey.size();
-            memcpy(buffer, &primary_keys_size, sizeof(size_t)); //copy number of primary keys
-            buffer += sizeof(size_t);
-            used_bytes += sizeof(size_t);
-
-            for (size_t k = 0; k < relation.primaryKey.size(); ++k) {
-                unsigned val = relation.primaryKey[k];
-                memcpy(buffer, &val, sizeof(unsigned)); //copy id of primary key
-                buffer += sizeof(unsigned);
-                used_bytes += sizeof(unsigned);
-            }
+        for (size_t k = 0; k < relation.primaryKey.size(); ++k) {
+            unsigned val = relation.primaryKey[k];
+            memcpy(buffer, &val, sizeof(unsigned)); //copy id of primary key
+            buffer += sizeof(unsigned);
+            used_bytes += sizeof(unsigned);
         }
     }
     if (buffer_size == used_bytes) {
-        std::cerr << "Size of Schema was calculated wrong! Expected difference 0, was: " << buffer_size <<
+        std::cerr << "Size of Schema was calculated wrong! Expected difference 0, was: " << schema_size <<
         std::endl;
     }
     // set the pointer to the beginning
-    *buffer -= buffer_size;
+    buffer -= buffer_size;
     write(fd, buffer, buffer_size);
 }
 
@@ -204,11 +206,11 @@ size_t size_of_schema(Schema schema){
 
         for (size_t a = 0; a  < relation.attributes.size(); ++a){
             Schema::Relation::Attribute attribute = relation.attributes[a];
-            buffer_size += sizeof(int); // length of attribute name
+            buffer_size += sizeof(size_t); // length of attribute name
             buffer_size += attribute.name.size(); // attribute name
-            buffer_size += sizeof(Schema::Relation::Attribute::type); // attribute type
+            buffer_size += sizeof(char); // attribute type
             buffer_size += sizeof(Schema::Relation::Attribute::len); // attribute len
-            buffer_size += sizeof(bool); //attribute not null
+            buffer_size += sizeof(char); //attribute not null
         }
         buffer_size += sizeof(size_t); // number of primary keys
         buffer_size += sizeof(unsigned int) * relation.primaryKey.size();

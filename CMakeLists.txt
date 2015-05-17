@@ -18,5 +18,6 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 add_subdirectory(src/database)
 add_subdirectory(testing/buffer)
 add_subdirectory(testing/slotted_pages)
+add_subdirectory(testing/relations)
 
 

@@ -2,6 +2,13 @@
 // Created by daniel on 5/13/15.
 //
 
+
+
+#include <fcntl.h>
+#include "gtest/gtest.h"
+#include "../../src/database/relations/parser/Parser.hpp"
+#include "../../src/database/relations/SchemaSerializer.h"
+
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
 using ::testing::Test;
@@ -11,23 +18,32 @@ using ::testing::TestInfo;
 using ::testing::TestPartResult;
 using ::testing::UnitTest;
 
-#include "gtest/gtest.h"
-#include "../../src/database/relations/parser/Parser.hpp"
-#include "../../src/database/relations/SchemaSerializer.h"
-
-
 TEST(SchemaSerializer, SameSize) {
-    Parser p(argv[1]);
+    const char * tempFile = "/media/daniel/Studium/Universität/Master/2.Semester/Datenbankimplementierung/repository/dbimpl/testing/relations/schema.temp";
+    Parser p("/media/daniel/Studium/Universität/Master/2.Semester/Datenbankimplementierung/repository/dbimpl/testing/relations/test.sql");
+    int fd = -1;
+    Schema schemaWrite;
+    Schema schemaRead;
+
     try {
-        Schema* schema = p.parse().get();
-        storeSchema(schema);
-        Schema* schema2 = loadSchema();
-
-        EXPECT_EQ(sizeof(*schema), sizeof(*schema2));
-        EXPECT_EQ(*schema, *schema2); //will fail if references are checked
-
-    } catch (ParserError& e) {
+        schemaWrite = *(p.parse().get());
+        fd = open(tempFile, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+        storeSchema(schemaWrite, fd);
+    } catch (ParserError &e) {
         std::cerr << e.what() << std::endl;
         EXPECT_TRUE(false);
+    }
+    if (fd != -1) {
+        close(fd);
+    }
+    fd = open(tempFile, O_RDONLY);
+    schemaRead = loadSchema(fd);
+
+    EXPECT_EQ(sizeof(schemaWrite), sizeof(schemaRead));
+    //EXPECT_EQ(schemaWrite, schemaRead); //will fail if references are checked
+
+    if (fd != -1) {
+        close(fd);
+        remove(tempFile);
     }
 }
