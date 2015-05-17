@@ -7,7 +7,6 @@
 #include <iostream>
 #include <unistd.h>
 #include "SchemaSerializer.h"
-#include "../../database/util/debug.h"
 #include "../buffer/BufferManager.hpp"
 
 //  ++++++++++++++++++++++
@@ -34,8 +33,7 @@ Schema loadSchema(int fd) {
     // read size of schema
     char * sizeBuffer = new char[sizeof(size_t)];
     read(fd, sizeBuffer, sizeof(size_t));
-    size_t size_of_schema = *reinterpret_cast<size_t*>(&sizeBuffer);
-
+    size_t size_of_schema = *reinterpret_cast<size_t*>(sizeBuffer);
 
     //* read whole schema into buffer
     char * buffer = new char[size_of_schema];
@@ -191,6 +189,8 @@ void storeSchema(Schema schema, int fd) {
     }
     // set the pointer to the beginning
     buffer -= buffer_size;
+
+    size_t stored_size_of_schema = *reinterpret_cast<size_t*>(buffer);
     write(fd, buffer, buffer_size);
 }
 

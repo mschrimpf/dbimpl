@@ -19,8 +19,8 @@ using ::testing::TestPartResult;
 using ::testing::UnitTest;
 
 TEST(SchemaSerializer, SameSize) {
-    const char * tempFile = "testing/relations/schema.temp";
-    Parser p("testing/relations/test.sql");
+    const char * tempFile = "schema.temp";
+    Parser p("test.sql");
     int fd = -1;
     Schema schemaWrite;
     Schema schemaRead;
