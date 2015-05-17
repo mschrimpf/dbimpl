@@ -38,7 +38,7 @@ bool SPSegment::remove(TID tid) {
 	if (!page->isInRange(slotOffset)) {
 		return false;
 	}
-	SlottedPage::Slot *slot = page->getExistingSlot(slotOffset);
+	Slot *slot = page->getExistingSlot(slotOffset);
 	if (slot->isFree()) {
 		return false;
 	}
@@ -66,7 +66,7 @@ Record SPSegment::lookup(TID tid) {
 	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, false);
 	SlottedPage *page = toSlottedPage(frame);
 	debug("Retrieving slot %" PRId16 " from page %" PRId64, slotOffset, pageId);
-	SlottedPage::Slot *slot = page->getExistingSlot(slotOffset);
+	Slot *slot = page->getExistingSlot(slotOffset);
 	if (slot->isFree()) {
 		throw std::invalid_argument("Requested slot is free (marked as deleted)");
 	}

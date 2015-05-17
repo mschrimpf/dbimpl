@@ -29,42 +29,10 @@ void SlottedPage::init() {
 	}
 }
 
-bool SlottedPage::Slot::isTid() {
-	return T == 0x11111111b;
-}
-
-TID SlottedPage::Slot::getTid() {
-	TID tid(0, 0);
-	std::memcpy(&tid, this, sizeof(SlottedPage::Slot));
-	return tid;
-}
-
-bool SlottedPage::Slot::wasRedirect() {
-	return S != 0;
-}
-
-void SlottedPage::Slot::nullTS() {
-	T = 0;
-	S = 0;
-}
-
-void SlottedPage::Slot::markAsFree() {
-	O = 0;
-	L = 0;
-}
-
-bool SlottedPage::Slot::isFree() {
-	return O == 0 && L == 0;
-}
-
-bool SlottedPage::Slot::isEmptyData() {
-	return O > 0 && L == 0;
-}
-
 uint16_t SlottedPage::createAndWriteSlot(const char *data, size_t data_size) {
 	uint16_t slotIndex = this->header.firstFreeSlot;
 	debug("First free slot: %" PRIu16 " | slotCount: %u", slotIndex, header.slotCount);
-	SlottedPage::Slot &slot = this->slots[slotIndex];
+	Slot &slot = this->slots[slotIndex];
 	if (slotIndex == this->header.slotCount) {
 		this->header.slotCount++;
 	}
@@ -75,7 +43,7 @@ uint16_t SlottedPage::createAndWriteSlot(const char *data, size_t data_size) {
 	debug("Write data");
 	slot.nullTS();
 	char *dataAddress = this->header.dataStart - data_size;
-	slot.O = dataAddress - (char *) (SlottedPage::Slot *) slots;
+	slot.O = dataAddress - (char *) (Slot *) slots;
 	slot.L = data_size;
 
 	std::memcpy(dataAddress, data, data_size);
@@ -103,8 +71,8 @@ bool SlottedPage::hasSpaceAtDataFront(size_t data_size) {
 }
 
 size_t SlottedPage::spaceBetweenSlotsAndData() const {
-	SlottedPage::Slot *slotStart = (SlottedPage::Slot *) slots;
-	SlottedPage::Slot *slotEnd = slotStart + header.slotCount * sizeof(Slot);
+	Slot *slotStart = (Slot *) slots;
+	Slot *slotEnd = slotStart + header.slotCount * sizeof(Slot);
 	return header.dataStart - (char *) slotEnd;
 }
 
@@ -114,13 +82,13 @@ bool SlottedPage::canMakeEnoughSpace(size_t necessary_space) {
 }
 
 void SlottedPage::compactify(char *pageEndPtr) {
-	std::vector<SlottedPage::Slot *> sortedSlots;
+	std::vector<Slot *> sortedSlots;
 	sortedSlots.reserve(this->header.slotCount);
 	for (int i = 0; i < this->header.slotCount; i++) {
 		sortedSlots.emplace_back(&this->slots[i]);
 	}
 	struct less_than_key {
-		inline bool operator()(const SlottedPage::Slot *slot1, const SlottedPage::Slot *slot2) {
+		inline bool operator()(const Slot *slot1, const Slot *slot2) {
 			return (slot1->O > slot2->O); // last data pointer at the beginning
 		}
 	};
@@ -136,7 +104,7 @@ void SlottedPage::compactify(char *pageEndPtr) {
 	this->header.fragmentedSpace = 0;
 }
 
-SlottedPage::Slot *SlottedPage::getExistingSlot(uint16_t slotOffset) {
+Slot *SlottedPage::getExistingSlot(uint16_t slotOffset) {
 	debug("Retrieving slot %" PRIu16 " | slotCount: %u", slotOffset, header.slotCount);
 	if (!isInRange(slotOffset)) {
 		throw std::invalid_argument("slotOffset is greater than or equal to the slotCount");
@@ -144,16 +112,16 @@ SlottedPage::Slot *SlottedPage::getExistingSlot(uint16_t slotOffset) {
 	return &this->slots[slotOffset];
 }
 
-char *SlottedPage::getSlotData(SlottedPage::Slot &slot) {
+char *SlottedPage::getSlotData(Slot &slot) {
 	return (char *) &this->slots[0] + (intptr_t) slot.O;
 }
 
-void SlottedPage::setSlotOffset(SlottedPage::Slot &slot, char *data_ptr) {
+void SlottedPage::setSlotOffset(Slot &slot, char *data_ptr) {
 	slot.O = data_ptr - (char *) &this->slots[0];
 }
 
-bool SlottedPage::isLastSlot(SlottedPage::Slot &slot) {
-	return slot.O + (char *) (SlottedPage::Slot *) slots == this->header.dataStart;
+bool SlottedPage::isLastSlot(Slot &slot) {
+	return slot.O + (char *) (Slot *) slots == this->header.dataStart;
 }
 
 bool SlottedPage::isInRange(uint16_t slotOffset) {

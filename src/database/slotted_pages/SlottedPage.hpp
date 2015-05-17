@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include "../buffer/BufferManager.hpp"
 #include "TID.hpp"
+#include "Slot.hpp"
 
 // TODO: might have to implement redirects
 // (initial implementation could be to just throw an exception when the page is full)
@@ -30,33 +31,6 @@ struct SlottedPage {
 		 */
 		unsigned fragmentedSpace;
 	} header;
-
-	/**
-	 * 8-byte control structure.
-	 * According to the slides: T | S | O | O | O | L | L | L
-	 * Actual implementation: T | O | O | O | L | L | L | O due to alignment issues
-	 */
-	struct Slot {
-		uint32_t T : 8;
-		/** Memory address */
-		uint32_t O : 24;
-		uint32_t L : 24;
-		uint32_t S : 8;
-
-		bool isTid();
-
-		TID getTid();
-
-		bool wasRedirect();
-
-		void nullTS();
-
-		void markAsFree();
-
-		bool isFree();
-
-		bool isEmptyData();
-	};
 
 	union {
 		/*
@@ -83,7 +57,7 @@ struct SlottedPage {
 
 	char *getSlotData(Slot &slot);
 
-	void setSlotOffset(SlottedPage::Slot &slot, char *data_ptr);
+	void setSlotOffset(Slot &slot, char *data_ptr);
 
 	void init();
 
@@ -91,7 +65,7 @@ struct SlottedPage {
 
 	uint16_t findFirstFreeSlot(uint16_t lastFreeSlot);
 
-	bool isLastSlot(SlottedPage::Slot &slot);
+	bool isLastSlot(Slot &slot);
 
 	bool isInRange(uint16_t slotOffset);
 };

@@ -14,6 +14,8 @@ set(BUFFER_SOURCE_FILES
     util/debug.cpp)
 set(SLOTTED_PAGES_SOURCE_FILES
     slotted_pages/TID.hpp
+    slotted_pages/Slot.hpp
+    slotted_pages/Slot.cpp
     slotted_pages/SlottedPage.hpp
     slotted_pages/SlottedPage.cpp
     slotted_pages/SPSegment.hpp

@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "../../src/database/slotted_pages/SlottedPage.hpp"
+#include "../../src/database/buffer/BufferManager.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -20,9 +21,10 @@ TEST(TidTest, SizeIs8Byte) {
 }
 
 TEST(SlotTest, SizeIs8Byte) {
-	EXPECT_EQ(8, sizeof(SlottedPage::Slot));
+	EXPECT_EQ(8, sizeof(Slot));
 }
 
 TEST(SlottedPageTest, SizeMatchesPageSize) {
-	EXPECT_EQ(BufferManager::DATA_SIZE_BYTE, sizeof(SlottedPage));
+	unsigned int dataSizeByte = BufferManager::DATA_SIZE_BYTE;
+	EXPECT_EQ(dataSizeByte, sizeof(SlottedPage));
 }
