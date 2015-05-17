@@ -185,8 +185,8 @@ void storeSchema(Schema schema, int fd) {
             used_bytes += sizeof(unsigned);
         }
     }
-    if (buffer_size == used_bytes) {
-        std::cerr << "Size of Schema was calculated wrong! Expected difference 0, was: " << schema_size <<
+    if (buffer_size != used_bytes) {
+        std::cerr << "Size of Schema was calculated wrong! Expected buffer_size: " << buffer_size << " - was " << used_bytes <<
         std::endl;
     }
     // set the pointer to the beginning
