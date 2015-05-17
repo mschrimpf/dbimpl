@@ -24,19 +24,21 @@ BufferManager::BufferManager(uint64_t pagesInMemory) {
 
 /* Writes all dirty frames to disk and free all resources */
 BufferManager::~BufferManager() {
-	debug("tear down\n");
 	this->global_lock();
 	/* write back all frames */
 	BufferFrame *frame;
 	while ((frame = replacementStrategy->pop()) != nullptr) {
+		debug("Write out page %" PRId64 " on segment %" PRId64, frame->getPageId(), frame->getSegmentId());
 
 		if (frame->tryLock(true)){
+			debug("got lock");
 			if (frame->isDirty()) {
 				debug(frame->getPageId(), "writing out in destructor");
 				writeOut(frame);
 			}
 			frame->unlock();
 		}else{
+			debug("did not get lock");
 			debug(frame->getPageId(), "Could not aquire lock for writing out frame!!!");
 		}
 	}
@@ -65,7 +67,7 @@ BufferFrame &BufferManager::fixPage(uint64_t pageAndSegmentId, bool exclusive) {
 BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool exclusive) {
 	this->global_lock();
 
-	debug(pageId, "trying to get global lock after extracting page and segment id");
+	debug(pageId, "trying to get global lock to fix page %" PRId64 " on segment %" PRId64, pageId, segmentId);
 
 	BufferFrame *frame = this->getPageInMemoryOrNull(pageId);
 	if (frame != nullptr) {
@@ -92,7 +94,7 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 			debug(pageId, "New frame created");
 			this->global_unlock();
 			debug(pageId, "global unlocked");
-		} else { // TODO: might need a while here
+		} else {
 			debug(pageId, "no space available -> replace");
 			frame = this->replacementStrategy->pop();
 			debug(pageId, "Popping frame with page id %" PRId64,
@@ -105,7 +107,7 @@ BufferFrame &BufferManager::fixPage(uint64_t segmentId, uint64_t pageId, bool ex
 			// write out if necessary
 			if (frame->isDirty()) {
 				debug(pageId, "locking frame for dirty write out");
-				this->global_unlock(); // TODO: we're running into concurency issues here - but if we swap the order, we do so as well
+				this->global_unlock();
 				this->writeOut(frame);
 				frame->setDirty(false);
 				debug(pageId, "written out");

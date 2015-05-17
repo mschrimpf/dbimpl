@@ -1,41 +1,55 @@
 //
 // Created by Daniel on 29.04.2015.
 //
+#include <inttypes.h>
 #include "TwoQList.h"
+#include "../util/debug.h"
 
 void TwoQList::push(BufferFrame *frame) {
-	if(frame->isFlagSet(BufferFrame::IN_FIFO_QUEUE)) {
-		FifoQueue.remove(frame);
-	} else if(frame->isFlagSet(BufferFrame::IN_LRU_QUEUE)) {
-		LruQueue.remove(frame);
-	}
+	debug(">> Pushing page %" PRId64 " on segment %" PRId64, frame->getPageId(), frame->getSegmentId());
+	for (auto it = FifoQueue.begin(); it != FifoQueue.end(); it++)
+		debug("[FifoQueue] page %" PRId64 " on segment %" PRId64, (*it)->getPageId(), (*it)->getSegmentId());
+	for (auto it = LruQueue.begin(); it != LruQueue.end(); it++)
+		debug("[LruQueue] page %" PRId64 " on segment %" PRId64, (*it)->getPageId(), (*it)->getSegmentId());
 
 	if (frame->usedBefore()) {
 		//LruSet.insert(frame);
 		LruQueue.push_back(frame);
-		frame->setFlag(BufferFrame::IN_LRU_QUEUE);
 	} else {
 		FifoQueue.push_back(frame);
 		//FifoSet.insert(frame);
-		frame->setFlag(BufferFrame::IN_FIFO_QUEUE);
 	}
 }
 
 BufferFrame *TwoQList::pop() {
-	BufferFrame *frame = nullptr;
+	debug(">> Popping");
+	for (auto it = FifoQueue.begin(); it != FifoQueue.end(); it++)
+		debug("[FifoQueue] page %" PRId64 " on segment %" PRId64, (*it)->getPageId(), (*it)->getSegmentId());
+	for (auto it = LruQueue.begin(); it != LruQueue.end(); it++)
+		debug("[LruQueue] page %" PRId64 " on segment %" PRId64, (*it)->getPageId(), (*it)->getSegmentId());
+
 	if (FifoQueue.size() > 0) {
-		frame = FifoQueue.front();
+		BufferFrame *front = FifoQueue.front();
 		FifoQueue.pop_front();
-		frame->unsetFlag(BufferFrame::IN_FIFO_QUEUE);
+		//FifoSet.erase(front);
+		return front;
 	} else if (LruQueue.size() > 0) {
-		frame = LruQueue.front();
+		BufferFrame *front = LruQueue.front();
 		LruQueue.pop_front();
-		frame->unsetFlag(BufferFrame::IN_LRU_QUEUE);
+		//LruSet.erase(front);
+		return front;
+	} else {
+		//no frame in List
+		return nullptr;
 	}
-	return frame;
 }
 
 void TwoQList::remove(BufferFrame *frame) {
+	debug(">> Remove page %" PRId64 " on segment %" PRId64, frame->getPageId(), frame->getSegmentId());
+	for (auto it = FifoQueue.begin(); it != FifoQueue.end(); it++)
+		debug("[FifoQueue] page %" PRId64 " on segment %" PRId64, (*it)->getPageId(), (*it)->getSegmentId());
+	for (auto it = LruQueue.begin(); it != LruQueue.end(); it++)
+		debug("[LruQueue] page %" PRId64 " on segment %" PRId64, (*it)->getPageId(), (*it)->getSegmentId());
 	//ADDED
 	if (frame->usedBefore()) {
 		LruQueue.remove(frame);
