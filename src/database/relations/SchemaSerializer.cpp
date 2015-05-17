@@ -34,7 +34,7 @@ Schema loadSchema(int fd) {
     // read size of schema
     char * sizeBuffer = new char[sizeof(size_t)];
     read(fd, sizeBuffer, sizeof(size_t));
-    size_t size_of_schema = *reinterpret_cast<size_t *>(&sizeBuffer);
+    size_t size_of_schema = *reinterpret_cast<size_t*>(&sizeBuffer);
 
 
     //* read whole schema into buffer
