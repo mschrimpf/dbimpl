@@ -7,7 +7,9 @@
 #include <algorithm>
 
 #ifdef _WIN32
+#define PRIu32 "lu"
 #define PRIu16 "u"
+#define PRIu8 "u"
 #else
 #include <inttypes.h>
 #endif
@@ -22,42 +24,52 @@ SlottedPage::SlottedPage() {
 }
 
 void SlottedPage::init() {
-	header.LSN = 0;
-	header.firstFreeSlot = 0;
-	header.fragmentedSpace = 0;
-	header.slotCount = 0;
-	header.dataStart = data + sizeof(char) * (BufferManager::FRAME_SIZE_BYTE - sizeof(SPHeader));
+	if (!header.dataStart) {
+		header.dataStart = data + sizeof(char) * (BufferManager::FRAME_SIZE_BYTE - sizeof(SPHeader));
+	}
 }
 
 bool SlottedPage::Slot::isTid() {
-	return this->T == 0x11111111b;
+	return T == 0x11111111b;
+}
+
+TID SlottedPage::Slot::getTid() {
+	TID tid(0, 0);
+	std::memcpy(&tid, this, sizeof(SlottedPage::Slot));
+	return tid;
 }
 
 bool SlottedPage::Slot::wasRedirect() {
-	return this->S != 0;
+	return S != 0;
 }
 
 void SlottedPage::Slot::nullTS() {
-	this->T = this->S = 0;
+	T = 0;
+	S = 0;
+}
+
+void SlottedPage::Slot::markAsFree() {
+	O = 0;
+	L = 0;
+}
+
+bool SlottedPage::Slot::isFree() {
+	return O == 0 && L == 0;
+}
+
+bool SlottedPage::Slot::isEmptyData() {
+	return O > 0 && L == 0;
 }
 
 uint16_t SlottedPage::createAndWriteSlot(const char *data, size_t data_size) {
 	uint16_t slotIndex = this->header.firstFreeSlot;
-	debug("First free slot: %" PRIu16, slotIndex);
+	debug("First free slot: %" PRIu16 " | slotCount: %u", slotIndex, header.slotCount);
 	SlottedPage::Slot &slot = this->slots[slotIndex];
-	for (uint16_t slotIterator = (uint16_t) (slotIndex + 1);
-		 slotIterator <= this->header.slotCount; // slot after the last slot must be free
-		 slotIterator++) {
-		debug("Slot iterator: %" PRIu16, slotIterator);
-		SlottedPage::Slot potentiallyFreeSlot = this->slots[slotIterator];
-		if (potentiallyFreeSlot.isFree()) {
-			this->header.firstFreeSlot = slotIterator;
-			break;
-		}
-	}
-	if (this->header.firstFreeSlot == this->header.slotCount) {
+	if (slotIndex == this->header.slotCount) {
 		this->header.slotCount++;
 	}
+	uint16_t newFreeSlot = findFirstFreeSlot(slotIndex);
+	header.firstFreeSlot = newFreeSlot;
 
 	// write data
 	debug("Write data");
@@ -69,6 +81,20 @@ uint16_t SlottedPage::createAndWriteSlot(const char *data, size_t data_size) {
 	std::memcpy(dataAddress, data, data_size);
 
 	return slotIndex;
+}
+
+uint16_t SlottedPage::findFirstFreeSlot(uint16_t lastFreeSlot) {
+	for (uint16_t slotIterator = (uint16_t) (lastFreeSlot + 1);
+		 slotIterator <= header.slotCount; // slot after the last slot must be free
+		 slotIterator++) {
+		Slot potentiallyFreeSlot = slots[slotIterator];
+		debug("Slot[%" PRIu32 "]: T=%" PRIu32 " | S=%" PRIu32 " | O=%" PRIu32 " | L=%" PRIu32, slotIterator,
+			  potentiallyFreeSlot.T, potentiallyFreeSlot.S, potentiallyFreeSlot.O, potentiallyFreeSlot.L);
+		if (potentiallyFreeSlot.isFree()) {
+			return slotIterator;
+		}
+	}
+	throw std::invalid_argument("Could not find free slot");
 }
 
 bool SlottedPage::hasSpaceAtDataFront(size_t data_size) {
@@ -85,14 +111,6 @@ size_t SlottedPage::spaceBetweenSlotsAndData() const {
 bool SlottedPage::canMakeEnoughSpace(size_t necessary_space) {
 	size_t totalFreeSpace = this->header.fragmentedSpace + this->spaceBetweenSlotsAndData();
 	return totalFreeSpace >= necessary_space;
-}
-
-bool SlottedPage::Slot::isFree() {
-	return O == L == 0;
-}
-
-bool SlottedPage::Slot::isEmptyData() {
-	return O > 0 && L == 0;
 }
 
 void SlottedPage::compactify(char *pageEndPtr) {
@@ -118,10 +136,26 @@ void SlottedPage::compactify(char *pageEndPtr) {
 	this->header.fragmentedSpace = 0;
 }
 
+SlottedPage::Slot *SlottedPage::getExistingSlot(uint16_t slotOffset) {
+	debug("Retrieving slot %" PRIu16 " | slotCount: %u", slotOffset, header.slotCount);
+	if (!isInRange(slotOffset)) {
+		throw std::invalid_argument("slotOffset is greater than or equal to the slotCount");
+	}
+	return &this->slots[slotOffset];
+}
+
 char *SlottedPage::getSlotData(SlottedPage::Slot &slot) {
 	return (char *) &this->slots[0] + (intptr_t) slot.O;
 }
 
 void SlottedPage::setSlotOffset(SlottedPage::Slot &slot, char *data_ptr) {
 	slot.O = data_ptr - (char *) &this->slots[0];
+}
+
+bool SlottedPage::isLastSlot(SlottedPage::Slot &slot) {
+	return slot.O + (char *) (SlottedPage::Slot *) slots == this->header.dataStart;
+}
+
+bool SlottedPage::isInRange(uint16_t slotOffset) {
+	return slotOffset < this->header.slotCount;
 }

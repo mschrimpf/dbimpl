@@ -30,11 +30,32 @@ TID SPSegment::insert(const Record &record) {
 }
 
 bool SPSegment::remove(TID tid) {
-	return false;
+	uint64_t pageId = tid.pageId;
+	uint16_t slotOffset = tid.slotOffset;
+
+	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
+	SlottedPage *page = toSlottedPage(frame);
+	if (!page->isInRange(slotOffset)) {
+		return false;
+	}
+	SlottedPage::Slot *slot = page->getExistingSlot(slotOffset);
+	if (slot->isFree()) {
+		return false;
+	}
+	if (slot->isTid()) {
+		TID redirectTid = slot->getTid();
+		remove(redirectTid);
+	}
+	slot->markAsFree();
+	if (!page->isLastSlot(*slot)) {
+		page->header.fragmentedSpace += slot->L;
+	}
+
+	this->bufferManager.unfixPage(frame, true);
+	return true;
 }
 
 bool SPSegment::update(TID tid, const Record &record) {
-	// TODO: we might have to reorder the data
 	return false;
 }
 
@@ -44,15 +65,18 @@ Record SPSegment::lookup(TID tid) {
 
 	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, false);
 	SlottedPage *page = toSlottedPage(frame);
-	SlottedPage::Slot slot = page->slots[slotOffset];
-	if (slot.isTid()) {
-		TID redirectTid(0, 0);
-		std::memcpy(&redirectTid, &slot, sizeof(SlottedPage::Slot));
+	debug("Retrieving slot %" PRId16 " from page %" PRId64, slotOffset, pageId);
+	SlottedPage::Slot *slot = page->getExistingSlot(slotOffset);
+	if (slot->isFree()) {
+		throw std::invalid_argument("Requested slot is free (marked as deleted)");
+	}
+	if (slot->isTid()) {
+		TID redirectTid = slot->getTid();
 		return lookup(redirectTid);
 	}
 
-	char *dataPtr = page->getSlotData(slot);
-	uint32_t length = slot.L;
+	char *dataPtr = page->getSlotData(*slot);
+	uint32_t length = slot->L;
 	this->bufferManager.unfixPage(frame, false);
 	Record record(length, dataPtr);
 	return record;

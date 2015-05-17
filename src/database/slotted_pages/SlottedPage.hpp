@@ -29,15 +29,12 @@ struct SlottedPage {
 		 * and fragment our total available space.
 		 */
 		unsigned fragmentedSpace;
-
-		SPHeader() : LSN(0), slotCount(0), firstFreeSlot(0),
-					 dataStart(nullptr),
-					 fragmentedSpace(0) { }
 	} header;
 
 	/**
 	 * 8-byte control structure.
-	 * T | S | O | O | O | L | L | L
+	 * According to the slides: T | S | O | O | O | L | L | L
+	 * Actual implementation: T | O | O | O | L | L | L | O due to alignment issues
 	 */
 	struct Slot {
 		uint32_t T : 8;
@@ -48,9 +45,13 @@ struct SlottedPage {
 
 		bool isTid();
 
+		TID getTid();
+
 		bool wasRedirect();
 
 		void nullTS();
+
+		void markAsFree();
 
 		bool isFree();
 
@@ -84,9 +85,15 @@ struct SlottedPage {
 
 	void setSlotOffset(SlottedPage::Slot &slot, char *data_ptr);
 
-	void init() const;
-
 	void init();
+
+	Slot *getExistingSlot(uint16_t slotOffset);
+
+	uint16_t findFirstFreeSlot(uint16_t lastFreeSlot);
+
+	bool isLastSlot(SlottedPage::Slot &slot);
+
+	bool isInRange(uint16_t slotOffset);
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H
