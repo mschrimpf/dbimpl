@@ -43,11 +43,8 @@ Schema loadSchema(int fd) {
     size_t number_of_relations = *reinterpret_cast<size_t*> (buffer);
     buffer += sizeof(size_t);
 
-    std::vector<Schema::Relation> relations;
-    relations.reserve(number_of_relations);
-
     Schema schema = Schema();
-    schema.relations = relations;
+    schema.relations.reserve(number_of_relations);
 
     for (size_t r = 0; r < number_of_relations; ++r){
         // read length of relation name
@@ -56,6 +53,7 @@ Schema loadSchema(int fd) {
         // read name
         char * relation_name = new char[length_of_relation_name];
         memcpy(relation_name, buffer, length_of_relation_name);
+        relation_name[length_of_relation_name] = '\0'; //we need to manually set the null-sign
         buffer += length_of_relation_name;
 
         Schema::Relation relation (relation_name);
@@ -72,16 +70,17 @@ Schema loadSchema(int fd) {
             size_t length_of_attribute_name = *reinterpret_cast<size_t*> (buffer);
             buffer += sizeof(size_t);
             // read name
-            char * attribute_name = new char[length_of_relation_name];
-            memcpy(attribute_name, buffer, length_of_relation_name);
+            char * attribute_name = new char[length_of_attribute_name];
+            memcpy(attribute_name, buffer, length_of_attribute_name);
+            attribute_name[length_of_attribute_name] = '\0'; //we need to manually set the null-sign
             buffer += length_of_attribute_name;
             attribute.name = attribute_name;
 
             // read type
-            char * type = new char[sizeof(char)];
-            memcpy(type, buffer, sizeof(char));
+            char type;
+            memcpy(&type, buffer, sizeof(char));
             buffer += sizeof(char);
-            attribute.type = type[0] == 't' ? Types::Tag::Integer : Types::Tag::Char;
+            attribute.type = type== 't' ? Types::Tag::Integer : Types::Tag::Char;
 
             // read attribute length
             unsigned attribute_length = *reinterpret_cast<unsigned*> (buffer);
@@ -89,10 +88,10 @@ Schema loadSchema(int fd) {
             attribute.len = attribute_length;
 
             // read not null
-            char * notnull = new char[sizeof(char)];
-            memcpy(type, buffer, sizeof(char));
+            char notnull;
+            memcpy(&notnull, buffer, sizeof(char));
             buffer += sizeof(char);
-            attribute.notNull = notnull[0] == 't';
+            attribute.notNull = notnull == 't';
 
             relation.attributes.push_back(attribute);
         }
@@ -104,7 +103,7 @@ Schema loadSchema(int fd) {
         for (size_t k = 0; k < number_of_primary_keys; ++k){
             unsigned primary_key = *reinterpret_cast<unsigned*> (buffer);
             buffer += sizeof(unsigned);
-            relation.primaryKey[k] = primary_key;
+            relation.primaryKey.push_back(primary_key);
         }
         schema.relations.push_back(relation);
     }
@@ -135,7 +134,7 @@ void storeSchema(Schema schema, int fd) {
         buffer += sizeof(size_t);
         used_bytes += sizeof(size_t);
 
-        memcpy(buffer, relation.name.c_str(), relation.name.size()); //copy relation name
+        strcpy(buffer, relation.name.c_str()); //copy relation name
         buffer += relation.name.size();
         used_bytes += relation.name.size();
 
@@ -152,7 +151,7 @@ void storeSchema(Schema schema, int fd) {
             buffer += sizeof(size_t);
             used_bytes += sizeof(size_t);
 
-            memcpy(buffer, attribute.name.c_str(), relation.name.size()); //copy attribute name
+            strcpy(buffer, attribute.name.c_str()); //copy attribute name
             buffer += attribute.name.size();
             used_bytes += attribute.name.size();
 
