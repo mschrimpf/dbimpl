@@ -4,7 +4,6 @@
 
 #include "gtest/gtest.h"
 #include "../../src/database/slotted_pages/SlottedPage.hpp"
-#include "../../src/database/slotted_pages/SPSegment.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -25,5 +24,5 @@ TEST(SlotTest, SizeIs8Byte) {
 }
 
 TEST(SlottedPageTest, SizeMatchesPageSize) {
-	EXPECT_EQ(PAGE_SIZE_BYTE, sizeof(SlottedPage));
+	EXPECT_EQ(BufferManager::DATA_SIZE_BYTE, sizeof(SlottedPage));
 }

@@ -5,9 +5,29 @@
 #include "SlottedPage.hpp"
 #include <vector>
 #include <algorithm>
+
+#ifdef _WIN32
+#define PRIu16 "u"
+#else
+#include <inttypes.h>
+#endif
+
 #include <cstring> // memcpy
+#include "../util/debug.h"
 
 // TODO: use firstFreeSlot
+
+SlottedPage::SlottedPage() {
+	init();
+}
+
+void SlottedPage::init() {
+	header.LSN = 0;
+	header.firstFreeSlot = 0;
+	header.fragmentedSpace = 0;
+	header.slotCount = 0;
+	header.dataStart = data + sizeof(char) * (BufferManager::FRAME_SIZE_BYTE - sizeof(SPHeader));
+}
 
 bool SlottedPage::Slot::isTid() {
 	return this->T == 0x11111111b;
@@ -23,10 +43,12 @@ void SlottedPage::Slot::nullTS() {
 
 uint16_t SlottedPage::createAndWriteSlot(const char *data, size_t data_size) {
 	uint16_t slotIndex = this->header.firstFreeSlot;
+	debug("First free slot: %" PRIu16, slotIndex);
 	SlottedPage::Slot &slot = this->slots[slotIndex];
 	for (uint16_t slotIterator = (uint16_t) (slotIndex + 1);
 		 slotIterator <= this->header.slotCount; // slot after the last slot must be free
 		 slotIterator++) {
+		debug("Slot iterator: %" PRIu16, slotIterator);
 		SlottedPage::Slot potentiallyFreeSlot = this->slots[slotIterator];
 		if (potentiallyFreeSlot.isFree()) {
 			this->header.firstFreeSlot = slotIterator;
@@ -38,6 +60,7 @@ uint16_t SlottedPage::createAndWriteSlot(const char *data, size_t data_size) {
 	}
 
 	// write data
+	debug("Write data");
 	slot.nullTS();
 	char *dataAddress = this->header.dataStart - data_size;
 	slot.O = dataAddress - (char *) (SlottedPage::Slot *) slots;
@@ -72,7 +95,7 @@ bool SlottedPage::Slot::isEmptyData() {
 	return O > 0 && L == 0;
 }
 
-void SlottedPage::compactify(char * pageEndPtr) {
+void SlottedPage::compactify(char *pageEndPtr) {
 	std::vector<SlottedPage::Slot *> sortedSlots;
 	sortedSlots.reserve(this->header.slotCount);
 	for (int i = 0; i < this->header.slotCount; i++) {
@@ -100,5 +123,5 @@ char *SlottedPage::getSlotData(SlottedPage::Slot &slot) {
 }
 
 void SlottedPage::setSlotOffset(SlottedPage::Slot &slot, char *data_ptr) {
-	slot.O = data_ptr - (char*) &this->slots[0];
+	slot.O = data_ptr - (char *) &this->slots[0];
 }
