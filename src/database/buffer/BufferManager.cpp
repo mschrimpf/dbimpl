@@ -29,12 +29,16 @@ BufferManager::~BufferManager() {
 	/* write back all frames */
 	BufferFrame *frame;
 	while ((frame = replacementStrategy->pop()) != nullptr) {
-		frame->lock(true);
-		if (frame->isDirty()) {
-			debug(frame->getPageId(), "writing out in destructor");
-			writeOut(frame);
+
+		if (frame->tryLock(true)){
+			if (frame->isDirty()) {
+				debug(frame->getPageId(), "writing out in destructor");
+				writeOut(frame);
+			}
+			frame->unlock();
+		}else{
+			debug(frame->getPageId(), "Could not aquire lock for writing out frame!!!");
 		}
-		frame->unlock();
 	}
 
 	/* clean frames */
@@ -166,6 +170,7 @@ void BufferManager::unfixPage(BufferFrame &frame, bool isDirty) {
 	this->global_lock();
 	this->replacementStrategy->push(&frame);
 	frame.unlock();
+	debug(frame.getPageId(), "unlocked frame");
 	this->global_unlock();
 }
 

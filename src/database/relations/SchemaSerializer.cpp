@@ -28,16 +28,30 @@
 //      ...
 //  +++++++++++++++++++++
 
-Schema loadSchema(int fd) {
 
+Schema SchemaSerializer::loadSchema(){
+    BufferFrame frame = bufferManager->fixPage(segmentId, pageId, false);
+    Schema schema = readSchema(frame.getData());
+    bufferManager->unfixPage(frame, false);
+    return schema;
+}
+
+void SchemaSerializer::saveSchema(Schema schema){
+    BufferFrame frame = bufferManager->fixPage(segmentId, pageId, true);
+    writeSchema(schema, frame.getData());
+    bufferManager->unfixPage(frame, true);
+}
+
+Schema SchemaSerializer::readSchema(void * data) {
     // read size of schema
     char * sizeBuffer = new char[sizeof(size_t)];
-    read(fd, sizeBuffer, sizeof(size_t));
+    memcpy(sizeBuffer, data, sizeof(size_t));
+    data += sizeof(size_t);
     size_t size_of_schema = *reinterpret_cast<size_t*>(sizeBuffer);
 
     //* read whole schema into buffer
     char * buffer = new char[size_of_schema];
-    read(fd, buffer, size_of_schema);
+    memcpy(buffer, data, size_of_schema);
 
     //* create vector of relations
     size_t number_of_relations = *reinterpret_cast<size_t*> (buffer);
@@ -112,7 +126,7 @@ Schema loadSchema(int fd) {
 }
 
 
-void storeSchema(Schema schema, int fd) {
+void SchemaSerializer::writeSchema(Schema schema, void * data) {
     size_t schema_size = size_of_schema(schema);
     size_t buffer_size = schema_size + sizeof(size_t);
     char *buffer = new char[buffer_size]; //size_t is for storing the length of the schema
@@ -190,11 +204,11 @@ void storeSchema(Schema schema, int fd) {
     buffer -= buffer_size;
 
     size_t stored_size_of_schema = *reinterpret_cast<size_t*>(buffer);
-    write(fd, buffer, buffer_size);
+    memcpy(data, buffer, buffer_size);
 }
 
 
-size_t size_of_schema(Schema schema){
+size_t SchemaSerializer::size_of_schema(Schema schema){
     size_t buffer_size = 0;
     buffer_size += sizeof(size_t); // number of relations
     for (size_t r = 0; r < schema.relations.size(); ++r){
@@ -217,5 +231,6 @@ size_t size_of_schema(Schema schema){
     return buffer_size;
 }
 
-
-//void write();
+SchemaSerializer::SchemaSerializer(BufferManager * manager) {
+    bufferManager = manager;
+}
