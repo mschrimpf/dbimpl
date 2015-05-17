@@ -6,14 +6,24 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <cstring> // memcpy
+#include "../util/debug.h"
+
+#ifdef _WIN32
+#define PRId64 "llu"
+#define PRId16 "u"
+#else
+#include <inttypes.h>
+#endif
 
 TID SPSegment::insert(const Record &record) {
 	size_t data_size = record.getLen();
 	BufferFrame frame = this->findOrCreatePage(data_size);
-	SlottedPage * page = toSlottedPage(frame);
-	uint16_t slotId = page->createAndWriteSlot(record.getData(), data_size);
+	SlottedPage *page = toSlottedPage(frame);
+	const char *dataPtr = record.getData();
+	uint16_t slotId = page->createAndWriteSlot(dataPtr, data_size);
+	uint64_t pageId = frame.getPageId();
 	this->bufferManager.unfixPage(frame, true);
-	return TID((uint16_t) frame.getPageId(), slotId);
+	return TID(slotId, pageId);
 
 	// when we redirect, append the 8 byte TID in front of the actual data.
 	// needed for a full table scan, where we scan over memory
@@ -32,8 +42,8 @@ Record SPSegment::lookup(TID tid) {
 	uint64_t pageId = tid.pageId;
 	uint16_t slotOffset = tid.slotOffset;
 
-	BufferFrame& frame = this->bufferManager.fixPage(this->segmentId, pageId, false);
-	SlottedPage * page = toSlottedPage(frame);
+	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, false);
+	SlottedPage *page = toSlottedPage(frame);
 	SlottedPage::Slot slot = page->slots[slotOffset];
 	if (slot.isTid()) {
 		TID redirectTid(0, 0);
@@ -49,9 +59,11 @@ Record SPSegment::lookup(TID tid) {
 }
 
 BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
-	for (unsigned pageId(0); pageId < this->pageCount; pageId++) {
-		BufferFrame& frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
-		SlottedPage * page = toSlottedPage(frame);
+	// attempt to find existing pages with enough space
+	for (uint64_t pageId(0); pageId < this->maxPageId; pageId++) {
+		debug("Find or create page %" PRId64, pageId);
+		BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
+		SlottedPage *page = toSlottedPage(frame);
 		if (page->hasSpaceAtDataFront(data_size)) {
 			return frame;
 		}
@@ -67,13 +79,13 @@ BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
 	}
 
 	// no page found -> create new
-	BufferFrame& frame = this->bufferManager.fixPage(this->segmentId, this->pageCount + 1, true);
-	this->pageCount++;
+	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, this->maxPageId + 1, true);
+	this->maxPageId++;
 	return frame;
 }
 
-SlottedPage * SPSegment::toSlottedPage(BufferFrame &frame) const { 
-	SlottedPage * page = reinterpret_cast<SlottedPage *>(frame.getData());
+SlottedPage *SPSegment::toSlottedPage(BufferFrame &frame) const {
+	SlottedPage *page = reinterpret_cast<SlottedPage *>(frame.getData());
 	page->init();
 	return page;
 }

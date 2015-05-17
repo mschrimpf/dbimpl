@@ -19,7 +19,7 @@ private:
 	BufferManager &bufferManager;
 	uint64_t segmentId;
 	/** Page count or max page (equivalent) */
-	uint64_t pageCount;
+	uint64_t maxPageId;
 
 public:
 	SPSegment(BufferManager &bufferManager, uint64_t segmentId)
