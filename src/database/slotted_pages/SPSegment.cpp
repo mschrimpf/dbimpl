@@ -37,6 +37,7 @@ void SPSegment::insertAtLocation(TID tid, const Record &record) {
 	SlottedPage *page = toSlottedPage(frame);
 	Slot *slot = &page->slots[slotOffset];
 
+	page->writeSlotData(slot, record.getData(), record.getLen());
 
 	this->bufferManager.unfixPage(frame, true);
 }

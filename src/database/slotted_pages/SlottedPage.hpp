@@ -68,6 +68,10 @@ struct SlottedPage {
 	bool isLastSlot(Slot &slot);
 
 	bool isInRange(uint16_t slotOffset);
+
+	Slot * retrieveSlot(uint16_t &slotIndex);
+
+	void writeSlotData(Slot *slot, const char *data, size_t data_size) const;
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H

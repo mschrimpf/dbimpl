@@ -120,14 +120,14 @@ TEST_F(SPSegmentTest, InsertRemoveInsertSameTid) {
 	EXPECT_EQ(tid1, tid2);
 }
 
-//TEST_F(SPSegmentTest, UpdateSameSize) {
-//	testUpdate(100, 100);
-//}
-//
-//TEST_F(SPSegmentTest, UpdateSmallerSize) {
-//	testUpdate(100, 50);
-//}
-//
-//TEST_F(SPSegmentTest, UpdateLargerSize) {
-//	testUpdate(100, 150);
-//}
+TEST_F(SPSegmentTest, UpdateSameSize) {
+	testUpdate(100, 100);
+}
+
+TEST_F(SPSegmentTest, UpdateSmallerSize) {
+	testUpdate(100, 50);
+}
+
+TEST_F(SPSegmentTest, UpdateLargerSize) {
+	testUpdate(100, 150);
+}
