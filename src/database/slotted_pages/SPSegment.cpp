@@ -5,7 +5,7 @@
 #include "SPSegment.hpp"
 #include <stdint.h>
 #include <stdexcept>
-#include <cstring> // memcpy
+#include <stdio.h>
 #include "../util/debug.h"
 
 #ifdef _WIN32
@@ -65,7 +65,7 @@ bool SPSegment::remove(TID tid) {
 
 	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
 	SlottedPage *page = toSlottedPage(frame);
-	Slot *slot = retrieveSlotIfPossible(*page, slotOffset);
+	Slot *slot = page->retrieveSlotIfPossible(slotOffset);
 	if (slot == nullptr) {
 		this->bufferManager.unfixPage(frame, false);
 		return false;
@@ -74,11 +74,16 @@ bool SPSegment::remove(TID tid) {
 		TID redirectTid = slot->getTid();
 		remove(redirectTid);
 	}
-	slot->markAsFree();
 	if (!page->isLastSlot(*slot)) {
 		page->header.fragmentedSpace += slot->L;
 	}
 	page->header.firstFreeSlot = slotOffset;
+
+	char *slotData = page->getSlotData(*slot);
+	if (slotData == page->header.dataStart) {
+		page->header.dataStart -= slot->L;
+	}
+	slot->markAsFree();
 
 	this->bufferManager.unfixPage(frame, true);
 	return true;
@@ -109,7 +114,8 @@ Record SPSegment::lookup(TID tid) {
 
 BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
 	// attempt to find existing pages with enough space
-	for (uint64_t pageId(0); pageId < this->maxPageId; pageId++) {
+	uint64_t pageId = 0;
+	for (; pageId < this->maxPageId; pageId++) {
 		debug("Find or create page %" PRId64, pageId);
 		BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
 		SlottedPage *page = toSlottedPage(frame);
@@ -128,7 +134,7 @@ BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
 	}
 
 	// no page found -> create new
-	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, this->maxPageId + 1, true);
+	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
 	this->maxPageId++;
 	return frame;
 }
@@ -137,15 +143,4 @@ SlottedPage *SPSegment::toSlottedPage(BufferFrame &frame) const {
 	SlottedPage *page = reinterpret_cast<SlottedPage *>(frame.getData());
 	page->init();
 	return page;
-}
-
-Slot *SPSegment::retrieveSlotIfPossible(SlottedPage &page, uint16_t slotOffset) {
-	if (!page.isInRange(slotOffset)) {
-		return nullptr;
-	}
-	Slot *slot = page.getExistingSlot(slotOffset);
-	if (slot->isFree()) {
-		return nullptr;
-	}
-	return slot;
 }

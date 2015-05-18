@@ -47,15 +47,15 @@ struct SlottedPage {
 
 	uint16_t createAndWriteSlot(const char *data, size_t data_size);
 
-	bool hasSpaceAtDataFront(size_t data_size);
+	bool hasSpaceAtDataFront(size_t data_size) const;
 
-	bool canMakeEnoughSpace(size_t necessary_space);
+	bool canMakeEnoughSpace(size_t necessary_space) const;
 
 	size_t spaceBetweenSlotsAndData() const;
 
 	void compactify(char *pageEndPtr);
 
-	char *getSlotData(Slot &slot);
+	char *getSlotData(Slot &slot) const;
 
 	void setSlotOffset(Slot &slot, char *data_ptr);
 
@@ -63,15 +63,17 @@ struct SlottedPage {
 
 	Slot *getExistingSlot(uint16_t slotOffset);
 
-	uint16_t findFirstFreeSlot(uint16_t lastFreeSlot);
+	uint16_t findFirstFreeSlot(uint16_t lastFreeSlot) const;
 
-	bool isLastSlot(Slot &slot);
+	bool isLastSlot(Slot &slot) const;
 
-	bool isInRange(uint16_t slotOffset);
+	bool isInRange(uint16_t slotOffset) const;
 
-	Slot * retrieveSlot(uint16_t &slotIndex);
+	Slot *retrieveSlot(uint16_t &slotIndex);
 
-	void writeSlotData(Slot *slot, const char *data, size_t data_size) const;
+	void writeSlotData(Slot *slot, const char *data, size_t data_size);
+
+	Slot *retrieveSlotIfPossible(uint16_t slotOffset);
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H

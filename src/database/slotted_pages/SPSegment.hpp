@@ -37,8 +37,6 @@ public:
 
 	SlottedPage * toSlottedPage(BufferFrame &frame) const;
 
-	Slot *retrieveSlotIfPossible(SlottedPage &page, uint16_t slotOffset);
-
 	void insertAtLocation(TID tid, const Record &record);
 };
 

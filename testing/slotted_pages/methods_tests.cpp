@@ -81,12 +81,33 @@ public:
 	}
 };
 
+TEST_F(SPSegmentTest, InsertTooMuch) {
+	ASSERT_THROW(insertRecord(BufferManager::DATA_SIZE_BYTE /* header takes space away from this anyway */),
+				 std::invalid_argument);
+}
+
 TEST_F(SPSegmentTest, InsertAndLookupMatch) {
-	size_t len = 100;
-	char *data = allocateData(len);
+	size_t  len = 100;
+	char *data = this->allocateData(len);
 	const Record record(len, data);
 	TID tid = segment->insert(record);
-	printf("Inserted TID: page %" PRId64 ", slot %" PRId16 "\n", tid.pageId, tid.slotOffset);
+	Record lookedupRecord = segment->lookup(tid);
+
+	expectRecordsEqual(&record, &lookedupRecord);
+}
+
+TEST_F(SPSegmentTest, InsertAndLookupTwiceMatch) {
+	SPSegmentTest_InsertAndLookupMatch_Test();
+	SPSegmentTest_InsertAndLookupMatch_Test();
+}
+
+TEST_F(SPSegmentTest, InsertAndLookupMatchWithRedirect) {
+	unsigned int length = BufferManager::DATA_SIZE_BYTE / 2;
+	insertRecord(length);
+
+	char *data = allocateData(length);
+	const Record record(length, data);
+	TID tid = segment->insert(record);
 	Record lookedupRecord = segment->lookup(tid);
 
 	expectRecordsEqual(&record, &lookedupRecord);
@@ -117,7 +138,8 @@ TEST_F(SPSegmentTest, InsertRemoveInsertSameTid) {
 	bool exists = segment->remove(tid1);
 	EXPECT_TRUE(exists);
 	TID tid2 = insertRecord(100);
-	EXPECT_EQ(tid1, tid2);
+	EXPECT_EQ(tid1.pageId, tid2.pageId);
+	EXPECT_EQ(tid1.slotOffset, tid2.slotOffset);
 }
 
 TEST_F(SPSegmentTest, UpdateSameSize) {
@@ -130,4 +152,16 @@ TEST_F(SPSegmentTest, UpdateSmallerSize) {
 
 TEST_F(SPSegmentTest, UpdateLargerSize) {
 	testUpdate(100, 150);
+}
+
+TEST_F(SPSegmentTest, UpdateWithRedirect) {
+	unsigned int length = BufferManager::DATA_SIZE_BYTE / 2;
+	insertRecord(length);
+
+	testUpdate(100, length);
+}
+
+TEST_F(SPSegmentTest, UpdateTooMuch) {
+	ASSERT_THROW(testUpdate(100, BufferManager::DATA_SIZE_BYTE /* header takes space away from this anyway */),
+				 std::invalid_argument);
 }
