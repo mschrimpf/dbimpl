@@ -112,6 +112,14 @@ TEST_F(SPSegmentTest, RemoveTwice) {
 	EXPECT_FALSE(exists);
 }
 
+TEST_F(SPSegmentTest, InsertRemoveInsertSameTid) {
+	TID tid1 = insertRecord(100);
+	bool exists = segment->remove(tid1);
+	EXPECT_TRUE(exists);
+	TID tid2 = insertRecord(100);
+	EXPECT_EQ(tid1, tid2);
+}
+
 //TEST_F(SPSegmentTest, UpdateSameSize) {
 //	testUpdate(100, 100);
 //}

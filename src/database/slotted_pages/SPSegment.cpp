@@ -29,17 +29,44 @@ TID SPSegment::insert(const Record &record) {
 	// needed for a full table scan, where we scan over memory
 }
 
+void SPSegment::insertAtLocation(TID tid, const Record &record) {
+	uint64_t pageId = tid.pageId;
+	uint16_t slotOffset = tid.slotOffset;
+
+	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
+	SlottedPage *page = toSlottedPage(frame);
+	Slot *slot = &page->slots[slotOffset];
+
+
+	this->bufferManager.unfixPage(frame, true);
+}
+
+bool SPSegment::update(TID tid, const Record &record) {
+//	// More efficient implementation
+//	if(tryOverrideSelf(tid, record))
+//		return true;
+//	if(tryInsertSelf(tid, record))
+//		return true;
+//	if(isRedirect && tryOverrideAtRedirection(tid, record))
+//		return true;
+//	if(isRedirect && tryInsertAtRedirection(tid, record))
+//		return true;
+
+	this->remove(tid);
+	this->insertAtLocation(tid, record);
+
+	return false;
+}
+
 bool SPSegment::remove(TID tid) {
 	uint64_t pageId = tid.pageId;
 	uint16_t slotOffset = tid.slotOffset;
 
 	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
 	SlottedPage *page = toSlottedPage(frame);
-	if (!page->isInRange(slotOffset)) {
-		return false;
-	}
-	Slot *slot = page->getExistingSlot(slotOffset);
-	if (slot->isFree()) {
+	Slot *slot = retrieveSlotIfPossible(*page, slotOffset);
+	if (slot == nullptr) {
+		this->bufferManager.unfixPage(frame, false);
 		return false;
 	}
 	if (slot->isTid()) {
@@ -50,13 +77,10 @@ bool SPSegment::remove(TID tid) {
 	if (!page->isLastSlot(*slot)) {
 		page->header.fragmentedSpace += slot->L;
 	}
+	page->header.firstFreeSlot = slotOffset;
 
 	this->bufferManager.unfixPage(frame, true);
 	return true;
-}
-
-bool SPSegment::update(TID tid, const Record &record) {
-	return false;
 }
 
 Record SPSegment::lookup(TID tid) {
@@ -112,4 +136,15 @@ SlottedPage *SPSegment::toSlottedPage(BufferFrame &frame) const {
 	SlottedPage *page = reinterpret_cast<SlottedPage *>(frame.getData());
 	page->init();
 	return page;
+}
+
+Slot *SPSegment::retrieveSlotIfPossible(SlottedPage &page, uint16_t slotOffset) {
+	if (!page.isInRange(slotOffset)) {
+		return nullptr;
+	}
+	Slot *slot = page.getExistingSlot(slotOffset);
+	if (slot->isFree()) {
+		return nullptr;
+	}
+	return slot;
 }

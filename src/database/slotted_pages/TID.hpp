@@ -14,4 +14,9 @@ struct TID {
 	uint64_t pageId : 48 /* use only 48 bit */;
 };
 
+inline bool operator==(const TID t1, const TID t2) {
+	return t1.pageId == t2.pageId
+		   && t1.slotOffset == t2.slotOffset;
+}
+
 #endif //PROJECT_TID_HPP

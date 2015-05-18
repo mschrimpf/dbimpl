@@ -36,6 +36,10 @@ public:
 	BufferFrame &findOrCreatePage(size_t data_size);
 
 	SlottedPage * toSlottedPage(BufferFrame &frame) const;
+
+	Slot *retrieveSlotIfPossible(SlottedPage &page, uint16_t slotOffset);
+
+	void insertAtLocation(TID tid, const Record &record);
 };
 
 #endif //PROJECT_SPSEGMENT_H
