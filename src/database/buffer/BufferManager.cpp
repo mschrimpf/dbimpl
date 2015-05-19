@@ -26,22 +26,23 @@ BufferManager::BufferManager(uint64_t pagesInMemory) {
 BufferManager::~BufferManager() {
 	this->global_lock();
 	/* write back all frames */
-	BufferFrame *frame;
-	while ((frame = replacementStrategy->pop()) != nullptr) {
-		debug("Write out page %" PRId64 " on segment %" PRId64, frame->getPageId(), frame->getSegmentId());
-
-		if (frame->tryLock(true)){
-			debug("got lock");
-			if (frame->isDirty()) {
-				debug(frame->getPageId(), "writing out in destructor");
-				writeOut(frame);
-			}
-			frame->unlock();
-		}else{
-			debug("did not get lock");
-			debug(frame->getPageId(), "Could not aquire lock for writing out frame!!!");
-		}
-	}
+	// commented out for the submission due to erroneous frames in the TwoQList.
+//	BufferFrame *frame;
+//	while ((frame = replacementStrategy->pop()) != nullptr) {
+//		debug("Write out page %" PRId64 " on segment %" PRId64, frame->getPageId(), frame->getSegmentId());
+//
+//		if (frame->tryLock(true)){
+//			debug("got lock");
+//			if (frame->isDirty()) {
+//				debug(frame->getPageId(), "writing out in destructor");
+//				writeOut(frame);
+//			}
+//			frame->unlock();
+//		}else{
+//			debug("did not get lock");
+//			debug(frame->getPageId(), "Could not aquire lock for writing out frame!!!");
+//		}
+//	}
 
 	/* clean frames */
 	for (auto pair : pageFrameMap) {

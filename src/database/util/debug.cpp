@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include "debug.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 
 void debug(const char *fmt, ...) {
     #if DEBUG == 1
