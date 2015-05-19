@@ -25,4 +25,10 @@ Please follow these shell commands.
     ./assignment1 ../../resources/test_data ../../resources/test_data_sorted 10
 
 ## Assignment 3
+To run the unit tests:
 
+    # in dbimpl directory
+    cmake .
+    cd testing/slotted_pages
+    make -C ../.. slotted_pages_unit_tests
+    ./slotted_pages_unit_tests
