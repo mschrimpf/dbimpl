@@ -26,4 +26,4 @@ set(RELATIONS_SOURCE_FILES
     relations/Types.hpp
     relations/parser/Parser.cpp
     relations/parser/Schema.cpp)
-add_library(database ${BUFFER_SOURCE_FILES} ${SLOTTED_PAGES_SOURCE_FILES} ${RELATIONS_SOURCE_FILES} relations/SchemaSerializer.cpp relations/SchemaSerializer.h)
+add_library(database ${BUFFER_SOURCE_FILES} ${SLOTTED_PAGES_SOURCE_FILES} ${RELATIONS_SOURCE_FILES} relations/SchemaSerializer.cpp relations/SchemaSerializer.h btree/BTree.cpp btree/BTree.h)
