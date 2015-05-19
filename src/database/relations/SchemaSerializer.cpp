@@ -43,15 +43,16 @@ void SchemaSerializer::saveSchema(Schema schema){
 }
 
 Schema SchemaSerializer::readSchema(void * data) {
+    char * dataPointer = (char * ) data;
     // read size of schema
     char * sizeBuffer = new char[sizeof(size_t)];
-    memcpy(sizeBuffer, data, sizeof(size_t));
-    data += sizeof(size_t);
+    memcpy(sizeBuffer, dataPointer, sizeof(size_t));
+    dataPointer += sizeof(size_t);
     size_t size_of_schema = *reinterpret_cast<size_t*>(sizeBuffer);
 
     //* read whole schema into buffer
     char * buffer = new char[size_of_schema];
-    memcpy(buffer, data, size_of_schema);
+    memcpy(buffer, dataPointer, size_of_schema);
 
     //* create vector of relations
     size_t number_of_relations = *reinterpret_cast<size_t*> (buffer);
@@ -122,7 +123,7 @@ Schema SchemaSerializer::readSchema(void * data) {
         schema.relations.push_back(relation);
     }
 
-   return schema;
+    return schema;
 }
 
 
