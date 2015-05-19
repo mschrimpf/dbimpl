@@ -6,17 +6,33 @@
 #define PROJECT_TID_HPP
 
 #include <stdint.h>
+#include <functional>
 
 struct TID {
 	TID(uint16_t slotOffset, uint64_t pageId) : slotOffset(slotOffset), pageId(pageId) { }
 
 	uint16_t slotOffset;
-	uint64_t pageId : 48 /* use only 48 bit */;
+	uint64_t pageId : 48;
+
+	bool operator==(const TID &other) const {
+		return pageId == other.pageId
+			   && slotOffset == other.slotOffset;
+	}
 };
 
-inline bool operator==(const TID t1, const TID t2) {
-	return t1.pageId == t2.pageId
-		   && t1.slotOffset == t2.slotOffset;
+namespace std {
+	template<>
+	struct hash<TID> {
+		size_t operator()(const TID &tid) const {
+			// Compute individual hash values for first,
+			// second and third and combine them using XOR
+			// and bit shifting:
+
+			return (hash<uint64_t>()(tid.pageId)
+					^ (hash<uint16_t>()(tid.slotOffset) << 1)) >> 1;
+		}
+	};
+
 }
 
 #endif //PROJECT_TID_HPP
