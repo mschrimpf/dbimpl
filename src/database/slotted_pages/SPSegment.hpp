@@ -21,6 +21,16 @@ private:
 	/** Page count or max page (equivalent) */
 	uint64_t maxPageId;
 
+	TID insert(const Record &record, BufferFrame &frame);
+
+	BufferFrame &findOrCreatePage(size_t data_size);
+
+	SlottedPage * toSlottedPage(BufferFrame &frame) const;
+
+	void insertAtLocation(TID tid, const Record &record);
+
+	BufferFrame &findOrCreatePage(unsigned int data_size, uint64_t * excludedPageId);
+
 public:
 	SPSegment(BufferManager &bufferManager, uint64_t segmentId)
 			: bufferManager(bufferManager), segmentId(segmentId) { };
@@ -32,12 +42,6 @@ public:
 	Record lookup(TID tid);
 
 	bool update(TID tid, const Record &record);
-
-	BufferFrame &findOrCreatePage(size_t data_size);
-
-	SlottedPage * toSlottedPage(BufferFrame &frame) const;
-
-	void insertAtLocation(TID tid, const Record &record);
 };
 
 #endif //PROJECT_SPSEGMENT_H

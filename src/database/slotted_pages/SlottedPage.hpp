@@ -43,6 +43,8 @@ struct SlottedPage {
 		char data[BufferManager::DATA_SIZE_BYTE - sizeof(SPHeader)];
 	};
 
+	static const unsigned int MAX_DATA_SIZE;
+
 	SlottedPage();
 
 	uint16_t createAndWriteSlot(const char *data, size_t data_size);
@@ -53,7 +55,7 @@ struct SlottedPage {
 
 	size_t spaceBetweenSlotsAndData() const;
 
-	void compactify(char *pageEndPtr);
+	void compactify();
 
 	char *getSlotData(Slot &slot) const;
 

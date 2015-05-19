@@ -6,7 +6,7 @@
 #include <cstring> // memcpy
 
 bool Slot::isTid() {
-	return T == 0x11111111b;
+	return T != Slot::T_NO_TID_VALUE;
 }
 
 TID Slot::getTid() {
@@ -20,7 +20,7 @@ bool Slot::wasRedirect() {
 }
 
 void Slot::nullTS() {
-	T = 0;
+	T = Slot::T_NO_TID_VALUE;
 	S = 0;
 }
 
@@ -35,4 +35,8 @@ bool Slot::isFree() {
 
 bool Slot::isEmptyData() {
 	return O > 0 && L == 0;
+}
+
+void Slot::redirectTo(TID redirectTid) {
+	std::memcpy(this, &redirectTid, sizeof(Slot));
 }

@@ -17,7 +17,9 @@
 #include <cstring> // memcpy
 #include "../util/debug.h"
 
-// TODO: use firstFreeSlot
+const unsigned int SlottedPage::MAX_DATA_SIZE = sizeof(SlottedPage)
+												- sizeof(SPHeader)
+												- sizeof(Slot) /* at least 1 slot */;
 
 SlottedPage::SlottedPage() {
 	init();
@@ -97,7 +99,8 @@ bool SlottedPage::canMakeEnoughSpace(size_t necessary_space) const {
 	return totalFreeSpace >= necessary_space;
 }
 
-void SlottedPage::compactify(char *pageEndPtr) {
+void SlottedPage::compactify() {
+	char *pageEndPtr = (char *) this + sizeof(*this);
 	std::vector<Slot *> sortedSlots;
 	sortedSlots.reserve(this->header.slotCount);
 	for (int i = 0; i < this->header.slotCount; i++) {

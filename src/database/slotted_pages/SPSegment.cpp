@@ -17,9 +17,14 @@
 
 TID SPSegment::insert(const Record &record) {
 	size_t data_size = record.getLen();
-	BufferFrame frame = this->findOrCreatePage(data_size);
+	BufferFrame &frame = this->findOrCreatePage(data_size);
+	return insert(record, frame);
+}
+
+TID SPSegment::insert(const Record &record, BufferFrame &frame) {
 	SlottedPage *page = toSlottedPage(frame);
 	const char *dataPtr = record.getData();
+	size_t data_size = record.getLen();
 	uint16_t slotId = page->createAndWriteSlot(dataPtr, data_size);
 	uint64_t pageId = frame.getPageId();
 	this->bufferManager.unfixPage(frame, true);
@@ -35,18 +40,41 @@ void SPSegment::insertAtLocation(TID tid, const Record &record) {
 
 	BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
 	SlottedPage *page = toSlottedPage(frame);
+	unsigned int data_size = record.getLen();
 	Slot *slot = &page->slots[slotOffset];
 
-	page->writeSlotData(slot, record.getData(), record.getLen());
+	// we can write the updated data on this page
+	if (page->hasSpaceAtDataFront(data_size) || page->canMakeEnoughSpace(data_size)) {
+		if (!page->hasSpaceAtDataFront(data_size)) {
+			page->compactify();
+		}
+
+		page->writeSlotData(slot, record.getData(), data_size);
+	} // we have to redirect
+	else {
+		BufferFrame redirectFrame = this->findOrCreatePage(data_size, &pageId);
+		TID redirectTid = this->insert(record, redirectFrame);
+		slot->redirectTo(redirectTid);
+	}
 
 	this->bufferManager.unfixPage(frame, true);
 }
 
 bool SPSegment::update(TID tid, const Record &record) {
+	if(record.getLen() > SlottedPage::MAX_DATA_SIZE) {
+		throw std::invalid_argument("Update record is too large for any page");
+	}
+
 //	// More efficient implementation
+//	/*
+//	 * Replace data on my own page at first to avoid redirection
+//	 * which would cause consecutive lookups to fix two pages.
+//	 */
 //	if(tryOverrideSelf(tid, record))
+//		redirectSlot.markAsFree();
 //		return true;
 //	if(tryInsertSelf(tid, record))
+//		redirectSlot.markAsFree();
 //		return true;
 //	if(isRedirect && tryOverrideAtRedirection(tid, record))
 //		return true;
@@ -102,6 +130,7 @@ Record SPSegment::lookup(TID tid) {
 	}
 	if (slot->isTid()) {
 		TID redirectTid = slot->getTid();
+		this->bufferManager.unfixPage(frame, false);
 		return lookup(redirectTid);
 	}
 
@@ -113,9 +142,16 @@ Record SPSegment::lookup(TID tid) {
 }
 
 BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
+	return this->findOrCreatePage(data_size, nullptr);
+}
+
+BufferFrame &SPSegment::findOrCreatePage(unsigned int data_size, uint64_t *excludedPageId) {
 	// attempt to find existing pages with enough space
 	uint64_t pageId = 0;
 	for (; pageId < this->maxPageId; pageId++) {
+		if (excludedPageId != nullptr && pageId == *excludedPageId) {
+			continue;
+		}
 		debug("Find or create page %" PRId64, pageId);
 		BufferFrame &frame = this->bufferManager.fixPage(this->segmentId, pageId, true);
 		SlottedPage *page = toSlottedPage(frame);
@@ -124,10 +160,13 @@ BufferFrame &SPSegment::findOrCreatePage(size_t data_size) {
 		}
 
 		if (page->canMakeEnoughSpace(data_size)) {
-			char *pageEndPtr = (char *) &page + sizeof(SlottedPage);
-			page->compactify(pageEndPtr);
+			page->compactify();
 			return frame;
 		}
+
+		/*
+		 * We don't unfix the found frames here - they will be unfixed in a later method.
+		 */
 
 		// frame does not match criteria -> next
 		this->bufferManager.unfixPage(frame, false);
