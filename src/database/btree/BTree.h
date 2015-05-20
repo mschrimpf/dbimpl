@@ -47,7 +47,7 @@ private:
         Leaf(Leaf *previous, Leaf *next, bool isRoot) : previousLeaf(previous), nextLeaf(next), count(0) , isRootNode(isRoot) { }
     };
 
-    inline bool isFull(Leaf leaf) {
+    inline bool shouldSplit(Leaf leaf) {
         return leaf.count > maxLeafCapacity;
     }
 
@@ -55,7 +55,7 @@ private:
         return !leaf.isRootNode && leaf.count < minLeafCapacity; //Root node should not be splitted
     }
 
-    inline bool isFull(Node node) {
+    inline bool shouldSplit(Node node) {
         return node.count > maxNodeCapacity;
     }
 
