@@ -9,6 +9,7 @@
 
 struct TID {
 	TID(uint16_t slotOffset, uint64_t pageId) : slotOffset(slotOffset), pageId(pageId) { }
+	TID(uint64_t id) : slotOffset((uint16_t) id >> 48), pageId(id & 0x0000ffffffffffff){}
 
 	uint16_t slotOffset;
 	uint64_t pageId : 48 /* use only 48 bit */;
