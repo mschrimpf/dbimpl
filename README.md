@@ -29,6 +29,12 @@ To run the unit tests:
 
     # in dbimpl directory
     cmake .
+    
+    cd testing/relations
+    make -C ../.. relations_tests
+    ./relations_tests
+    cd ../..
+    
     cd testing/slotted_pages
     make -C ../.. slotted_pages_unit_tests
     ./slotted_pages_unit_tests
