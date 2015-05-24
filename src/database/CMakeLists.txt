@@ -23,7 +23,17 @@ set(SLOTTED_PAGES_SOURCE_FILES
     slotted_pages/Record.hpp)
 set(RELATIONS_SOURCE_FILES
     relations/Schema.hpp
+    relations/SchemaSerializer.h
+    relations/SchemaSerializer.cpp
     relations/Types.hpp
     relations/parser/Parser.cpp
     relations/parser/Schema.cpp)
-add_library(database ${BUFFER_SOURCE_FILES} ${SLOTTED_PAGES_SOURCE_FILES} ${RELATIONS_SOURCE_FILES} relations/SchemaSerializer.cpp relations/SchemaSerializer.h btree/BTree.cpp btree/BTree.h)
+set(BTREE_SOURCE_FILES
+    btree/BTree.h
+    btree/BTree.cpp)
+
+add_library(database
+    ${BUFFER_SOURCE_FILES}
+    ${SLOTTED_PAGES_SOURCE_FILES}
+    ${RELATIONS_SOURCE_FILES}
+    ${BTREE_SOURCE_FILES})
