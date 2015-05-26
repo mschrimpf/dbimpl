@@ -15,6 +15,7 @@ class BTree {
 private:
     BufferManager *bufferManager;
     SPSegment *spSegment;
+    KeyComparator comparator;
 
     uint64_t treeSize; // number of elements inside of the tree
     uint64_t maxNodeCapacity; // capacity of nodes
@@ -85,8 +86,14 @@ public:
     bool erase(KeyType key);
 
     void visualize();
+
+    void visualizeNode(Node * node);
+    void visualizeLeaf(Leaf * leaf);
     //TODO split, merge
 
+    bool searchForKey(KeyType key, TID &tid, void * node, uint64_t depth);
+    bool searchLeafForKey(KeyType key, TID &tid, Leaf * leaf);
+    bool searchNodeForKey(KeyType key, TID &tid, Node * node, uint64_t depth);
 };
 
 
