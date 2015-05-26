@@ -91,3 +91,9 @@ TEST_F(BTreeTest, TestSplitUp) {
 
 TEST_F(BTreeTest, TestMergeUp) {
 }
+
+TEST_F(BTreeTest, TestLeafVisualization){
+    uint64_t id = 0;
+    BTree::Leaf leaf (nullptr, nullptr);
+    leaf.visualize(&id);
+}

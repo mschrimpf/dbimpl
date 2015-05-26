@@ -70,7 +70,7 @@ void test(uint64_t n) {
    // Set up stuff, you probably have to change something here to match to your interfaces
    BufferManager *bm = new BufferManager(100);
    SPSegment *segment = new SPSegment(*bm, 1);
-   BTree<T, CMP> bTree(bm, segment);
+   BTree<T, CMP> bTree(bm, segment, 10, 10);
 
 
    // Insert values

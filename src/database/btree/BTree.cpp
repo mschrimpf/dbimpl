@@ -174,3 +174,7 @@ void BTree::Node::visualize(uint64_t *leafId, uint64_t *nodeId, uint64_t curDept
     }
     std::cout << stream.str() << std::endl;
 }
+
+uint64_t BTree::size() {
+    return 0;
+}
