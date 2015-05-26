@@ -3,7 +3,6 @@
 //
 
 #include <sstream>
-#include <inttypes.h>
 #include <iostream>
 #include "BTree.h"
 
@@ -48,10 +47,10 @@ void BTree::visualize() {
         //no elements
     } else if (depth == 1) {
         Leaf *leaf = reinterpret_cast<Leaf *>(rootNode);
-        visualizeLeaf(leaf, 0);
+        leaf->visualize(0);
     } else {
         Node *node = reinterpret_cast<Node *> (rootNode);
-        visualizeNode(node, 0, 0, 1);
+        node->visualize(0, 0, 1, depth);
     }
 
     //TODO combine leaves and leaves like: //just using lookupRange
@@ -66,43 +65,7 @@ void BTree::visualize() {
     std::cout << stream.str() << std::endl;
 }
 
-void BTree::visualizeNode(BTree::Node * node, uint64_t * leafId, uint64_t * nodeId, uint64_t curDepth) {
-    std::stringstream stream;
-    stream << "node" << *nodeId << " [shape=record, label=\n"
-    << "\"<count> " << node->count << " | ";
-    for (uint64_t n = 0; n < node->count; ++n){
-        Entry entry = node -> entries[n];
-        //TODO maybe casting of value
-        stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
-        if (curDepth + 1== depth){
-            //we have reached the bottom
-            Leaf * leaf = reinterpret_cast<Leaf *>(entry.value);
-            visualizeLeaf(leaf, leafId);
-            (*leafId)++;
-            //TODO combine nodes and leaves like:
-            //stream << "node0:ptr0 -> leaf0:count;";
-        }else{
-            Node * curNode = reinterpret_cast<Node * >(entry.value);
-            visualizeNode(curNode, leafId, nodeId, curDepth + 1);
-            (*nodeId)++;
-            //TODO combine nodes and nodes like:
-            //stream << "node0:ptr0 -> node1:count;";
-        }
-    }
-    std::cout << stream.str() << std::endl;
-}
 
-void BTree::visualizeLeaf(BTree::Leaf * leaf, uint64_t * leafId) {
-    std::stringstream stream;
-    stream << "leaf" << *leafId << " [shape=record, label=\n"
-    << "\"<count> " << leaf->count << " | ";
-    for (uint64_t e = 0; e < leaf->count; ++e) {
-        Entry entry = leaf->entries[e];
-        //TODO maybe casting of value
-        stream << "<key" << e << ">" << entry.key << "<value" << e << "> " << entry.value << " | <next> *\"]; \n";
-    }
-    std::cout << stream.str() << std::endl;
-}
 
 
 template<class KeyType, class KeyComparator>
@@ -172,4 +135,42 @@ bool BTree::searchForKey(KeyType key, TID &tid, void * node, uint64_t currentDep
         Node *curNode = reinterpret_cast<Node *> (node);
         return searchNodeForKey(key, tid, curNode, currentDepth);
     }
+}
+
+void BTree::Leaf::visualize(uint64_t *leafId) {
+    std::stringstream stream;
+    stream << "leaf" << *leafId << " [shape=record, label=\n"
+    << "\"<count> " << count << " | ";
+    for (uint64_t e = 0; e < count; ++e) {
+        Entry entry = entries[e];
+        //TODO maybe casting of value
+        stream << "<key" << e << ">" << entry.key << "<value" << e << "> " << entry.value << " | <next> *\"]; \n";
+    }
+    std::cout << stream.str() << std::endl;
+}
+
+void BTree::Node::visualize(uint64_t *leafId, uint64_t *nodeId, uint64_t curDepth, uint64_t maxDepth) {
+    std::stringstream stream;
+    stream << "node" << *nodeId << " [shape=record, label=\n"
+    << "\"<count> " << count << " | ";
+    for (uint64_t n = 0; n < count; ++n){
+        Entry entry = entries[n];
+        //TODO maybe casting of value
+        stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
+        if (curDepth + 1== maxDepth){
+            //we have reached the bottom
+            Leaf * leaf = reinterpret_cast<Leaf *>(entry.value);
+            leaf->visualize(leafId);
+            (*leafId)++;
+            //TODO combine nodes and leaves like:
+            //stream << "node0:ptr0 -> leaf0:count;";
+        }else{
+            Node * curNode = reinterpret_cast<Node * >(entry.value);
+            curNode->visualize(leafId, nodeId, curDepth + 1, maxDepth);
+            (*nodeId)++;
+            //TODO combine nodes and nodes like:
+            //stream << "node0:ptr0 -> node1:count;";
+        }
+    }
+    std::cout << stream.str() << std::endl;
 }
