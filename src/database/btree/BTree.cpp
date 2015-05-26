@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include <iostream>
-#include "BTree.h"
+#include "BTree.hpp"
 
 template<class KeyType, class KeyComparator>
 bool BTree::erase(KeyType key) {
@@ -38,33 +38,6 @@ std::vector<TID>::iterator BTree::lookupRange(KeyType key) {
     return NULL;
 }
 
-void BTree::visualize() {
-    std::stringstream stream;
-    stream << "diagraph myBTree { \n";
-    stream << "node [shape=record];";
-
-    if (depth == 0) {
-        //no elements
-    } else if (depth == 1) {
-        Leaf *leaf = reinterpret_cast<Leaf *>(rootNode);
-        leaf->visualize(0);
-    } else {
-        Node *node = reinterpret_cast<Node *> (rootNode);
-        node->visualize(0, 0, 1, depth);
-    }
-
-    //TODO combine leaves and leaves like: //just using lookupRange
-    //
-    uint64_t leafId = 0;
-    Leaf * currentLeaf = NULL; //beginning most left leaf
-    while (currentLeaf->nextLeaf != nullptr){
-        stream << "leaf"<<leafId++ << ":next -> leaf"<< leafId << "count;";
-        currentLeaf = currentLeaf->nextLeaf;
-    }
-    stream << "}";
-    std::cout << stream.str() << std::endl;
-}
-
 
 
 
@@ -80,7 +53,7 @@ bool BTree::lookup(KeyType key, TID& tid) {
 template<class KeyType, class KeyComparator>
 bool BTree::searchLeafForKey(KeyType key, TID &tid, Leaf * leaf) {
     uint64_t left = 0;
-    uint64_t right = leaf->count;
+    uint64_t right = leaf->header.count;
     uint64_t middle = (left + right) / 2;
 
     while (left != right){
@@ -91,7 +64,7 @@ bool BTree::searchLeafForKey(KeyType key, TID &tid, Leaf * leaf) {
         }
         middle = (left + right) / 2;
     }
-    if (middle < leaf->count){
+    if (middle < leaf->header.count){
         //value found
         Entry foundEntry = leaf->entries[middle];
         tid = foundEntry.value;
@@ -105,7 +78,7 @@ bool BTree::searchLeafForKey(KeyType key, TID &tid, Leaf * leaf) {
 template<class KeyType, class KeyComparator>
 bool BTree::searchNodeForKey(KeyType key, TID &tid, BTree::Node * node, uint64_t depth) {
     uint64_t left = 0;
-    uint64_t right = node->count;
+    uint64_t right = node->header.count;
     uint64_t middle = (left + right) / 2;
 
     while (left != right) {
@@ -117,7 +90,7 @@ bool BTree::searchNodeForKey(KeyType key, TID &tid, BTree::Node * node, uint64_t
         }
         middle = (left + right) / 2;
     }
-    if (middle < node->count) {
+    if (middle < node->header.count) {
         //value found
         return searchForKey(key, tid, node->entries[middle].value, depth + 1);
     }
@@ -135,44 +108,6 @@ bool BTree::searchForKey(KeyType key, TID &tid, void * node, uint64_t currentDep
         Node *curNode = reinterpret_cast<Node *> (node);
         return searchNodeForKey(key, tid, curNode, currentDepth);
     }
-}
-
-void BTree::Leaf::visualize(uint64_t *leafId) {
-    std::stringstream stream;
-    stream << "leaf" << *leafId << " [shape=record, label=\n"
-    << "\"<count> " << count << " | ";
-    for (uint64_t e = 0; e < count; ++e) {
-        Entry entry = entries[e];
-        //TODO maybe casting of value
-        stream << "<key" << e << ">" << entry.key << "<value" << e << "> " << entry.value << " | <next> *\"]; \n";
-    }
-    std::cout << stream.str() << std::endl;
-}
-
-void BTree::Node::visualize(uint64_t *leafId, uint64_t *nodeId, uint64_t curDepth, uint64_t maxDepth) {
-    std::stringstream stream;
-    stream << "node" << *nodeId << " [shape=record, label=\n"
-    << "\"<count> " << count << " | ";
-    for (uint64_t n = 0; n < count; ++n){
-        Entry entry = entries[n];
-        //TODO maybe casting of value
-        stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
-        if (curDepth + 1== maxDepth){
-            //we have reached the bottom
-            Leaf * leaf = reinterpret_cast<Leaf *>(entry.value);
-            leaf->visualize(leafId);
-            (*leafId)++;
-            //TODO combine nodes and leaves like:
-            //stream << "node0:ptr0 -> leaf0:count;";
-        }else{
-            Node * curNode = reinterpret_cast<Node * >(entry.value);
-            curNode->visualize(leafId, nodeId, curDepth + 1, maxDepth);
-            (*nodeId)++;
-            //TODO combine nodes and nodes like:
-            //stream << "node0:ptr0 -> node1:count;";
-        }
-    }
-    std::cout << stream.str() << std::endl;
 }
 
 uint64_t BTree::size() {

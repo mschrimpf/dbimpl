@@ -5,7 +5,7 @@
 #include <string.h>
 #include "../../src/database/buffer/BufferManager.hpp"
 #include "../../src/database/slotted_pages/SPSegment.hpp"
-#include "../../src/database/btree/BTree.h"
+#include "BTree.hpp"
 
 //#include "MyDatabaseIncludes.hpp"
 

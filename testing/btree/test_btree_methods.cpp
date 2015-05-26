@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../../src/database/btree/BTree.h"
+#include "BTree.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;

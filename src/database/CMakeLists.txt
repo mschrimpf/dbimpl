@@ -29,11 +29,14 @@ set(RELATIONS_SOURCE_FILES
     relations/parser/Parser.cpp
     relations/parser/Schema.cpp)
 set(BTREE_SOURCE_FILES
-    btree/BTree.h
-    btree/BTree.cpp)
+    btree/BTree.hpp
+    btree/BTree.cpp
+    btree/BTreeLeaf.cpp
+    btree/BTreeVisualize.cpp)
 
 add_library(database
     ${BUFFER_SOURCE_FILES}
     ${SLOTTED_PAGES_SOURCE_FILES}
     ${RELATIONS_SOURCE_FILES}
-    ${BTREE_SOURCE_FILES})
+    ${BTREE_SOURCE_FILES}
+    )
