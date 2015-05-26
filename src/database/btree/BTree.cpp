@@ -49,3 +49,7 @@ template<class KeyType, class KeyComparator>
 std::vector<TID>::iterator BTree::lookupRange(KeyType key) {
     return NULL;
 }
+
+void BTree::visualize() {
+
+}
