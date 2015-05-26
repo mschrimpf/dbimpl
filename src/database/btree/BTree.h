@@ -26,19 +26,6 @@ private:
     void * rootNode; //either node or leaf
     size_t depth; //depth of the tree
 
-
-    inline bool shouldMerge(Leaf * leaf) {
-        return !leaf->isRootNode && leaf->count < minLeafCapacity; //Root node should not be splitted
-    }
-
-    inline bool shouldSplit(Node * node) {
-        return node->count > maxNodeCapacity;
-    }
-
-    inline bool shouldMerge(Node * node) {
-        return node->count < minNodeCapacity;
-    }
-
     bool searchForKey(KeyType key, TID &tid, void * node, uint64_t depth);
     bool searchLeafForKey(KeyType key, TID &tid, Leaf * leaf);
     bool searchNodeForKey(KeyType key, TID &tid, Node * node, uint64_t depth);
