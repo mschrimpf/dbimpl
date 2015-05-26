@@ -6,10 +6,6 @@
 #include <iostream>
 #include "BTree.hpp"
 
-uint64_t BTree::size() {
-	return 0;
-}
-
 bool BTree::Leaf::shouldSplit() {
 	return header.count > maxLeafCapacity;
 }

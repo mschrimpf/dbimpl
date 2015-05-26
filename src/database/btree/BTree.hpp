@@ -13,18 +13,19 @@ template<class KeyType, class KeyComparator>
 class BTree {
 
 private:
+	static const uint64_t maxNodeCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(Node::Header))
+											/ sizeof(Entry) - 1 /* one less for the additional K/V pair */;
+	static const uint64_t minNodeCapacity = maxNodeCapacity / 2; // 50 percent is minimum
+	static const uint64_t maxLeafCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(Node::Header))
+											/ sizeof(Entry) - 1 /* one less for the additional K/V pair */;
+	static const uint64_t minLeafCapacity = maxLeafCapacity / 2;
+
 	BufferManager *bufferManager;
-	SPSegment *spSegment;
 	KeyComparator comparator;
 
+	uint64_t rootPageId : 48;
 	size_t treeSize; // number of elements inside of the tree
-	static uint64_t maxNodeCapacity; // capacity of nodes
-	static uint64_t maxLeafCapacity; // capacity of leaves
-	static uint64_t minNodeCapacity; // 50 percent is minimum
-	static uint64_t minLeafCapacity; // 50 percent is minimum
-
-	void *rootNode; //either node or leaf
-	size_t depth; //depth of the tree
+	size_t depth;
 
 	bool searchForKey(KeyType key, TID &tid, void *node, uint64_t depth);
 
@@ -34,10 +35,7 @@ private:
 
 
 public:
-	BTree(BufferManager *bManager, SPSegment *segment, uint64_t maxNodeEntries, uint64_t maxLeafEntries) :
-			bufferManager(bManager), spSegment(segment), maxNodeCapacity(maxNodeEntries),
-			maxLeafCapacity(maxLeafEntries), minNodeCapacity(maxNodeEntries / 2),
-			minLeafCapacity(minLeafCapacity / 2) { }
+	BTree(BufferManager *bManager) : bufferManager(bManager) { }
 
 	bool insert(KeyType key, TID tid);
 
@@ -46,6 +44,8 @@ public:
 	std::vector<TID>::iterator lookupRange(KeyType key);
 
 	bool erase(KeyType key);
+
+	uint64_t size();
 
 	void visualize();
 
@@ -88,8 +88,6 @@ public:
 
 		bool shouldSplit();
 	};
-
-	uint64_t size();
 };
 
 

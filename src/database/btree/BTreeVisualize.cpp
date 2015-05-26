@@ -24,32 +24,20 @@ void BTree::visualize() {
 	//TODO combine leaves and leaves like: //just using lookupRange
 	//
 	uint64_t leafId = 0;
-	Leaf *currentLeaf = NULL; //beginning most left leaf
-	while (currentLeaf->nextLeaf != nullptr) {
+	Leaf *currentLeaf = nullptr; //beginning most left leaf
+	while (currentLeaf->header.nextLeaf != nullptr) {
 		stream << "leaf" << leafId++ << ":next -> leaf" << leafId << "count;";
-		currentLeaf = currentLeaf->nextLeaf;
+		currentLeaf = currentLeaf->header.nextLeaf;
 	}
 	stream << "}";
-	std::cout << stream.str() << std::endl;
-}
-
-void BTree::Leaf::visualize(uint64_t *leafId) {
-	std::stringstream stream;
-	stream << "leaf" << *leafId << " [shape=record, label=\n"
-	<< "\"<count> " << count << " | ";
-	for (uint64_t e = 0; e < count; ++e) {
-		Entry entry = entries[e];
-		//TODO maybe casting of value
-		stream << "<key" << e << ">" << entry.key << "<value" << e << "> " << entry.value << " | <next> *\"]; \n";
-	}
 	std::cout << stream.str() << std::endl;
 }
 
 void BTree::Node::visualize(uint64_t *leafId, uint64_t *nodeId, uint64_t curDepth, uint64_t maxDepth) {
 	std::stringstream stream;
 	stream << "node" << *nodeId << " [shape=record, label=\n"
-	<< "\"<count> " << count << " | ";
-	for (uint64_t n = 0; n < count; ++n) {
+	<< "\"<count> " << header.count << " | ";
+	for (uint64_t n = 0; n < header.count; ++n) {
 		Entry entry = entries[n];
 		//TODO maybe casting of value
 		stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
@@ -71,10 +59,14 @@ void BTree::Node::visualize(uint64_t *leafId, uint64_t *nodeId, uint64_t curDept
 	std::cout << stream.str() << std::endl;
 }
 
-uint64_t BTree::size() {
-	return 0;
-}
-
-bool BTree::Leaf::shouldSplit() {
-	return header.count > maxLeafCapacity;
+void BTree::Leaf::visualize(uint64_t *leafId) {
+	std::stringstream stream;
+	stream << "leaf" << *leafId << " [shape=record, label=\n"
+	<< "\"<count> " << header.count << " | ";
+	for (uint64_t e = 0; e < header.count; ++e) {
+		Entry entry = entries[e];
+		//TODO maybe casting of value
+		stream << "<key" << e << ">" << entry.key << "<value" << e << "> " << entry.value << " | <next> *\"]; \n";
+	}
+	std::cout << stream.str() << std::endl;
 }
