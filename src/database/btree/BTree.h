@@ -26,51 +26,6 @@ private:
     void * rootNode; //either node or leaf
     size_t depth; //depth of the tree
 
-    template<class ValueType>
-    struct Entry {
-        KeyType key;
-        ValueType value;
-    };
-
-    // Node and Leaf are not the same struct as the sizes can differ
-    struct Node {
-        size_t count; // number of entries
-
-        template<void *>
-        Entry entries[];
-
-        Node() : count(0){ }
-        void visualize(uint64_t * leafId, uint64_t * nodeId, uint64_t depth, uint64_t maxDepth);
-    };
-
-    struct Leaf {
-        bool isRootNode;
-        size_t count; // number of entries
-        Entry entries[];
-
-        Leaf *previousLeaf;
-        Leaf *nextLeaf;
-
-        Leaf(Leaf *previous, Leaf *next, bool isRoot) : previousLeaf(previous), nextLeaf(next), count(0) , isRootNode(isRoot) { }
-        void visualize(uint64_t *leafId);
-
-        inline bool shouldSplit() {
-            return count > maxLeafCapacity;
-        }
-    };
-
-    inline bool shouldMerge(Leaf * leaf) {
-        return !leaf->isRootNode && leaf->count < minLeafCapacity; //Root node should not be splitted
-    }
-
-    inline bool shouldSplit(Node * node) {
-        return node->count > maxNodeCapacity;
-    }
-
-    inline bool shouldMerge(Node * node) {
-        return node->count < minNodeCapacity;
-    }
-
     bool searchForKey(KeyType key, TID &tid, void * node, uint64_t depth);
     bool searchLeafForKey(KeyType key, TID &tid, Leaf * leaf);
     bool searchNodeForKey(KeyType key, TID &tid, Node * node, uint64_t depth);
@@ -90,6 +45,41 @@ public:
     bool erase(KeyType key);
 
     void visualize();
+
+    template<class ValueType>
+    struct Entry {
+        KeyType key;
+        ValueType value;
+    };
+
+    // Node and Leaf are not the same struct as the sizes can differ
+    struct Node {
+        size_t count; // number of entries
+
+        template<void *>
+        Entry entries[];
+
+        Node() : count(0){ }
+        void visualize(uint64_t * leafId, uint64_t * nodeId, uint64_t depth, uint64_t maxDepth);
+    };
+
+    struct Leaf {
+        size_t count; // number of entries
+        template<void *>
+        Entry entries[];
+
+        Leaf *previousLeaf;
+        Leaf *nextLeaf;
+
+        Leaf(Leaf *previous, Leaf *next) : previousLeaf(previous), nextLeaf(next), count(0) { }
+        void visualize(uint64_t *leafId);
+
+        inline bool shouldSplit() {
+            return count > maxLeafCapacity;
+        }
+    };
+
+    uint64_t size();
 };
 
 
