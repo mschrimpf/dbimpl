@@ -17,7 +17,7 @@ private:
     SPSegment *spSegment;
     KeyComparator comparator;
 
-    uint64_t treeSize; // number of elements inside of the tree
+    size_t treeSize; // number of elements inside of the tree
     uint64_t maxNodeCapacity; // capacity of nodes
     uint64_t maxLeafCapacity; // capacity of leaves
     uint64_t minNodeCapacity; // 50 percent is minimum
@@ -51,24 +51,31 @@ private:
         Leaf *nextLeaf;
 
         Leaf(Leaf *previous, Leaf *next, bool isRoot) : previousLeaf(previous), nextLeaf(next), count(0) , isRootNode(isRoot) { }
+
     };
 
-    inline bool shouldSplit(Leaf leaf) {
-        return leaf.count > maxLeafCapacity;
+    inline bool shouldSplit(Leaf * leaf) {
+        return leaf->count > maxLeafCapacity;
     }
 
-    inline bool shouldMerge(Leaf leaf) {
-        return !leaf.isRootNode && leaf.count < minLeafCapacity; //Root node should not be splitted
+    inline bool shouldMerge(Leaf * leaf) {
+        return !leaf->isRootNode && leaf->count < minLeafCapacity; //Root node should not be splitted
     }
 
-    inline bool shouldSplit(Node node) {
-        return node.count > maxNodeCapacity;
+    inline bool shouldSplit(Node * node) {
+        return node->count > maxNodeCapacity;
     }
 
-    inline bool shouldMerge(Node node) {
-        return node.count < minNodeCapacity;
+    inline bool shouldMerge(Node * node) {
+        return node->count < minNodeCapacity;
     }
 
+    bool searchForKey(KeyType key, TID &tid, void * node, uint64_t depth);
+    bool searchLeafForKey(KeyType key, TID &tid, Leaf * leaf);
+    bool searchNodeForKey(KeyType key, TID &tid, Node * node, uint64_t depth);
+
+    void visualizeNode(Node * node, uint64_t * leafId, uint64_t * nodeId, uint64_t depth);
+    void visualizeLeaf(Leaf * leaf, uint64_t * leafId);
 
 public:
     BTree(BufferManager *bManager, SPSegment *segment, uint64_t maxNodeEntries, uint64_t maxLeafEntries) :
@@ -77,8 +84,6 @@ public:
 
     bool insert(KeyType key, TID tid);
 
-    uint64_t size();
-
     bool lookup(KeyType key, TID &tid);
 
     std::vector<TID>::iterator lookupRange (KeyType key);
@@ -86,14 +91,6 @@ public:
     bool erase(KeyType key);
 
     void visualize();
-
-    void visualizeNode(Node * node);
-    void visualizeLeaf(Leaf * leaf);
-    //TODO split, merge
-
-    bool searchForKey(KeyType key, TID &tid, void * node, uint64_t depth);
-    bool searchLeafForKey(KeyType key, TID &tid, Leaf * leaf);
-    bool searchNodeForKey(KeyType key, TID &tid, Node * node, uint64_t depth);
 };
 
 
