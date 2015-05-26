@@ -18,10 +18,10 @@ private:
     KeyComparator comparator;
 
     size_t treeSize; // number of elements inside of the tree
-    uint64_t maxNodeCapacity; // capacity of nodes
-    uint64_t maxLeafCapacity; // capacity of leaves
-    uint64_t minNodeCapacity; // 50 percent is minimum
-    uint64_t minLeafCapacity; // 50 percent is minimum
+    static uint64_t maxNodeCapacity; // capacity of nodes
+    static uint64_t maxLeafCapacity; // capacity of leaves
+    static uint64_t minNodeCapacity; // 50 percent is minimum
+    static uint64_t minLeafCapacity; // 50 percent is minimum
 
     void * rootNode; //either node or leaf
     size_t depth; //depth of the tree
@@ -40,6 +40,7 @@ private:
         Entry entries[];
 
         Node() : count(0){ }
+        void visualize(uint64_t * leafId, uint64_t * nodeId, uint64_t depth, uint64_t maxDepth);
     };
 
     struct Leaf {
@@ -51,12 +52,12 @@ private:
         Leaf *nextLeaf;
 
         Leaf(Leaf *previous, Leaf *next, bool isRoot) : previousLeaf(previous), nextLeaf(next), count(0) , isRootNode(isRoot) { }
+        void visualize(uint64_t *leafId);
 
+        inline bool shouldSplit() {
+            return count > maxLeafCapacity;
+        }
     };
-
-    inline bool shouldSplit(Leaf * leaf) {
-        return leaf->count > maxLeafCapacity;
-    }
 
     inline bool shouldMerge(Leaf * leaf) {
         return !leaf->isRootNode && leaf->count < minLeafCapacity; //Root node should not be splitted
@@ -74,8 +75,6 @@ private:
     bool searchLeafForKey(KeyType key, TID &tid, Leaf * leaf);
     bool searchNodeForKey(KeyType key, TID &tid, Node * node, uint64_t depth);
 
-    void visualizeNode(Node * node, uint64_t * leafId, uint64_t * nodeId, uint64_t depth);
-    void visualizeLeaf(Leaf * leaf, uint64_t * leafId);
 
 public:
     BTree(BufferManager *bManager, SPSegment *segment, uint64_t maxNodeEntries, uint64_t maxLeafEntries) :
