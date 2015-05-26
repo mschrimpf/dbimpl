@@ -9,8 +9,8 @@ uint64_t BTree::size() {
     return treeSize;
 }
 
-template<class T, class CMP>
-bool BTree::lookup(T param, TID& tid) {
+template<class KeyType, class KeyComparator>
+bool BTree::lookup(KeyType key, TID& tid) {
     // while not found
     // while currentNode != leaf
         // check each value in node, if param < currentNode.param, look left, otherwise right
@@ -18,8 +18,8 @@ bool BTree::lookup(T param, TID& tid) {
     return true;
 }
 
-template<class T, class CMP>
-bool BTree::erase(T param) {
+template<class KeyType, class KeyComparator>
+bool BTree::erase(KeyType key) {
     //Remove first
     //Check if Node Size < min-Capacity
         //no -> we're done
@@ -28,10 +28,10 @@ bool BTree::erase(T param) {
     return true;
 }
 
-template<class T, class CMP>
-bool BTree::insert(T param, TID tid) {
+template<class KeyType, class KeyComparator>
+bool BTree::insert(KeyType key, TID tid) {
     // Check if key is already in tree
-    if (lookup(param, tid)){
+    if (lookup(key, tid)){
         return false;
     }
 
@@ -45,3 +45,7 @@ bool BTree::insert(T param, TID tid) {
     return true;
 }
 
+template<class KeyType, class KeyComparator>
+std::vector<TID>::iterator BTree::lookupRange(KeyType key) {
+    return NULL;
+}
