@@ -22,6 +22,9 @@ private:
     uint64_t minNodeCapacity; // 50 percent is minimum
     uint64_t minLeafCapacity; // 50 percent is minimum
 
+    void * rootNode; //either node or leaf
+    size_t depth; //depth of the tree
+
     template<class ValueType>
     struct Entry {
         KeyType key;
@@ -30,14 +33,17 @@ private:
 
     // Node and Leaf are not the same struct as the sizes can differ
     struct Node {
-        uint64_t count; // number of entries
+        size_t count; // number of entries
+
+        template<void *>
         Entry entries[];
+
         Node() : count(0){ }
     };
 
     struct Leaf {
         bool isRootNode;
-        uint64_t count; // number of entries
+        size_t count; // number of entries
         Entry entries[];
 
         Leaf *previousLeaf;
