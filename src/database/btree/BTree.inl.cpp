@@ -56,7 +56,16 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
 }
 
 template<class KeyType, class KeyComparator>
-inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(KeyType key) {
+inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(KeyType begin, KeyType end) {
+  KeyType left = begin;
+  KeyType right = end;
+
+  /* if given end-limit is lower than begin, we need to swap both borders*/
+  if (comparator(end, begin)){
+    left = end;
+    right = begin;
+  }
+
   return NULL;
 }
 
@@ -67,8 +76,11 @@ inline bool BTree<KeyType, KeyComparator>::lookup(KeyType key, TID &tid) {
     // no element found
     return false;
   }
-  return false;
-//	return searchForKey(key, tid, rootNode, 1); // TODO
+  //TODO fix everything to the key
+  //TODO return data;
+  //TODO unfix everything
+  return true;
+  //return searchForKey(key, tid, rootNode, 1);
 }
 
 template<class KeyType, class KeyComparator>

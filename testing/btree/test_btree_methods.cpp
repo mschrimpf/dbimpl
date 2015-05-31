@@ -51,6 +51,14 @@ public:
   };
 };
 
+TEST_F(BTreeTest, TestBTreeVisualization) {
+  bTree->visualize();
+  for (unsigned id = 0; id < 20; ++id){
+    std::cout << "Adding Pair(" << id << ",0) to bTree";
+    bTree->insert(id, TID(0));
+    bTree->visualize();
+  }
+}
 
 TEST_F(BTreeTest, InsertFindTest) {
   TID tid(0);
@@ -93,10 +101,4 @@ TEST_F(BTreeTest, TestSplitUp) {
 }
 
 TEST_F(BTreeTest, TestMergeUp) {
-}
-
-TEST_F(BTreeTest, TestLeafVisualization) {
-  uint64_t id = 0;
-  Leaf<uint64_t, MyCustomUInt64Cmp> leaf(nullptr, nullptr);
-  leaf.visualize(&id);
 }

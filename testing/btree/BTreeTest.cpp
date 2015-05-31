@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string.h>
 #include "../../src/database/buffer/BufferManager.hpp"
-#include "BTree.inl.hpp"
+#include "../../src/database/btree/BTree.hpp"
 
 /* Comparator functor for uint64_t*/
 struct MyCustomUInt64Cmp {

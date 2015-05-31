@@ -31,7 +31,7 @@ struct Leaf {
   Leaf(Leaf<KeyType, KeyComparator> *previous, Leaf<KeyType, KeyComparator> *next)
       : header(previous, next) { }
 
-  inline void visualize(uint64_t *leafId);
+  inline void visualize(uint64_t leafId);
 
   inline bool hasSpaceForOneMoreEntry();
 

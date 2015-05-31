@@ -11,21 +11,19 @@ void BTree<KeyType, KeyComparator>::visualize() {
   std::stringstream stream;
   stream << "diagraph myBTree { \n";
   stream << "node [shape=record];";
-
-  void *rootNode = nullptr; // TODO: retrieve from rootPageId
+  BufferFrame frame = bufferManager.fixPage(segmentId, rootPageId, false);
+  void *rootNode = frame.getData(); // TODO: retrieve from rootPageId
   if (height == 0) {
-    //no elements
-  } else if (height == 1) {
     Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(rootNode);
     leaf->visualize(0);
   } else {
     InnerNode<KeyType, KeyComparator> *node = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (rootNode);
-    node->visualize(0, 0, 1, height);
+    node->visualize(0, 0, 0, height);
   }
+    bufferManager.unfixPage(frame, false);
 
   //TODO combine leaves and leaves like: //just using lookupRange
-  //
-  uint64_t leafId = 0;
+  /*uint64_t leafId = 0;
   Leaf<KeyType, KeyComparator> *currentLeaf = nullptr; //beginning most left leaf
   while (currentLeaf->header.nextLeaf != nullptr) {
     stream << "leaf" << leafId++ << ":next -> leaf" << leafId << "count;";
@@ -33,6 +31,7 @@ void BTree<KeyType, KeyComparator>::visualize() {
   }
   stream << "}";
   std::cout << stream.str() << std::endl;
+  */
 }
 
 template<class KeyType, class KeyComparator>
@@ -45,10 +44,10 @@ void InnerNode<KeyType, KeyComparator>::visualize(uint64_t *leafId, uint64_t *no
     Entry<KeyType, uint64_t> entry = entries[n];
     //TODO maybe casting of value
     stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
-    if (curDepth + 1 == maxDepth) {
+    if (curDepth == maxDepth) {
       //we have reached the bottom
       Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(entry.value);
-      leaf->visualize(leafId);
+      leaf->visualize(*leafId);
       (*leafId)++;
       //TODO combine nodes and leaves like:
       //stream << "node0:ptr0 -> leaf0:keyCount;";
@@ -64,9 +63,9 @@ void InnerNode<KeyType, KeyComparator>::visualize(uint64_t *leafId, uint64_t *no
 }
 
 template<class KeyType, class KeyComparator>
-void Leaf<KeyType, KeyComparator>::visualize(uint64_t *leafId) {
+void Leaf<KeyType, KeyComparator>::visualize(uint64_t leafId) {
   std::stringstream stream;
-  stream << "leaf" << *leafId << " [shape=record, label=\n"
+  stream << "leaf" << leafId << " [shape=record, label=\n"
   << "\"<count> " << header.keyCount << " | ";
   for (uint64_t e = 0; e < header.keyCount; ++e) {
     Entry<KeyType, TID> entry = entries[e];

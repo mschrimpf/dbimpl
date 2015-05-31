@@ -48,7 +48,7 @@ public:
 
   inline bool lookup(KeyType key, TID &tid);
 
-  inline std::vector<TID>::iterator lookupRange(KeyType key);
+  inline std::vector<TID>::iterator lookupRange(KeyType begin, KeyType end);
 
   inline bool erase(KeyType key);
 
@@ -66,6 +66,6 @@ public:
 };
 
 #include "BTree.inl.cpp"
-#include "BtreeVisualize.inl.cpp"
+#include "BTreeVisualize.inl.cpp"
 
 #endif //PROJECT_BTREE_H
