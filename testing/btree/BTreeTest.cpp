@@ -4,10 +4,7 @@
 #include <sstream>
 #include <string.h>
 #include "../../src/database/buffer/BufferManager.hpp"
-#include "../../src/database/slotted_pages/SPSegment.hpp"
-#include "BTree.hpp"
-
-//#include "MyDatabaseIncludes.hpp"
+#include "BTree.inl.hpp"
 
 /* Comparator functor for uint64_t*/
 struct MyCustomUInt64Cmp {
@@ -68,9 +65,8 @@ const IntPair& getKey(const uint64_t& i) {
 template <class T, class CMP>
 void test(uint64_t n) {
    // Set up stuff, you probably have to change something here to match to your interfaces
-   BufferManager *bm = new BufferManager(100);
-   SPSegment *segment = new SPSegment(*bm, 1);
-   BTree<T, CMP> bTree(bm, segment, 10, 10);
+   BufferManager bm(100);
+   BTree<T, CMP> bTree(bm, 1);
 
 
    // Insert values
@@ -106,9 +102,6 @@ void test(uint64_t n) {
    for (uint64_t i=0; i<n; ++i)
       bTree.erase(getKey<T>(i));
    assert(bTree.size()==0);
-
-   delete bm;
-   delete segment;
 }
 
 int main(int argc, char* argv[]) {

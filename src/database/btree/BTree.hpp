@@ -6,89 +6,73 @@
 #define PROJECT_BTREE_H
 
 #include <stdint.h>
-#include <bits/stl_vector.h>
-#include "../slotted_pages/SPSegment.hpp"
+#include <vector>
+#include "Entry.hpp"
+#include "InnerNode.hpp"
+#include "Leaf.hpp"
+#include "../buffer/BufferManager.hpp"
+#include "../slotted_pages/TID.hpp"
 
+/**
+ * Entries less than the key are on the left, entries greater than or equal to the key are on the right.
+ *
+ * The first key in the entries array of InnerNodes and Leafs does not have a meaning,
+ * it only fills up the array from the left with the additional necessary value.
+ */
 template<class KeyType, class KeyComparator>
 class BTree {
+public:
+  static const uint64_t maxNodeCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(InnerNode<KeyType>::Header))
+                                          / sizeof(Entry<KeyType, void *>)
+                                          - 1 /* one less for the additional K/V pair */;
+  static const uint64_t minNodeCapacity = maxNodeCapacity / 2;
+  static const uint64_t maxLeafCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(InnerNode<KeyType>::Header))
+                                          / sizeof(Entry<KeyType, TID>)
+                                          - 1 /* one less for the additional K/V pair */;
+  static const uint64_t minLeafCapacity = maxLeafCapacity / 2;
 
 private:
-	static const uint64_t maxNodeCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(Node::Header))
-											/ sizeof(Entry) - 1 /* one less for the additional K/V pair */;
-	static const uint64_t minNodeCapacity = maxNodeCapacity / 2; // 50 percent is minimum
-	static const uint64_t maxLeafCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(Node::Header))
-											/ sizeof(Entry) - 1 /* one less for the additional K/V pair */;
-	static const uint64_t minLeafCapacity = maxLeafCapacity / 2;
+  BufferManager &bufferManager;
+  uint64_t segmentId;
+  KeyComparator comparator;
 
-	BufferManager *bufferManager;
-	KeyComparator comparator;
+  uint64_t rootPageId : 48;
+  size_t treeSize; // number of elements inside of the tree
+  /**
+   * Longest path from the root to one of the leafs.
+   * I.e., a tree with only the root leaf has a height of 0.
+   */
+  size_t height;
 
-	uint64_t rootPageId : 48;
-	size_t treeSize; // number of elements inside of the tree
-	size_t depth;
+  inline bool searchForKey(KeyType key, TID &tid, void *node, uint64_t depth);
 
-	bool searchForKey(KeyType key, TID &tid, void *node, uint64_t depth);
+  inline bool searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType> *leaf);
 
-	bool searchLeafForKey(KeyType key, TID &tid, Leaf *leaf);
-
-	bool searchNodeForKey(KeyType key, TID &tid, Node *node, uint64_t depth);
-
+  inline bool searchNodeForKey(KeyType key, TID &tid, InnerNode<KeyType> *node, uint64_t depth);
 
 public:
-	BTree(BufferManager *bManager) : bufferManager(bManager) { }
+  BTree(BufferManager &bManager, uint64_t segmentId) : bufferManager(bManager), segmentId(segmentId) { }
 
-	bool insert(KeyType key, TID tid);
+  inline bool insert(KeyType key, TID tid);
 
-	bool lookup(KeyType key, TID &tid);
+  inline bool lookup(KeyType key, TID &tid);
 
-	std::vector<TID>::iterator lookupRange(KeyType key);
+  inline std::vector<TID>::iterator lookupRange(KeyType key);
 
-	bool erase(KeyType key);
+  inline bool erase(KeyType key);
 
-	uint64_t size();
+  inline uint64_t size();
 
-	void visualize();
+  inline void visualize();
 
-	template<class ValueType>
-	struct Entry {
-		KeyType key;
-		ValueType value;
-	};
+  inline bool isLeafHeight(size_t height);
 
-	// Node and Leaf are not the same struct as the sizes can differ
-	struct Node {
-		struct Header {
-			size_t count; // number of entries
-			Header() : count(0) { }
-		} header;
+  inline void splitInnerNode(InnerNode<KeyType> *innerNode, InnerNode<KeyType> *parentNode);
 
-		template<void *>
-		Entry entries[];
-
-		Node() : header() { }
-
-		void visualize(uint64_t *leafId, uint64_t *nodeId, uint64_t depth, uint64_t maxDepth);
-	};
-
-	struct Leaf {
-		struct Header {
-			size_t count; // number of entries
-			Leaf *previousLeaf;
-			Leaf *nextLeaf;
-
-			Header(Leaf *previous, Leaf *next) : previousLeaf(previous), nextLeaf(next), count(0) { }
-		} header;
-
-		template<void *>
-		Entry entries[];
-
-		Leaf(Leaf *previous, Leaf *next) : header(previous, next) { }
-
-		void visualize(uint64_t *leafId);
-
-		bool shouldSplit();
-	};
+  inline void splitLeaf(Leaf<KeyType> *leaf, InnerNode<KeyType> *parentNode);
 };
 
+#include "BTree.inl.cpp"
+#include "BtreeVisualize.inl.cpp"
 
 #endif //PROJECT_BTREE_H

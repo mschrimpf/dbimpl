@@ -30,9 +30,14 @@ set(RELATIONS_SOURCE_FILES
     relations/parser/Schema.cpp)
 set(BTREE_SOURCE_FILES
     btree/BTree.hpp
-    btree/BTree.cpp
-    btree/BTreeLeaf.cpp
-    btree/BTreeVisualize.cpp)
+#    btree/BTree.inl.cpp
+    btree/Entry.hpp
+    btree/InnerNode.hpp
+#    btree/InnerNode.inl.cpp
+    btree/Leaf.hpp
+#    btree/Leaf.inl.cpp
+#    btree/BTreeVisualize.inl.cpp
+    )
 
 add_library(database
     ${BUFFER_SOURCE_FILES}
