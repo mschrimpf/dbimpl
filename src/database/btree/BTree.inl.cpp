@@ -24,8 +24,8 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
   uint64_t currPageId = rootPageId;
   BufferFrame *parentFrame = nullptr;
   BufferFrame *currFrame = nullptr;
-  InnerNode<KeyType> *parentNode = nullptr;
-  InnerNode<KeyType> *currNode = nullptr;
+  InnerNode<KeyType, KeyComparator> *parentNode = nullptr;
+  InnerNode<KeyType, KeyComparator> *currNode = nullptr;
 
   while (!isLeafHeight(currHeight)) {
     if (parentFrame != nullptr) {
@@ -34,7 +34,7 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
     parentFrame = currFrame;
     currFrame = &bufferManager.fixPage(this->segmentId, currPageId, true);
     parentNode = currNode;
-    currNode = reinterpret_cast<InnerNode<KeyType> *>(currFrame->getData());
+    currNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *>(currFrame->getData());
     if (!currNode->hasSpaceForOneMoreEntry()) {
       splitInnerNode(currNode, parentNode);
       currNode = parentNode; // do not advance the loop
@@ -44,11 +44,11 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
     currHeight++;
   }
   currFrame = &bufferManager.fixPage(this->segmentId, currPageId, true);
-  Leaf<KeyType> *leaf = reinterpret_cast<Leaf<KeyType> *>(currFrame->getData());
+  Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currFrame->getData());
   if (!leaf->hasSpaceForOneMoreEntry()) {
     splitLeaf(leaf, currNode);
     bufferManager.unfixPage(*currFrame, true);
-    uint64_t leafPageId = currNode->getNextNode(key);
+    uint64_t leafPageId = currNode->getNextNode(key); // TODO: handle leaf == root
     currFrame = &bufferManager.fixPage(this->segmentId, leafPageId, true);
   }
   leaf->insert(key, tid);
@@ -75,19 +75,19 @@ template<class KeyType, class KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, void *node, uint64_t currentDepth) {
   if (currentDepth == height) {
     //we reached maximum height, so nodes are leaves
-    Leaf<KeyType> *leaf = reinterpret_cast<Leaf<KeyType> *>(node);
+    Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(node);
     return searchLeafForKey(key, tid, leaf);
   } else {
     //we haven't reached the leaves yet
-    InnerNode<KeyType> *curNode = reinterpret_cast<InnerNode<KeyType> *> (node);
+    InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (node);
     return searchNodeForKey(key, tid, curNode, currentDepth);
   }
 }
 
 template<class KeyType, class KeyComparator>
-inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &tid, InnerNode<KeyType> *node, uint64_t depth) {
+inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &tid, InnerNode<KeyType, KeyComparator> *node, uint64_t depth) {
   uint64_t left = 0;
-  uint64_t right = node->header.count;
+  uint64_t right = node->header.keyCount;
   uint64_t middle = (left + right) / 2;
 
   while (left != right) {
@@ -99,7 +99,7 @@ inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &ti
     }
     middle = (left + right) / 2;
   }
-  if (middle < node->header.count) {
+  if (middle < node->header.keyCount) {
     //value found
     return searchForKey(key, tid, node->entries[middle].value, depth + 1);
   }
@@ -107,9 +107,9 @@ inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &ti
 }
 
 template<class KeyType, class KeyComparator>
-inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType> *leaf) {
+inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType, KeyComparator> *leaf) {
   uint64_t left = 0;
-  uint64_t right = leaf->header.count;
+  uint64_t right = leaf->header.keyCount;
   uint64_t middle = (left + right) / 2;
 
   while (left != right) {
@@ -120,7 +120,7 @@ inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &ti
     }
     middle = (left + right) / 2;
   }
-  if (middle < leaf->header.count) {
+  if (middle < leaf->header.keyCount) {
     //value found
     Entry<KeyType, TID> foundEntry = leaf->entries[middle];
     tid = foundEntry.value;
@@ -133,7 +133,7 @@ inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &ti
 
 template<class KeyType, class KeyComparator>
 inline uint64_t BTree<KeyType, KeyComparator>::size() {
-  return 0;
+  return this->treeSize;
 }
 
 template<class KeyType, class KeyComparator>
@@ -142,11 +142,11 @@ inline bool BTree<KeyType, KeyComparator>::isLeafHeight(size_t height) {
 }
 
 template<class KeyType, class KeyComparator>
-inline void BTree<KeyType, KeyComparator>::splitInnerNode(InnerNode<KeyType> *innerNode, InnerNode<KeyType> *parentNode) {
+inline void BTree<KeyType, KeyComparator>::splitInnerNode(InnerNode<KeyType, KeyComparator> *innerNode, InnerNode<KeyType, KeyComparator> *parentNode) {
 
 }
 
 template<class KeyType, class KeyComparator>
-inline void BTree<KeyType, KeyComparator>::splitLeaf(Leaf<KeyType> *leaf, InnerNode<KeyType> *parentNode) {
+inline void BTree<KeyType, KeyComparator>::splitLeaf(Leaf<KeyType, KeyComparator> *leaf, InnerNode<KeyType, KeyComparator> *parentNode) {
 
 }

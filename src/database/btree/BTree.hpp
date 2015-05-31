@@ -21,16 +21,6 @@
  */
 template<class KeyType, class KeyComparator>
 class BTree {
-public:
-  static const uint64_t maxNodeCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(InnerNode<KeyType>::Header))
-                                          / sizeof(Entry<KeyType, void *>)
-                                          - 1 /* one less for the additional K/V pair */;
-  static const uint64_t minNodeCapacity = maxNodeCapacity / 2;
-  static const uint64_t maxLeafCapacity = (BufferManager::DATA_SIZE_BYTE - sizeof(InnerNode<KeyType>::Header))
-                                          / sizeof(Entry<KeyType, TID>)
-                                          - 1 /* one less for the additional K/V pair */;
-  static const uint64_t minLeafCapacity = maxLeafCapacity / 2;
-
 private:
   BufferManager &bufferManager;
   uint64_t segmentId;
@@ -46,9 +36,10 @@ private:
 
   inline bool searchForKey(KeyType key, TID &tid, void *node, uint64_t depth);
 
-  inline bool searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType> *leaf);
+  inline bool searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType, KeyComparator> *leaf);
 
-  inline bool searchNodeForKey(KeyType key, TID &tid, InnerNode<KeyType> *node, uint64_t depth);
+  inline bool searchNodeForKey(KeyType key, TID &tid,
+                               InnerNode<KeyType, KeyComparator> *node, uint64_t depth);
 
 public:
   BTree(BufferManager &bManager, uint64_t segmentId) : bufferManager(bManager), segmentId(segmentId) { }
@@ -67,9 +58,11 @@ public:
 
   inline bool isLeafHeight(size_t height);
 
-  inline void splitInnerNode(InnerNode<KeyType> *innerNode, InnerNode<KeyType> *parentNode);
+  inline void splitInnerNode(InnerNode<KeyType, KeyComparator> *innerNode,
+                             InnerNode<KeyType, KeyComparator> *parentNode);
 
-  inline void splitLeaf(Leaf<KeyType> *leaf, InnerNode<KeyType> *parentNode);
+  inline void splitLeaf(Leaf<KeyType, KeyComparator> *leaf,
+                        InnerNode<KeyType, KeyComparator> *parentNode);
 };
 
 #include "BTree.inl.cpp"

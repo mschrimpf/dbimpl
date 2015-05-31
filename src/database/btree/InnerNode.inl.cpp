@@ -3,13 +3,17 @@
 //
 
 #include "InnerNode.hpp"
+#include "BTreeConstants.hpp"
+#include "EntriesSearch.inl.cpp"
 
-template<class KeyType>
-inline uint64_t InnerNode<KeyType>::getNextNode(KeyType key) {
-  return 0;
+template<class KeyType, class KeyComparator>
+inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key) {
+  int min = 1;
+  int max = header.keyCount + 1;
+  return search<KeyType, KeyComparator, uint64_t>(entries, key, min, max);
 }
 
-template<class KeyType>
-bool InnerNode<KeyType>::hasSpaceForOneMoreEntry() {
-  return false;
+template<class KeyType, class KeyComparator>
+inline bool InnerNode<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
+  return this->header.keyCount == BTreeConstants<KeyType, KeyComparator>::maxNodeCapacity;
 }

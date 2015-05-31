@@ -10,19 +10,26 @@
 #include "Entry.hpp"
 #include "../slotted_pages/TID.hpp"
 
-template<class KeyType>
+template<class KeyType, class KeyComparator>
 struct Leaf {
   struct Header {
-    size_t count; // number of entries
-    Leaf *previousLeaf;
-    Leaf *nextLeaf;
+    size_t keyCount;
+    Leaf<KeyType, KeyComparator> *previousLeaf;
+    Leaf<KeyType, KeyComparator> *nextLeaf;
 
-    Header(Leaf *previous, Leaf *next) : previousLeaf(previous), nextLeaf(next), count(0) { }
+    Header(Leaf<KeyType, KeyComparator> *previous, Leaf<KeyType, KeyComparator> *next)
+        : previousLeaf(previous), nextLeaf(next),
+          keyCount(0) { }
   } header;
 
+  /**
+   * key -> TID.
+   * Only use the value of the first entry, the key is meaningless.
+   */
   Entry<KeyType, TID> entries[];
 
-  Leaf(Leaf *previous, Leaf *next) : header(previous, next) { }
+  Leaf(Leaf<KeyType, KeyComparator> *previous, Leaf<KeyType, KeyComparator> *next)
+      : header(previous, next) { }
 
   inline void visualize(uint64_t *leafId);
 

@@ -97,6 +97,6 @@ TEST_F(BTreeTest, TestMergeUp) {
 
 TEST_F(BTreeTest, TestLeafVisualization) {
   uint64_t id = 0;
-  Leaf<int> leaf(nullptr, nullptr);
+  Leaf<uint64_t, MyCustomUInt64Cmp> leaf(nullptr, nullptr);
   leaf.visualize(&id);
 }

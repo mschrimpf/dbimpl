@@ -9,14 +9,18 @@
 #include <stddef.h>
 #include "Entry.hpp"
 
-template<class KeyType>
+template<class KeyType, class KeyComparator>
 struct InnerNode {
   struct Header {
-    size_t count; // number of entries
-    Header() : count(0) { }
+    size_t keyCount;
+    Header() : keyCount(0) { }
   } header;
 
-  Entry<KeyType, void *> entries[];
+  /**
+   * key -> page id.
+   * Only use the value of the first entry, the key is meaningless.
+   */
+  Entry<KeyType, uint64_t> entries[];
 
   InnerNode() : header() { }
 

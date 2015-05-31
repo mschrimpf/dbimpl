@@ -3,13 +3,14 @@
 //
 
 #include "Leaf.hpp"
+#include "BTreeConstants.hpp"
 
-template<class KeyType>
-inline bool Leaf<KeyType>::hasSpaceForOneMoreEntry() {
-  return false;
+template<class KeyType, class KeyComparator>
+inline bool Leaf<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
+  return header.keyCount == BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity;
 }
 
-template<class KeyType>
-inline void Leaf<KeyType>::insert(KeyType key, TID tid) {
+template<class KeyType, class KeyComparator>
+inline void Leaf<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
 
 }
