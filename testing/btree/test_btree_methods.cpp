@@ -94,10 +94,17 @@ TEST_F(BTreeTest, InsertSameKeyTest) {
 TEST_F(BTreeTest, TestLookupRange) {
   for (unsigned id = 0; id < 20; ++id){
     std::cout << "Adding Pair(" << id << ",0) to bTree";
-    bTree->insert(id, TID(id));
+    bTree->insert(id, TID(0, id));
   }
   std::vector<TID>::iterator iterator = bTree->lookupRange(0, 20);
-  while (iterator)
+  uint64_t currentValue = 0;
+  while (*(iterator++) != nullptr){
+    TID tid = * iterator;
+    ASSERT_EQ(tid.slotOffset, 0);
+    ASSERT_EQ(tid.pageId, currentValue);
+    currentValue++;
+  }
+  ASSERT_EQ(currentValue, 20); //end has been reached
 }
 
 
