@@ -91,6 +91,16 @@ TEST_F(BTreeTest, InsertSameKeyTest) {
   //TODO what is the behaviour here? should the insertion fail?
 }
 
+TEST_F(BTreeTest, TestLookupRange) {
+  for (unsigned id = 0; id < 20; ++id){
+    std::cout << "Adding Pair(" << id << ",0) to bTree";
+    bTree->insert(id, TID(id));
+  }
+  std::vector<TID>::iterator iterator = bTree->lookupRange(0, 20);
+  while (iterator)
+}
+
+
 TEST_F(BTreeTest, TestSplit) {
 }
 

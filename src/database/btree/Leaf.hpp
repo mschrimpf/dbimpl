@@ -35,7 +35,7 @@ struct Leaf {
 
   inline bool hasSpaceForOneMoreEntry();
 
-  inline void insert(KeyType key, TID tid);
+  inline void insertDefiniteFit(KeyType key, TID tid);
 };
 
 #include "Leaf.inl.cpp"
