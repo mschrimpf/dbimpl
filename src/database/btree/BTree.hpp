@@ -29,6 +29,10 @@ struct FrameLeaf {
  *
  * The first key in the entries array of InnerNodes and Leafs does not have a meaning,
  * it only fills up the array from the left with the additional necessary value.
+ *
+ * Invariants:
+ * 1) the parent node of an inner node in an insert call always has space for at least one more entry
+ * 2) the parent node of a leaf in an insert call always has space for at least one more entry
  */
 template<class KeyType, class KeyComparator>
 class BTree {

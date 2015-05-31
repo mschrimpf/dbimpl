@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "../../src/database/buffer/BufferManager.hpp"
 #include "../../src/database/btree/BTree.hpp"
+#include "KeysAndComparators.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -11,26 +12,11 @@ using ::testing::TestInfo;
 using ::testing::TestPartResult;
 using ::testing::UnitTest;
 
-struct MyCustomUInt64Cmp {
-  bool operator()(uint64_t a, uint64_t b) const {
-    return a<b;
-  }
-};
-
 class BTreeTest : public Test {
 private:
   static const uint64_t SEGMENT_ID = 1;
 
   BufferManager *bufferManager;
-  char *allocatedData = nullptr;
-
-  /**
-   * Allocates data that will automatically be free'd at the end of the test.
-   */
-  char *allocateData(size_t len) {
-    this->allocatedData = (char *) malloc(len);
-    return this->allocatedData;
-  }
 
 public:
   BTree<uint64_t, MyCustomUInt64Cmp> *bTree;
@@ -43,11 +29,6 @@ public:
   void TearDown() {
     delete this->bufferManager;
     delete this->bTree;
-
-
-    if (allocatedData != nullptr) {
-      free(allocatedData);
-    }
   };
 };
 

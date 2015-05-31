@@ -75,6 +75,7 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
   }
   leaf->insertDefiniteFit(key, tid);
   bufferManager.unfixPage(*currFrame, true);
+  treeSize++;
   return true;
 }
 
@@ -166,16 +167,16 @@ inline bool BTree<KeyType, KeyComparator>::isLeafHeight(size_t height) {
 }
 
 template<class KeyType, class KeyComparator>
-inline FrameNode<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitInnerNode(
-    InnerNode<KeyType, KeyComparator> *innerNode,
-    InnerNode<KeyType, KeyComparator> *parentNode) {
+inline FrameNode<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitInnerNode
+    (InnerNode<KeyType, KeyComparator> *innerNode, InnerNode<KeyType, KeyComparator> *parentNode) {
+  // invariant: parent node has space for one more entry
 
 }
 
 template<class KeyType, class KeyComparator>
-inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLeaf(Leaf<KeyType, KeyComparator> *leaf,
-                                                                                  InnerNode<KeyType, KeyComparator> *parentNode,
-                                                                                  KeyType key) {
+inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLeaf
+    (Leaf<KeyType, KeyComparator> *leaf, InnerNode<KeyType, KeyComparator> *parentNode, KeyType key) {
+  // invariant: parent node has space for one more entry
 
 }
 

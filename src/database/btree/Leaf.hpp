@@ -8,25 +8,20 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "Entry.hpp"
+#include "BTreeConstants.hpp"
 #include "../slotted_pages/TID.hpp"
+#include "LeafHeader.hpp"
 
 template<class KeyType, class KeyComparator>
 struct Leaf {
-  struct Header {
-    size_t keyCount;
-    Leaf<KeyType, KeyComparator> *previousLeaf;
-    Leaf<KeyType, KeyComparator> *nextLeaf;
-
-    Header(Leaf<KeyType, KeyComparator> *previous, Leaf<KeyType, KeyComparator> *next)
-        : previousLeaf(previous), nextLeaf(next),
-          keyCount(0) { }
-  } header;
+  LeafHeader header;
 
   /**
    * key -> TID.
    * Only use the value of the first entry, the key is meaningless.
    */
-  Entry<KeyType, TID> entries[];
+  Entry<KeyType, TID> entries[
+      BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity + 1 /* additional KV pair */];
 
   Leaf(Leaf<KeyType, KeyComparator> *previous, Leaf<KeyType, KeyComparator> *next)
       : header(previous, next) { }

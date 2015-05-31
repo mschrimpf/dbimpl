@@ -7,20 +7,20 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "BTreeConstants.hpp"
 #include "Entry.hpp"
+#include "InnerNodeHeader.hpp"
 
 template<class KeyType, class KeyComparator>
 struct InnerNode {
-  struct Header {
-    size_t keyCount;
-    Header() : keyCount(0) { }
-  } header;
+  InnerNodeHeader header;
 
   /**
    * key -> page id.
    * Only use the value of the first entry, the key is meaningless.
    */
-  Entry<KeyType, uint64_t> entries[];
+  Entry<KeyType, uint64_t> entries[
+      BTreeConstants<KeyType, KeyComparator>::maxNodeCapacity + 1 /* additional KV pair */];
 
   InnerNode() : header() { }
 

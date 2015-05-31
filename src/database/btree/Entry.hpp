@@ -7,8 +7,10 @@
 
 template<class KeyType, class ValueType>
 struct Entry {
-	KeyType key;
-	ValueType value;
+  KeyType key;
+  ValueType value;
+
+  Entry() { }
 };
 
 #endif //PROJECT_ENTRY_HPP
