@@ -97,14 +97,12 @@ TEST_F(BTreeTest, TestLookupRange) {
     bTree->insert(id, TID(0, id));
   }
   std::vector<TID>::iterator iterator = bTree->lookupRange(0, 20);
-  uint64_t currentValue = 0;
-  while (*(iterator++) != nullptr){
+  for (int cur = 0; cur < 20; cur++){
     TID tid = * iterator;
     ASSERT_EQ(tid.slotOffset, 0);
-    ASSERT_EQ(tid.pageId, currentValue);
-    currentValue++;
+    ASSERT_EQ(tid.pageId, cur);
+    iterator++;
   }
-  ASSERT_EQ(currentValue, 20); //end has been reached
 }
 
 

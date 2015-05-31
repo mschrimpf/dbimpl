@@ -89,7 +89,8 @@ inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(Key
     right = begin;
   }
 
-  return NULL;
+  std::vector<TID> vec;
+  return vec.begin();
 }
 
 
