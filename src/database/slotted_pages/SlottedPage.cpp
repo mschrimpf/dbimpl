@@ -32,15 +32,6 @@ void SlottedPage::init() {
 	}
 }
 
-uint16_t SlottedPage::createAndWriteSlot(const char *data, size_t data_size) {
-	uint16_t slotIndex;
-	Slot *slot = retrieveSlot(slotIndex);
-
-	writeSlotData(slot, data, data_size);
-
-	return slotIndex;
-}
-
 Slot *SlottedPage::retrieveSlot(uint16_t &slotIndex) {
 	slotIndex = header.firstFreeSlot;
 	Slot *slot = &slots[slotIndex];

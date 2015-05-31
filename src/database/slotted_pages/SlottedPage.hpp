@@ -47,8 +47,6 @@ struct SlottedPage {
 
 	SlottedPage();
 
-	uint16_t createAndWriteSlot(const char *data, size_t data_size);
-
 	bool hasSpaceAtDataFront(size_t data_size) const;
 
 	bool canMakeEnoughSpace(size_t necessary_space) const;

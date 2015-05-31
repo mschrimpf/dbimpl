@@ -25,10 +25,12 @@ TID SPSegment::insert(const Record &record, BufferFrame &frame) {
 	SlottedPage *page = toSlottedPage(frame);
 	const char *dataPtr = record.getData();
 	size_t data_size = record.getLen();
-	uint16_t slotId = page->createAndWriteSlot(dataPtr, data_size);
+	uint16_t slotIndex;
+	Slot *slot = page->retrieveSlot(slotIndex);
+	page->writeSlotData(slot, dataPtr, data_size);
 	uint64_t pageId = frame.getPageId();
 	this->bufferManager.unfixPage(frame, true);
-	return TID(slotId, pageId);
+	return TID(slotIndex, pageId);
 
 	// when we redirect, append the 8 byte TID in front of the actual data.
 	// needed for a full table scan, where we scan over memory
