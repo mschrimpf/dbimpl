@@ -29,6 +29,12 @@ struct InnerNode {
   inline bool hasSpaceForOneMoreEntry();
 
   inline uint64_t getNextNode(KeyType key);
+
+  void insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue);
+
+  int searchInsertPosition(KeyType key);
+
+  void moveEntriesToRight(int fromIndex);
 };
 
 #include "InnerNode.inl.cpp"

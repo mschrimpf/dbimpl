@@ -47,7 +47,7 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
     currFrame = &bufferManager.fixPage(this->segmentId, currPageId, true);
     currNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *>(currFrame->getData());
     if (!currNode->hasSpaceForOneMoreEntry()) {
-      FrameNode<KeyType, KeyComparator> frameNode = splitInnerNode(currNode, parentNode);
+      FrameNode<KeyType, KeyComparator> frameNode = splitInnerNode(currNode, currPageId, parentNode);
       currFrame = frameNode.frame;
       currNode = frameNode.node;
       continue;
@@ -66,7 +66,7 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
   currFrame = &bufferManager.fixPage(this->segmentId, currPageId, true);
   Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currFrame->getData());
   if (!leaf->hasSpaceForOneMoreEntry()) {
-    FrameLeaf<KeyType, KeyComparator> frameLeaf = splitLeaf(leaf, parentNode, key);
+    FrameLeaf<KeyType, KeyComparator> frameLeaf = splitLeaf(leaf, currFrame, currPageId, parentNode, key);
     currFrame = frameLeaf.frame;
     leaf = frameLeaf.leaf;
   }
@@ -168,16 +168,66 @@ inline bool BTree<KeyType, KeyComparator>::isLeafHeight(size_t height) {
 
 template<class KeyType, class KeyComparator>
 inline FrameNode<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitInnerNode
-    (InnerNode<KeyType, KeyComparator> *innerNode, InnerNode<KeyType, KeyComparator> *parentNode) {
+    (InnerNode<KeyType, KeyComparator> *node, uint64_t nodePageId,
+     InnerNode<KeyType, KeyComparator> *parent) {
   // invariant: parent node has space for one more entry
+  InnerNode<KeyType, KeyComparator> newNode;
+  size_t arraySplitIndex = node->header.keyCount / 2 + 1 /* first key value pair */;
+  size_t splitLength = node->header.keyCount - arraySplitIndex;
+  KeyType splitKey = node->entries[arraySplitIndex].key;
+  uint64_t newPageId = nextPageId();
 
+  memcpy(newNode.entries, node->entries + arraySplitIndex, splitLength);
+  node->header.keyCount = arraySplitIndex;
+  newNode.header.keyCount = splitLength;
+
+  parent->insertDefiniteFit(splitKey, nodePageId, newPageId);
+
+  BufferFrame &newFrame = bufferManager.fixPage(this->segmentId, newPageId, true);
+  void *newFrameData = newFrame.getData();
+  memcpy(newFrameData, &newNode, sizeof(newNode));
+
+  return FrameNode<KeyType, KeyComparator>{
+      &newFrame /* unfixed in calling method */,
+      reinterpret_cast<InnerNode<KeyType, KeyComparator> *>(newFrameData)
+  };
 }
 
 template<class KeyType, class KeyComparator>
 inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLeaf
-    (Leaf<KeyType, KeyComparator> *leaf, InnerNode<KeyType, KeyComparator> *parentNode, KeyType key) {
+    (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
+     InnerNode<KeyType, KeyComparator> *parent,
+     KeyType key) {
   // invariant: parent node has space for one more entry
+  Leaf<KeyType, KeyComparator> newLeaf(leaf, nullptr);
+  size_t arraySplitIndex = leaf->header.keyCount / 2 + 1 /* first key value pair */;
+  size_t splitLength = leaf->header.keyCount - arraySplitIndex;
+  KeyType splitKey = leaf->entries[arraySplitIndex].key;
+  uint64_t newPageId = nextPageId();
 
+  memcpy(newLeaf.entries, leaf->entries + arraySplitIndex, splitLength);
+  leaf->header.keyCount = arraySplitIndex;
+  newLeaf.header.keyCount = splitLength;
+
+  parent->insertDefiniteFit(splitKey, leafPageId, newPageId);
+
+  BufferFrame &newFrame = bufferManager.fixPage(this->segmentId, newPageId, true);
+  void *newFrameData = newFrame.getData();
+  memcpy(newFrameData, &newLeaf, sizeof(newLeaf));
+
+  if (key < splitKey) {
+    bufferManager.unfixPage(newFrame, true);
+    return FrameLeaf<KeyType, KeyComparator>{
+        leafFrame,
+        leaf
+    };
+  } else {
+    bufferManager.unfixPage(*leafFrame, true);
+    return FrameLeaf<KeyType, KeyComparator>{
+        &newFrame /* unfixed in calling method */,
+        reinterpret_cast<Leaf<KeyType, KeyComparator> *>(newFrameData)
+    };
+  }
 }
 
 template<class KeyType, class KeyComparator>
