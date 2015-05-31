@@ -16,6 +16,9 @@ public:
 	static const unsigned FRAME_SIZE_BYTE = 4 * 1024;
 	static const unsigned DATA_SIZE_BYTE = FRAME_SIZE_BYTE - sizeof(BufferFrame::Header);
 
+	static const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
+	static const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
+
 	BufferManager(uint64_t pagesInMemory);
 
 	~BufferManager();
@@ -27,9 +30,6 @@ public:
 	void unfixPage(BufferFrame &frame, bool isDirty);
 
 private:
-	static const uint64_t SEGMENT_MASK = 0xFFFF000000000000;
-	static const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
-
 	std::condition_variable replacementAccessed;
 	uint64_t maxFramesInMemory;
 	char *cache;
