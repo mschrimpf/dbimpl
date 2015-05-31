@@ -9,8 +9,8 @@ set_target_properties(btree_unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
 target_link_libraries(btree_unit_tests database)
 target_link_libraries(btree_unit_tests gtest_main)
 
-add_executable(BTReeTest
+add_executable(BTreeTest
     BTreeTest.cpp)
-set_target_properties(BTReeTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
-target_link_libraries(BTReeTest database)
-target_link_libraries(BTReeTest gtest_main)
+set_target_properties(BTreeTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
+target_link_libraries(BTreeTest database)
+target_link_libraries(BTreeTest gtest_main)

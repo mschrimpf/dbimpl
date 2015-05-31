@@ -7,10 +7,10 @@
 
 template<class KeyType, class KeyComparator>
 inline bool Leaf<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
-  return header.keyCount == BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity;
+  return header.keyCount < BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity;
 }
 
 template<class KeyType, class KeyComparator>
-inline void Leaf<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
+inline void Leaf<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, TID tid) {
 
 }

@@ -13,6 +13,17 @@
 #include "../buffer/BufferManager.hpp"
 #include "../slotted_pages/TID.hpp"
 
+template<class KeyType, class KeyComparator>
+struct FrameNode {
+  BufferFrame *frame;
+  InnerNode<KeyType, KeyComparator> *node;
+};
+template<class KeyType, class KeyComparator>
+struct FrameLeaf {
+  BufferFrame *frame;
+  Leaf<KeyType, KeyComparator> *leaf;
+};
+
 /**
  * Entries less than the key are on the left, entries greater than or equal to the key are on the right.
  *
@@ -34,6 +45,8 @@ private:
    */
   size_t height;
 
+  uint64_t lastPageId;
+
   inline bool searchForKey(KeyType key, TID &tid, void *node, uint64_t depth);
 
   inline bool searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType, KeyComparator> *leaf);
@@ -41,8 +54,22 @@ private:
   inline bool searchNodeForKey(KeyType key, TID &tid,
                                InnerNode<KeyType, KeyComparator> *node, uint64_t depth);
 
+  inline bool isLeafHeight(size_t height);
+
+  inline FrameNode<KeyType, KeyComparator> splitInnerNode(InnerNode<KeyType, KeyComparator> *innerNode,
+                                  InnerNode<KeyType, KeyComparator> *parentNode);
+
+  /**
+   * Returns the page id of the leaf that contains the key
+   */
+  inline FrameLeaf<KeyType, KeyComparator> splitLeaf(Leaf<KeyType, KeyComparator> *leaf,
+                             InnerNode<KeyType, KeyComparator> *parentNode,
+                             KeyType key);
+
+  inline uint64_t nextPageId();
+
 public:
-  BTree(BufferManager &bManager, uint64_t segmentId) : bufferManager(bManager), segmentId(segmentId) { }
+  inline BTree(BufferManager &bManager, uint64_t segmentId);
 
   inline bool insert(KeyType key, TID tid);
 
@@ -55,14 +82,6 @@ public:
   inline uint64_t size();
 
   inline void visualize();
-
-  inline bool isLeafHeight(size_t height);
-
-  inline void splitInnerNode(InnerNode<KeyType, KeyComparator> *innerNode,
-                             InnerNode<KeyType, KeyComparator> *parentNode);
-
-  inline void splitLeaf(Leaf<KeyType, KeyComparator> *leaf,
-                        InnerNode<KeyType, KeyComparator> *parentNode);
 };
 
 #include "BTree.inl.cpp"

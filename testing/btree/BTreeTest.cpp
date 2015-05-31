@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string.h>
 #include "../../src/database/buffer/BufferManager.hpp"
-#include "BTree.inl.hpp"
+#include "../../src/database/btree/BTree.hpp"
 
 /* Comparator functor for uint64_t*/
 struct MyCustomUInt64Cmp {
@@ -71,7 +71,7 @@ void test(uint64_t n) {
 
    // Insert values
    for (uint64_t i=0; i<n; ++i)
-      bTree.insert(getKey<T>(i),TID(i*i));
+      bTree.template insert<T, CMP>(getKey<T>(i),TID(i*i));
    assert(bTree.size()==n);
    uint64_t size = bTree.size();
 
@@ -108,13 +108,13 @@ int main(int argc, char* argv[]) {
    // Get command line argument
    const uint64_t n = (argc==2) ? strtoul(argv[1], NULL, 10) : 1000*1000ul;
 
-   // Test index with 64bit unsigned integers
+   // Test index with 64 bit unsigned integers
    test<uint64_t, MyCustomUInt64Cmp>(n);
 
    // Test index with 20 character strings
    test<Char<20>, MyCustomCharCmp<20>>(n);
 
    // Test index with compound key
-   test<IntPair, MyCustomIntPairCmp>(n);
+//   test<IntPair, MyCustomIntPairCmp>(n);
    return 0;
 }

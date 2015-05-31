@@ -15,5 +15,5 @@ inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key) {
 
 template<class KeyType, class KeyComparator>
 inline bool InnerNode<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
-  return this->header.keyCount == BTreeConstants<KeyType, KeyComparator>::maxNodeCapacity;
+  return this->header.keyCount < BTreeConstants<KeyType, KeyComparator>::maxNodeCapacity;
 }
