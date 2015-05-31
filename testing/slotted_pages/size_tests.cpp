@@ -24,7 +24,7 @@ TEST(SlotTest, SizeIs8Byte) {
 	EXPECT_EQ(8, sizeof(Slot));
 }
 
-TEST(SlottedPageTest, SizeMatchesPageSize) {
+TEST(SlottedPageTest, SizeMatchesPageDataSize) {
 	unsigned int dataSizeByte = BufferManager::DATA_SIZE_BYTE;
 	EXPECT_EQ(dataSizeByte, sizeof(SlottedPage));
 }

@@ -3,9 +3,17 @@
 #include <cassert>
 #include <string.h>
 #include <unordered_map>
+#include <stdio.h>
 #include "../../src/database/slotted_pages/TID.hpp"
 #include "../../src/database/buffer/BufferManager.hpp"
 #include "../../src/database/slotted_pages/SPSegment.hpp"
+
+#ifdef _WIN32
+#define PRIu64 "llu"
+#define PRIu16 "u"
+#else
+#include <inttypes.h>
+#endif
 
 using namespace std;
 
@@ -38,12 +46,7 @@ class Random64 {
 };
 
 int main(int argc, char** argv) {
-   // Check arguments
-   if (argc != 2) {
-      cerr << "usage: " << argv[0] << " <pageSize>" << endl;
-      return -1;
-   }
-   const unsigned pageSize = atoi(argv[1]);
+   const unsigned pageSize = BufferManager::FRAME_SIZE_BYTE;
 
    // Bookkeeping
    unordered_map<TID, unsigned> values; // TID -> testData entry
@@ -72,7 +75,9 @@ int main(int argc, char** argv) {
          break;
 
       // Insert record
+      printf("Inserting %u bytes...\n", s.length());
       TID tid = sp.insert(Record(s.size(), s.c_str()));
+      printf("OK (page %" PRIu64 ", slot %" PRIu16 ")\n", tid.pageId, tid.slotOffset);
       assert(values.find(tid)==values.end()); // TIDs should not be overwritten
       values[tid]=r;
       unsigned pageId = extractPage(tid); // extract the pageId from the TID

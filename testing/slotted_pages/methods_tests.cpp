@@ -11,6 +11,7 @@
 
 #include "gtest/gtest.h"
 #include "../../src/database/slotted_pages/SPSegment.hpp"
+#include <vector>
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -24,7 +25,7 @@ using ::testing::UnitTest;
 class SPSegmentTest : public Test {
 private:
 	BufferManager *bufferManager;
-	char *allocatedData = nullptr;
+	std::vector<char *> allocatedData;
 public:
 	static const uint64_t SEGMENT_ID = 1;
 	SPSegment *segment;
@@ -41,8 +42,8 @@ public:
 		std::string filename = std::to_string(SEGMENT_ID);
 		remove(filename.c_str());
 
-		if (allocatedData != nullptr) {
-			free(allocatedData);
+		for(auto it : allocatedData) {
+			free(it);
 		}
 	};
 
@@ -50,8 +51,9 @@ public:
 	 * Allocates data that will automatically be free'd at the end of the test.
 	 */
 	char *allocateData(size_t len) {
-		this->allocatedData = (char *) malloc(len);
-		return this->allocatedData;
+		char *data = (char *) malloc(len);
+		this->allocatedData.push_back(data);
+		return data;
 	}
 
 	void testUpdate(size_t initialLength, size_t updatedLength) {
@@ -86,8 +88,25 @@ TEST_F(SPSegmentTest, InsertTooMuch) {
 				 std::invalid_argument);
 }
 
+TEST_F(SPSegmentTest, InsertLookupBigData) {
+	size_t len = BufferManager::DATA_SIZE_BYTE / 2;
+	char *data = this->allocateData(len);
+	const Record record1(len, data);
+	TID tid1 = segment->insert(record1);
+
+	char *data2 = this->allocateData(len);
+	const Record record2(len, data2);
+	TID tid2 = segment->insert(record2);
+
+	Record lookedupRecord1 = segment->lookup(tid1);
+	expectRecordsEqual(&record1, &lookedupRecord1);
+
+	Record lookedupRecord2 = segment->lookup(tid2);
+	expectRecordsEqual(&record2, &lookedupRecord2);
+}
+
 TEST_F(SPSegmentTest, InsertAndLookupMatch) {
-	size_t  len = 100;
+	size_t len = 100;
 	char *data = this->allocateData(len);
 	const Record record(len, data);
 	TID tid = segment->insert(record);
