@@ -6,6 +6,8 @@ Exercise implementation by
 * Martin Schrimpf <martin.schrimpf@tum.de> and 
 * Daniel Langerenken <daniel.langerenken@gmail.com>
 
+C++ Code style according to the [Google Styleguide] (https://google-styleguide.googlecode.com/svn/trunk/cppguide.html)
+
 
 ## Assignment 1
 Please follow these shell commands.
