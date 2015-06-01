@@ -98,28 +98,28 @@ inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(Key
 
 template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::lookup(KeyType key, TID &tid) {
-  if (height == 0) {
-    // no element found
-    return false;
-  }
-  //TODO fix everything to the key
-  //TODO return data;
-  //TODO unfix everything
-  return true;
-  //return searchForKey(key, tid, rootNode, 1);
+  // start from the root node and receive frame */
+  bool result = searchForKey(key, tid, rootPageId, 0);
+  return result;
 }
 
 template<typename KeyType, typename KeyComparator>
-inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, void *node, uint64_t currentDepth) {
+inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, uint64_t pageId, uint64_t currentDepth) {
+  BufferFrame * currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
+  bool result = false;
   if (currentDepth == height) {
     //we reached maximum height, so nodes are leaves
-    Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(node);
-    return searchLeafForKey(key, tid, leaf);
+    Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
+    result = searchLeafForKey(key, tid, leaf);
   } else {
     //we haven't reached the leaves yet
-    InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (node);
-    return searchNodeForKey(key, tid, curNode, currentDepth);
+    InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
+    result = searchNodeForKey(key, tid, curNode, currentDepth);
   }
+
+  //return page as result was received and page is no longer required
+  bufferManager.unfixPage(* currentFrame, false);
+  return result;
 }
 
 template<typename KeyType, typename KeyComparator>
@@ -140,7 +140,8 @@ inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &ti
   }
   if (middle < node->header.keyCount) {
     //value found
-    return searchForKey(key, tid, (Leaf<KeyType, KeyComparator> *) node->entries[middle].value, depth + 1);
+
+    return searchForKey(key, tid, node->entries[middle].value, depth + 1);
   }
   return false;
 }

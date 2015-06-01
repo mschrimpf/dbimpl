@@ -9,46 +9,6 @@ using ::testing::TestInfo;
 using ::testing::TestPartResult;
 using ::testing::UnitTest;
 
-struct MyCustomUInt64Cmp {
-  bool operator()(uint64_t a, uint64_t b) const {
-    return a<b;
-  }
-};
-
-class BTreeTest : public Test {
-private:
-  static const uint64_t SEGMENT_ID = 1;
-
-  BufferManager *bufferManager;
-  char *allocatedData = nullptr;
-
-  /**
-   * Allocates data that will automatically be free'd at the end of the test.
-   */
-  char *allocateData(size_t len) {
-    this->allocatedData = (char *) malloc(len);
-    return this->allocatedData;
-  }
-
-public:
-  BTree<uint64_t, MyCustomUInt64Cmp> *bTree;
-
-  void SetUp() {
-    bufferManager = new BufferManager(65536);
-    bTree = new BTree<uint64_t, MyCustomUInt64Cmp>(*bufferManager, SEGMENT_ID);
-  }
-
-  void TearDown() {
-    delete this->bufferManager;
-    delete this->bTree;
-
-
-    if (allocatedData != nullptr) {
-      free(allocatedData);
-    }
-  };
-};
-
 TEST_F(BTreeTest, InsertFindTest) {
   TID tid(0);
   ASSERT_EQ(0, bTree->size());

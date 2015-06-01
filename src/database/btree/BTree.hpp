@@ -53,7 +53,7 @@ private:
 
   uint64_t lastPageId;
 
-  inline bool searchForKey(KeyType key, TID &tid, void *node, uint64_t depth);
+  inline bool searchForKey(KeyType key, TID &tid, uint64_t pageId, uint64_t depth);
 
   inline bool searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType, KeyComparator> *leaf);
 
