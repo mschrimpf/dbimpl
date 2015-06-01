@@ -8,22 +8,13 @@
 
 template<class KeyType, class KeyComparator>
 inline BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t segmentId)
-    : bufferManager(bManager), segmentId(segmentId), lastPageId(0) {
+    : bufferManager(bManager), segmentId(segmentId),
+      lastPageId(0), treeSize(0), height(0) {
   this->rootPageId = nextPageId();
   Leaf<KeyType, KeyComparator> leaf(nullptr, nullptr);
   BufferFrame &frame = bufferManager.fixPage(this->segmentId, rootPageId, true);
   char *data = (char *) frame.getData();
   memcpy(data, &leaf, sizeof(leaf));
-}
-
-template<class KeyType, class KeyComparator>
-inline bool BTree<KeyType, KeyComparator>::erase(KeyType key) {
-  //Remove first
-  //Check if Node Size < min-Capacity
-  //no -> we're done
-  //yes -> merge with left neighbour, if not exist, with right neighbour
-  // check if we need to split afterwards.
-  return true;
 }
 
 /**
@@ -76,6 +67,16 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
   leaf->insertDefiniteFit(key, tid);
   bufferManager.unfixPage(*currFrame, true);
   treeSize++;
+  return true;
+}
+
+template<class KeyType, class KeyComparator>
+inline bool BTree<KeyType, KeyComparator>::erase(KeyType key) {
+  //Remove first
+  //Check if Node Size < min-Capacity
+  //no -> we're done
+  //yes -> merge with left neighbour, if not exist, with right neighbour
+  // check if we need to split afterwards.
   return true;
 }
 
