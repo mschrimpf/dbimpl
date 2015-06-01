@@ -14,16 +14,16 @@ using ::testing::Test;
 
 class BTreeTest : public Test {
 private:
-  static const uint64_t SEGMENT_ID = 1;
-
   BufferManager *bufferManager;
+  static const uint64_t SEGMENT_ID = 1;
+  MyCustomUInt64Cmp cmp;
 
 public:
   BTree<uint64_t, MyCustomUInt64Cmp> *bTree;
 
   void SetUp() {
     bufferManager = new BufferManager(65536);
-    bTree = new BTree<uint64_t, MyCustomUInt64Cmp>(*bufferManager, SEGMENT_ID);
+    bTree = new BTree<uint64_t, MyCustomUInt64Cmp>(*bufferManager, SEGMENT_ID, cmp);
     ASSERT_EQ(0, bTree->size());
   }
 

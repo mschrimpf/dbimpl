@@ -8,11 +8,13 @@
 #include <stddef.h>
 
 struct LeafHeader {
-  size_t keyCount;
-  uint64_t * previousLeafPageId;
-  uint64_t * nextLeafPageId;
+  static const uint64_t INVALID_PAGE_ID = (uint64_t) (int64_t) -1; // max value
 
-  LeafHeader(uint64_t * previous, uint64_t * next)
+  size_t keyCount;
+  uint64_t previousLeafPageId;
+  uint64_t nextLeafPageId;
+
+  LeafHeader(uint64_t previous, uint64_t next)
       : previousLeafPageId(previous), nextLeafPageId(next),
         keyCount(0) { }
 };

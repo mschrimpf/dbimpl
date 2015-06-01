@@ -28,10 +28,11 @@ ValueType searchValue(Entry<KeyType, ValueType> entries[], KeyType key, int min,
 
 // iterative binary search implementation to find the current position
 template<typename KeyType, typename KeyComparator, typename ValueType>
-int findPosition(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max){
+int findPosition(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max, KeyComparator &smaller){
   while (max != min) {
     int mid = (max + min) / 2;
-    if (entries[mid].key < key) {
+    KeyType entryKey = entries[mid].key;
+    if (smaller(entryKey, key)) {
       min = mid + 1;
     } else {
       max = mid - 1;

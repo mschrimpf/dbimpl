@@ -24,9 +24,9 @@ void BTree<KeyType, KeyComparator>::visualize() {
 
     uint64_t leafId = 0;
     Leaf <KeyType, KeyComparator> currentLeaf = getMostLeftLeaf(); //beginning most left leaf
-    while (currentLeaf.header.nextLeafPageId != nullptr) {
+    while (currentLeaf.header.nextLeafPageId != LeafHeader::INVALID_PAGE_ID) {
         stream << "leaf" << leafId++ << ":next -> leaf" << leafId << "count;";
-        currentLeaf = getLeaf(* currentLeaf.header.nextLeafPageId);
+        currentLeaf = getLeaf(currentLeaf.header.nextLeafPageId);
     }
     stream << "}";
     std::cout << stream.str() << std::endl;
