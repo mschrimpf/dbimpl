@@ -6,7 +6,7 @@ add_executable(btree_unit_tests
     ../run_all_tests.cpp
     size_tests.cpp
     BTreeTestFixture.hpp
-    test_btree_methods.cpp
+    unit_tests.cpp
     VisualizationTest.cpp)
 set_target_properties(btree_unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
 target_link_libraries(btree_unit_tests database)
