@@ -40,7 +40,6 @@ TEST_F(BTreeTest, InsertSameKeyThrowsAndSizeStaysTheSame) {
 
 TEST_F(BTreeTest, LookupRange) {
   for (unsigned id = 0; id < 20; ++id) {
-    std::cout << "Adding Pair(" << id << ",0) to bTree";
     bTree->insert(id, TID(0, id));
   }
   std::vector<TID> vec = bTree->lookupRange(0, 20);
