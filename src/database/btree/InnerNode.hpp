@@ -28,11 +28,11 @@ struct InnerNode {
 
   inline bool hasSpaceForOneMoreEntry();
 
-  inline uint64_t getNextNode(KeyType key);
+  inline uint64_t getNextNode(KeyType key, KeyComparator &smaller);
 
-  void insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue);
+  void insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue, KeyComparator &smaller);
 
-  int searchInsertPosition(KeyType key);
+  int searchInsertPosition(KeyType key, KeyComparator &smaller);
 
   void moveEntriesToRight(int fromIndex);
 };

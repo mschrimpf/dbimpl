@@ -6,10 +6,10 @@
 #include "EntriesSearch.inl.cpp"
 
 template<typename KeyType, typename KeyComparator>
-inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key) {
+inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key, KeyComparator &smaller) {
   int min = 1;
   int max = header.keyCount + 1;
-  return searchValue<KeyType, KeyComparator, uint64_t>(entries, key, min, max);
+  return searchValue<KeyType, KeyComparator, uint64_t>(entries, key, min, max, smaller);
 }
 
 template<typename KeyType, typename KeyComparator>
@@ -18,8 +18,9 @@ inline bool InnerNode<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
 }
 
 template<typename KeyType, typename KeyComparator>
-void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue) {
-  int insertPosition = searchInsertPosition(key);
+void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue,
+                                                          KeyComparator &smaller) {
+  int insertPosition = searchInsertPosition(key, smaller);
   moveEntriesToRight(insertPosition);
   entries[insertPosition].key = key;
   entries[insertPosition].value = rightValue;
@@ -28,15 +29,16 @@ void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t 
 
 // iterative binary search implementation
 template<typename KeyType, typename KeyComparator>
-int InnerNode<KeyType, KeyComparator>::searchInsertPosition(KeyType key) {
+int InnerNode<KeyType, KeyComparator>::searchInsertPosition(KeyType key, KeyComparator &smaller) {
   int min = 1;
   int max = header.keyCount + 1;
 
   while (max >= min) {
     int mid = (max + min) / 2;
-    if (entries[mid].key == key) {
+    KeyType entriesKey = entries[mid].key;
+    if (!smaller(entriesKey, key) && !smaller(key, entriesKey)) {
       throw std::invalid_argument("Key already exists");
-    } else if (entries[mid].key < key) {
+    } else if (smaller(entriesKey, key)) {
       min = mid + 1;
     } else {
       max = mid - 1;

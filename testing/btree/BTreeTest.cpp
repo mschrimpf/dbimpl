@@ -2,7 +2,6 @@
 #include <cassert>
 #include <vector>
 #include <sstream>
-#include <string.h>
 #include "../../src/database/buffer/BufferManager.hpp"
 #include "../../src/database/btree/BTree.hpp"
 #include "KeysAndComparators.hpp"
@@ -35,12 +34,13 @@ template<typename T, typename CMP>
 void test(uint64_t n) {
   // Set up stuff, you probably have to change something here to match to your interfaces
   BufferManager bm(100);
-  BTree<T, CMP> bTree(bm, 1);
+  CMP smallerComparator;
+  BTree<T, CMP> bTree(bm, 1, smallerComparator);
 
 
   // Insert values
   for (uint64_t i = 0; i < n; ++i)
-    bTree.template insert<T, CMP>(getKey<T>(i), TID(i * i));
+    bTree.insert(getKey<T>(i), TID(i * i));
   assert(bTree.size() == n);
   uint64_t size = bTree.size();
 
@@ -84,6 +84,6 @@ int main(int argc, char *argv[]) {
   test<Char<20>, MyCustomCharCmp<20>>(n);
 
   // Test index with compound key
-//   test<IntPair, MyCustomIntPairCmp>(n);
+  test<IntPair, MyCustomIntPairCmp>(n);
   return 0;
 }

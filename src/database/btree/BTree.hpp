@@ -41,7 +41,7 @@ class BTree {
 private:
   BufferManager &bufferManager;
   uint64_t segmentId;
-  KeyComparator comparator;
+  KeyComparator smallerComparator;
 
   uint64_t rootPageId : 48;
   size_t treeSize; // number of elements inside of the tree
@@ -80,7 +80,7 @@ private:
   Leaf<KeyType, KeyComparator> &getLeaf(KeyType key);
 
 public:
-  inline BTree(BufferManager &bManager, uint64_t segmentId);
+  inline BTree(BufferManager &bManager, uint64_t segmentId, KeyComparator &smaller);
 
   inline bool insert(KeyType key, TID tid);
 

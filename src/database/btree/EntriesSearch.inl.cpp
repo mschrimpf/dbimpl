@@ -10,12 +10,13 @@
 
 // iterative binary search implementation
 template<typename KeyType, typename KeyComparator, typename ValueType>
-ValueType searchValue(Entry<KeyType, ValueType> entries[], KeyType key, int &min, int &max) {
+ValueType searchValue(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max, KeyComparator &smaller) {
   while (max >= min) {
     int mid = (max + min) / 2;
-    if (entries[mid].key == key) {
+    KeyType entryKey = entries[mid].key;
+    if (!smaller(entryKey, key) && !smaller(key, entryKey)) {
       return entries[mid].value;
-    } else if (entries[mid].key < key) {
+    } else if (smaller(entryKey, key)) {
       min = mid + 1;
     } else {
       max = mid - 1;

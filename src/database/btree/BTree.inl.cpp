@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 template<typename KeyType, typename KeyComparator>
-inline BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t segmentId)
-    : bufferManager(bManager), segmentId(segmentId),
+inline BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t segmentId, KeyComparator &smaller)
+    : bufferManager(bManager), segmentId(segmentId), smallerComparator(smaller),
       lastPageId(0), treeSize(0), height(0) {
   this->rootPageId = nextPageId();
   Leaf<KeyType, KeyComparator> leaf(LeafHeader::INVALID_PAGE_ID, LeafHeader::INVALID_PAGE_ID);
@@ -43,7 +43,7 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
       currNode = frameNode.node;
       continue;
     }
-    currPageId = currNode->getNextNode(key);
+    currPageId = currNode->getNextNode(key, this->smallerComparator);
     currHeight++;
   }
   // we are now at leaf height - the currPageId points to a leaf
@@ -127,7 +127,7 @@ inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &ti
   uint64_t middle = (left + right) / 2;
 
   while (left != right) {
-    if (comparator(node->entries[middle].key, key)) {
+    if (smallerComparator(node->entries[middle].key, key)) {
       //move left end nearer to right end
       left = middle + 1;
     } else {
@@ -150,7 +150,7 @@ inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &ti
   uint64_t middle = (left + right) / 2;
 
   while (left != right) {
-    if (comparator(leaf->entries[middle].key, key)) {
+    if (smallerComparator(leaf->entries[middle].key, key)) {
       left = middle + 1;
     } else {
       right = middle;
@@ -193,7 +193,7 @@ inline FrameNode<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitInn
   node->header.keyCount = arraySplitIndex;
   newNode.header.keyCount = splitLength;
 
-  parent->insertDefiniteFit(splitKey, nodePageId, newPageId);
+  parent->insertDefiniteFit(splitKey, nodePageId, newPageId, smallerComparator);
 
   BufferFrame &newFrame = bufferManager.fixPage(this->segmentId, newPageId, true);
   void *newFrameData = newFrame.getData();
@@ -221,13 +221,13 @@ inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLea
   leaf->header.keyCount = arraySplitIndex;
   newLeaf.header.keyCount = splitLength;
 
-  parent->insertDefiniteFit(splitKey, leafPageId, newPageId);
+  parent->insertDefiniteFit(splitKey, leafPageId, newPageId, smallerComparator);
 
   BufferFrame &newFrame = bufferManager.fixPage(this->segmentId, newPageId, true);
   void *newFrameData = newFrame.getData();
   memcpy(newFrameData, &newLeaf, sizeof(newLeaf));
 
-  if (key < splitKey) {
+  if (smallerComparator(key, splitKey)) {
     bufferManager.unfixPage(newFrame, true);
     return FrameLeaf<KeyType, KeyComparator>{
         leafFrame,
