@@ -11,7 +11,7 @@ inline BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t se
     : bufferManager(bManager), segmentId(segmentId),
       lastPageId(0), treeSize(0), height(0) {
   this->rootPageId = nextPageId();
-  Leaf<KeyType, KeyComparator> leaf(nullptr, nullptr);
+  Leaf<KeyType, KeyComparator> leaf(LeafHeader::INVALID_PAGE_ID, LeafHeader::INVALID_PAGE_ID);
   BufferFrame &frame = bufferManager.fixPage(this->segmentId, rootPageId, true);
   char *data = (char *) frame.getData();
   memcpy(data, &leaf, sizeof(leaf));
@@ -72,11 +72,8 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
 
 template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::erase(KeyType key) {
-  //Remove first
-  //Check if Node Size < min-Capacity
-  //no -> we're done
-  //yes -> merge with left neighbour, if not exist, with right neighbour
-  // check if we need to split afterwards.
+  Leaf<KeyType, KeyComparator> &leaf = getLeaf(key);
+  leaf.erase(key);
   return true;
 }
 
@@ -214,7 +211,7 @@ inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLea
      InnerNode<KeyType, KeyComparator> *parent,
      KeyType key) {
   // invariant: parent node has space for one more entry
-  Leaf<KeyType, KeyComparator> newLeaf(leaf, nullptr);
+  Leaf<KeyType, KeyComparator> newLeaf(leafPageId, LeafHeader::INVALID_PAGE_ID);
   size_t arraySplitIndex = leaf->header.keyCount / 2 + 1 /* first key value pair */;
   size_t splitLength = leaf->header.keyCount - arraySplitIndex;
   KeyType splitKey = leaf->entries[arraySplitIndex].key;
@@ -248,4 +245,9 @@ inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLea
 template<typename KeyType, typename KeyComparator>
 inline uint64_t BTree<KeyType, KeyComparator>::nextPageId() {
   return lastPageId++;
+}
+
+template<typename KeyType, typename KeyComparator>
+Leaf<KeyType, KeyComparator> &BTree<KeyType, KeyComparator>::getLeaf(KeyType key) {
+  // TODO
 }

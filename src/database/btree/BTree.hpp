@@ -77,6 +77,8 @@ private:
 
   inline uint64_t nextPageId();
 
+  Leaf<KeyType, KeyComparator> &getLeaf(KeyType key);
+
 public:
   inline BTree(BufferManager &bManager, uint64_t segmentId);
 

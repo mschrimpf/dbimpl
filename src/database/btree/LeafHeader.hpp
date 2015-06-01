@@ -7,15 +7,15 @@
 
 #include <stddef.h>
 
-// cannot use Leaf in the previous and next pointers
-// since that would lead to cyclic dependency
 struct LeafHeader {
-  size_t keyCount;
-  void *previousLeaf;
-  void *nextLeaf;
+  static const uint64_t INVALID_PAGE_ID = 0;
 
-  LeafHeader(void *previous, void *next)
-      : previousLeaf(previous), nextLeaf(next),
+  size_t keyCount;
+  uint64_t previousLeafPageId;
+  uint64_t nextLeafPageId;
+
+  LeafHeader(uint64_t previous, uint64_t next)
+      : previousLeafPageId(previous), nextLeafPageId(next),
         keyCount(0) { }
 };
 

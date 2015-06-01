@@ -12,5 +12,10 @@ inline bool Leaf<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
 
 template<typename KeyType, typename KeyComparator>
 inline void Leaf<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, TID tid) {
+  // TODO
+}
 
+template<typename KeyType, typename KeyComparator>
+void Leaf<KeyType, KeyComparator>::erase(KeyType key) {
+  // TODO
 }

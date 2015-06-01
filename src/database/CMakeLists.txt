@@ -30,14 +30,14 @@ set(RELATIONS_SOURCE_FILES
     relations/parser/Schema.cpp)
 set(BTREE_SOURCE_FILES
     btree/BTree.hpp
-#    btree/BTree.inl.cpp
     btree/BTreeConstants.hpp
     btree/Entry.hpp
     btree/InnerNodeHeader.hpp
     btree/InnerNode.hpp
-#    btree/InnerNode.inl.cpp
     btree/LeafHeader.hpp
     btree/Leaf.hpp
+#    btree/BTree.inl.cpp
+#    btree/InnerNode.inl.cpp
 #    btree/Leaf.inl.cpp
 #    btree/BTreeVisualize.inl.cpp
 #    btree/EntriesSearch.inl.cpp

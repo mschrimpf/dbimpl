@@ -18,19 +18,21 @@ struct Leaf {
 
   /**
    * key -> TID.
-   * Only use the value of the first entry, the key is meaningless.
+   * Only use the value of the first entry, entries[0].key is meaningless.
    */
   Entry<KeyType, TID> entries[
       BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity + 1 /* additional KV pair */];
 
-  Leaf(Leaf<KeyType, KeyComparator> *previous, Leaf<KeyType, KeyComparator> *next)
-      : header(previous, next) { }
+  Leaf(uint64_t previousPageId, uint64_t nextPageId)
+      : header(previousPageId, nextPageId) { }
 
   inline void visualize(uint64_t leafId);
 
   inline bool hasSpaceForOneMoreEntry();
 
   inline void insertDefiniteFit(KeyType key, TID tid);
+
+  inline void erase(KeyType key);
 };
 
 #include "Leaf.inl.cpp"
