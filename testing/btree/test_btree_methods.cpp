@@ -45,12 +45,13 @@ TEST_F(BTreeTest, TestLookupRange) {
     std::cout << "Adding Pair(" << id << ",0) to bTree";
     bTree->insert(id, TID(0, id));
   }
-  std::vector<TID>::iterator iterator = bTree->lookupRange(0, 20);
-  for (int cur = 0; cur < 20; cur++){
-    TID tid = * iterator;
+  std::vector<TID> vec = bTree->lookupRange(0, 20);
+  int cur = 0;
+  for (std::vector<TID>::iterator it = vec.begin() ; it != vec.end(); ++it) {
+    TID tid = * it;
     ASSERT_EQ(tid.slotOffset, 0);
     ASSERT_EQ(tid.pageId, cur);
-    iterator++;
+    cur++;
   }
 }
 
