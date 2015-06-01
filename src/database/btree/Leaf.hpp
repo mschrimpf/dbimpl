@@ -23,10 +23,8 @@ struct Leaf {
   Entry<KeyType, TID> entries[
       BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity + 1 /* additional KV pair */];
 
-  Leaf(uint64_t previousPageId, uint64_t nextPageId)
+  Leaf(uint64_t * previousPageId, uint64_t * nextPageId)
       : header(previousPageId, nextPageId) { }
-
-  inline void visualize(uint64_t leafId);
 
   inline bool hasSpaceForOneMoreEntry();
 

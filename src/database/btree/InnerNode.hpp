@@ -24,8 +24,6 @@ struct InnerNode {
 
   InnerNode() : header() { }
 
-  inline void visualize(uint64_t *leafId, uint64_t *nodeId, uint64_t depth, uint64_t maxDepth);
-
   inline bool hasSpaceForOneMoreEntry();
 
   inline uint64_t getNextNode(KeyType key);

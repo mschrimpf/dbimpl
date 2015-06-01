@@ -11,7 +11,7 @@ inline BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t se
     : bufferManager(bManager), segmentId(segmentId),
       lastPageId(0), treeSize(0), height(0) {
   this->rootPageId = nextPageId();
-  Leaf<KeyType, KeyComparator> leaf(LeafHeader::INVALID_PAGE_ID, LeafHeader::INVALID_PAGE_ID);
+  Leaf<KeyType, KeyComparator> leaf(nullptr, nullptr);
   BufferFrame &frame = bufferManager.fixPage(this->segmentId, rootPageId, true);
   char *data = (char *) frame.getData();
   memcpy(data, &leaf, sizeof(leaf));
@@ -103,8 +103,15 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
         }
         if (position == leftLeaf.header.keyCount + 1) {
             //reached end of leaf and need to check the next leaf
-            leftLeaf =  getLeaf(leftLeaf.header.nextLeafPageId);
-            position = 1;
+            uint64_t * nextLeaf = leftLeaf.header.nextLeafPageId;
+            if (nextLeaf != nullptr){
+                // set next leaf and reset position to first entry
+                leftLeaf =  getLeaf(* nextLeaf);
+                position = 1;
+            }else{
+                // end of leaves reached, we cannot look further so we return the set
+                return lookupSet;
+            }
         } else {
             return lookupSet;
         }
@@ -220,7 +227,7 @@ inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLea
      InnerNode<KeyType, KeyComparator> *parent,
      KeyType key) {
   // invariant: parent node has space for one more entry
-  Leaf<KeyType, KeyComparator> newLeaf(leafPageId, LeafHeader::INVALID_PAGE_ID);
+  Leaf<KeyType, KeyComparator> newLeaf(& leafPageId, nullptr);
   size_t arraySplitIndex = leaf->header.keyCount / 2 + 1 /* first key value pair */;
   size_t splitLength = leaf->header.keyCount - arraySplitIndex;
   KeyType splitKey = leaf->entries[arraySplitIndex].key;
@@ -262,4 +269,55 @@ Leaf<KeyType, KeyComparator> &BTree<KeyType, KeyComparator>::getLeaf(KeyType key
     Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame->getData());
     bufferManager.unfixPage(* frame, false);
     return * leaf;
+}
+
+template<typename KeyType, typename KeyComparator>
+Leaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::getMostLeftLeaf() {
+    BufferFrame *currentFrame = &bufferManager.fixPage(this->segmentId, rootPageId, false);
+    int currentDepth = 0;
+    BufferFrame *parentFrame = nullptr;
+    while (currentDepth != height) {
+        InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
+        if (parentFrame != nullptr) {
+            bufferManager.unfixPage(*parentFrame, false);
+        }
+        Entry<KeyType, uint64_t> entry = curNode->entries[1]; //most left value = 1
+        uint64_t pageId = entry.value;
+        parentFrame = currentFrame;
+        currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
+        currentDepth++;
+    }
+    if (parentFrame != nullptr) {
+        bufferManager.unfixPage(*parentFrame, false);
+    }
+
+    Leaf<KeyType, KeyComparator> * leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
+    bufferManager.unfixPage(* currentFrame, false);
+    return * leaf;
+}
+
+template<typename KeyType, typename KeyComparator>
+Leaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::getMostRightLeaf() {
+    BufferFrame *currentFrame = &bufferManager.fixPage(this->segmentId, rootPageId, false);
+    int currentDepth = 0;
+    BufferFrame *parentFrame = nullptr;
+    while (currentDepth != height) {
+        InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
+        if (parentFrame != nullptr) {
+            bufferManager.unfixPage(*parentFrame, false);
+        }
+        Entry<KeyType, uint64_t> entry = curNode->entries[curNode->header.keyCount]; //most right value = 1 //TODO vllt header.keyCount + 1!!!
+        uint64_t pageId = entry.value;
+        parentFrame = currentFrame;
+        currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
+        currentDepth++;
+    }
+    if (parentFrame != nullptr) {
+        bufferManager.unfixPage(*parentFrame, false);
+    }
+
+    Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
+    Entry<KeyType, TID> entry = leaf->entries[leaf->header.keyCount]; //TODO vllt header.keyCount + 1!!!
+    bufferManager.unfixPage(* currentFrame, false);
+    return entry;
 }
