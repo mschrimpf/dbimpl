@@ -20,8 +20,7 @@ public:
   static const uint64_t minNodeCapacity = maxNodeCapacity / 2;
   static const uint64_t maxLeafCapacity = (BufferManager::DATA_SIZE_BYTE
                                            - sizeof(LeafHeader))
-                                          / sizeof(Entry<KeyType, TID>)
-                                          - 1 /* one less for the additional K/V pair */;
+                                          / sizeof(Entry<KeyType, TID>);
   static const uint64_t minLeafCapacity = maxLeafCapacity / 2;
 };
 

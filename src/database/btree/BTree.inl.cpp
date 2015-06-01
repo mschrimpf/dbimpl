@@ -65,7 +65,7 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
   if (parentFrame != nullptr) {
     bufferManager.unfixPage(*parentFrame, true);
   }
-  leaf->insertDefiniteFit(key, tid);
+  leaf->insertDefiniteFit(key, tid, smallerComparator);
   bufferManager.unfixPage(*currFrame, true);
   treeSize++;
   return true;
@@ -91,9 +91,10 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
 
   std::vector<TID> lookupSet;
   Leaf<KeyType, KeyComparator> leftLeaf = getLeaf(left);
-  int position = findPosition<KeyType, KeyComparator, TID>(leftLeaf.entries, left,
-                                                           1, leftLeaf.header.keyCount + 1,
-                                                           smallerComparator);
+  int position = EntriesHelper::findPosition<KeyType, KeyComparator, TID>(
+      leftLeaf.entries, left,
+      1, leftLeaf.header.keyCount + 1,
+      smallerComparator);
   while (true) {
     while (position < leftLeaf.header.keyCount + 1) {
       Entry<KeyType, TID> entry = leftLeaf.entries[position];
@@ -138,9 +139,10 @@ BufferFrame *BTree<KeyType, KeyComparator>::findFrameForKey(KeyType key, bool ex
     if (parentFrame != nullptr) {
       bufferManager.unfixPage(*parentFrame, false);
     }
-    int curPosition = findPosition<KeyType, KeyComparator, uint64_t>(curNode->entries, key, 1,
-                                                                     curNode->header.keyCount + 1,
-                                                                     smallerComparator);
+    int curPosition = EntriesHelper::findPosition<KeyType, KeyComparator, uint64_t>(
+        curNode->entries, key, 1,
+        curNode->header.keyCount + 1,
+        smallerComparator);
     if (curPosition < curNode->header.keyCount) {
       Entry<KeyType, uint64_t> entry = curNode->entries[curPosition];
       uint64_t pageId = entry.value;
@@ -169,7 +171,7 @@ inline bool BTree<KeyType, KeyComparator>::searchForKey(
     Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(
         currentFrame->getData());
     try {
-      tid = searchValue(leaf->entries, key, 1, leaf->header.keyCount + 1, smallerComparator);
+      tid = EntriesHelper::searchValue(leaf->entries, key, 1, leaf->header.keyCount + 1, smallerComparator);
       result = true;
     } catch (const std::invalid_argument &ia) {
       result = false;
@@ -179,7 +181,7 @@ inline bool BTree<KeyType, KeyComparator>::searchForKey(
     InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (
         currentFrame->getData());
     try {
-      pageId = searchValue(curNode->entries, key, 1, curNode->header.keyCount + 1, smallerComparator);
+      pageId = EntriesHelper::searchValue(curNode->entries, key, 1, curNode->header.keyCount + 1, smallerComparator);
       result = searchForKey(key, tid, pageId, currentDepth + 1);
     } catch (const std::invalid_argument &ia) {
       result = false;

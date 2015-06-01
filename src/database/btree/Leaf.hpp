@@ -16,19 +16,15 @@ template<typename KeyType, typename KeyComparator>
 struct Leaf {
   LeafHeader header;
 
-  /**
-   * key -> TID.
-   * Only use the value of the first entry, entries[0].key is meaningless.
-   */
   Entry<KeyType, TID> entries[
-      BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity + 1 /* additional KV pair */];
+      BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity];
 
   Leaf(uint64_t previousPageId, uint64_t nextPageId)
       : header(previousPageId, nextPageId) { }
 
   inline bool hasSpaceForOneMoreEntry();
 
-  inline void insertDefiniteFit(KeyType key, TID tid);
+  inline void insertDefiniteFit(KeyType key, TID tid, KeyComparator &smaller);
 
   inline void erase(KeyType key);
 };

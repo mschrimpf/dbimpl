@@ -27,7 +27,7 @@ struct FrameLeaf {
 /**
  * Entries less than the key are on the left, entries greater than or equal to the key are on the right.
  *
- * The first key in the entries array of InnerNodes and Leafs does not have a meaning,
+ * The first key in the entries array of InnerNodes does not have a meaning,
  * it only fills up the array from the left with the additional necessary value.
  *
  * Splits are always done to the right; the new node/leaf will be to the right of the old one.
