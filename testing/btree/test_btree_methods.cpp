@@ -63,6 +63,7 @@ TEST_F(BTreeTest, TestBTreeVisualization) {
     bTree->insert(id, TID(0));
     bTree->visualize();
   }
+  bTree->visualize();
 }
 
 

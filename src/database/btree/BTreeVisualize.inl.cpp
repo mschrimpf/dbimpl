@@ -65,10 +65,15 @@ template<class KeyType, class KeyComparator>
 void BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyComparator> * leaf, uint64_t leafId) {
   std::stringstream stream;
   stream << "leaf" << leafId << " [shape=record, label=\n"
-  << "\"<count> " << leaf-> header.keyCount << " | ";
-  for (uint64_t e = 1; e < leaf->header.keyCount + 1; ++e) {
+  << "\"<count> " << leaf->header.keyCount << " | ";
+  for (uint64_t e = 0; e < leaf->header.keyCount; ++e) {
     Entry<KeyType, TID> entry = leaf->entries[e];
-    //stream << "<key" << e << ">" << entry.key << "<value" << e << "> " << entry.value << " | <next> *\"]; \n";
+    stream << "<key";
+    stream << e << ">";
+    stream << entry.key;
+    stream << "<value" << e;
+    stream << "> " << entry.value.pageId;
+    stream << " | <next> *\"]; \n";
   }
   std::cout << stream.str() << std::endl;
 }
