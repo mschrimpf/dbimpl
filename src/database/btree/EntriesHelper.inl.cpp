@@ -102,12 +102,6 @@ public:
       }
     }
 
-    if (min != max) {
-      std::string minStr = std::to_string(min);
-      std::string maxStr = std::to_string(max);
-      std::string msg = "min (" + minStr + ") != max (" + maxStr + ")";
-      throw std::invalid_argument(msg);
-    }
     return min;
   }
 

@@ -11,23 +11,56 @@ using ::testing::UnitTest;
 
 TEST_F(BTreeTest, InsertFindTid) {
   TID tid(0);
-  ASSERT_EQ(0, bTree->size());
   bTree->insert(0, tid);
-  ASSERT_EQ(1, bTree->size());
+  EXPECT_EQ(1, bTree->size());
 
-  TID tid2(0);
-  ASSERT_TRUE(bTree->lookup(0, tid2));
-  ASSERT_EQ(tid.pageId, tid2.pageId);
-  ASSERT_EQ(tid.slotOffset, tid2.slotOffset);
+  TID resultTid(0);
+  ASSERT_TRUE(bTree->lookup(0, resultTid));
+  EXPECT_EQ(tid.pageId, resultTid.pageId);
+  EXPECT_EQ(tid.slotOffset, resultTid.slotOffset);
+}
+
+TEST_F(BTreeTest, InsertFindTidTwice) {
+  TID tid1(1);
+  bTree->insert(1, tid1);
+  EXPECT_EQ(1, bTree->size());
+
+  TID tid2(2);
+  bTree->insert(2, tid2);
+  EXPECT_EQ(2, bTree->size());
+
+  TID resultTid(0);
+  ASSERT_TRUE(bTree->lookup(1, resultTid));
+  EXPECT_EQ(tid1.pageId, resultTid.pageId);
+  EXPECT_EQ(tid1.slotOffset, resultTid.slotOffset);
+
+  ASSERT_TRUE(bTree->lookup(2, resultTid));
+  EXPECT_EQ(tid2.pageId, resultTid.pageId);
+  EXPECT_EQ(tid2.slotOffset, resultTid.slotOffset);
+}
+
+TEST_F(BTreeTest, InsertFindTidMultiple) {
+  uint64_t keys[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  int count = 0;
+  for (const uint64_t key : keys) {
+    TID tid(key);
+    bTree->insert(key, tid);
+    count++;
+    ASSERT_EQ(count, bTree->size());
+
+    TID resultTid(0);
+    ASSERT_TRUE(bTree->lookup(key, resultTid));
+    EXPECT_EQ(tid.pageId, resultTid.pageId);
+    EXPECT_EQ(tid.slotOffset, resultTid.slotOffset);
+  }
 }
 
 TEST_F(BTreeTest, InsertRemoveSize) {
   TID tid(0);
-  ASSERT_EQ(0, bTree->size());
   bTree->insert(0, tid);
-  ASSERT_EQ(1, bTree->size());
+  EXPECT_EQ(1, bTree->size());
   bTree->erase(0);
-  ASSERT_EQ(0, bTree->size());
+  EXPECT_EQ(0, bTree->size());
 }
 
 TEST_F(BTreeTest, InsertSameKeyThrowsAndSizeStaysTheSame) {
@@ -35,7 +68,7 @@ TEST_F(BTreeTest, InsertSameKeyThrowsAndSizeStaysTheSame) {
   TID tid(0);
   bTree->insert(key, tid);
   ASSERT_THROW(bTree->insert(key, tid), std::invalid_argument);
-  ASSERT_EQ(1, bTree->size());
+  EXPECT_EQ(1, bTree->size());
 }
 
 TEST_F(BTreeTest, LookupRange) {
@@ -46,8 +79,8 @@ TEST_F(BTreeTest, LookupRange) {
   int cur = 0;
   for (std::vector<TID>::iterator it = vec.begin(); it != vec.end(); ++it) {
     TID tid = *it;
-    ASSERT_EQ(tid.slotOffset, 0);
-    ASSERT_EQ(tid.pageId, cur);
+    EXPECT_EQ(tid.slotOffset, 0);
+    EXPECT_EQ(tid.pageId, cur);
     cur++;
   }
 }
