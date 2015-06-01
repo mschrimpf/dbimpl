@@ -42,6 +42,30 @@ public:
     return false;
   }
 
+  /**
+   * Find the position of a key in an array of entries.
+   * Iterative binary search implementation.
+   */
+  template<typename KeyType, typename KeyComparator, typename ValueType>
+  static int findKeyPosition(Entry<KeyType, ValueType> entries[],
+                          KeyType key,
+                          int min, int max,
+                          KeyComparator &smaller) {
+    while (max >= min) {
+      int mid = (max + min) / 2;
+      KeyType entryKey = entries[mid].key;
+      if (!smaller(entryKey, key) && !smaller(key, entryKey)) {
+        return mid;
+      } else if (smaller(entryKey, key)) {
+        min = mid + 1;
+      } else {
+        max = mid - 1;
+      }
+    }
+
+    throw std::invalid_argument("Key not found");
+  }
+
 // iterative binary search implementation to find the current position
   template<typename KeyType, typename KeyComparator, typename ValueType>
   static int findPosition(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max, KeyComparator &smaller) {
@@ -68,10 +92,10 @@ public:
     }
     while (max >= min) {
       int mid = (max + min) / 2;
-      KeyType entriesKey = entries[mid].key;
-      if (!smaller(entriesKey, key) && !smaller(key, entriesKey)) {
+      KeyType entryKey = entries[mid].key;
+      if (!smaller(entryKey, key) && !smaller(key, entryKey)) {
         throw std::invalid_argument("Key already exists");
-      } else if (smaller(entriesKey, key)) {
+      } else if (smaller(entryKey, key)) {
         min = mid + 1;
       } else {
         max = mid - 1;
@@ -92,6 +116,11 @@ public:
     memcpy(entries + fromIndex + 1 /* move one to right */,
            entries,
            (size_t) (lastKeyIndex /* first KV pair */ - fromIndex));
+  }
+
+  template<typename KeyType, typename ValueType>
+  static void moveEntriesToLeft(Entry<KeyType, ValueType> entries[], int fromIndex, int size) {
+    memcpy(entries + fromIndex - 1, entries + fromIndex, (size_t) size - fromIndex);
   }
 };
 

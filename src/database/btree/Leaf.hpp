@@ -26,7 +26,7 @@ struct Leaf {
 
   inline void insertDefiniteFit(KeyType key, TID tid, KeyComparator &smaller);
 
-  inline void erase(KeyType key);
+  inline void erase(KeyType key, KeyComparator &smaller);
 };
 
 #include "Leaf.inl.cpp"

@@ -32,6 +32,9 @@ struct FrameLeaf {
  *
  * Splits are always done to the right; the new node/leaf will be to the right of the old one.
  *
+ * Merges are never performed. We assume a realistic database where inserts heavily outweigh the deletes
+ * (should there even be any deletes at all).
+ *
  * Invariants:
  * 1) the parent node of an inner node in an insert call always has space for at least one more entry
  * 2) the parent node of a leaf in an insert call always has space for at least one more entry
@@ -90,13 +93,13 @@ private:
 public:
   inline BTree(BufferManager &bManager, uint64_t segmentId, KeyComparator &smaller);
 
-    inline bool insert(KeyType key, TID tid);
+    inline void insert(KeyType key, TID tid);
 
     inline bool lookup(KeyType key, TID &tid);
 
     inline std::vector<TID> lookupRange(KeyType begin, KeyType end);
 
-    inline bool erase(KeyType key);
+    inline void erase(KeyType key);
 
     inline uint64_t size();
 

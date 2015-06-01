@@ -19,9 +19,14 @@ inline void Leaf<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, TID tid
   EntriesHelper::moveEntriesToRight(entries, insertPosition, max);
   entries[insertPosition].key = key;
   entries[insertPosition].value = tid;
+  header.keyCount++;
 }
 
 template<typename KeyType, typename KeyComparator>
-void Leaf<KeyType, KeyComparator>::erase(KeyType key) {
-  // TODO
+void Leaf<KeyType, KeyComparator>::erase(KeyType key, KeyComparator &smaller) {
+  int min = 0;
+  int max = header.keyCount;
+  int keyPosition = EntriesHelper::findKeyPosition(entries, key, min, max, smaller);
+  EntriesHelper::moveEntriesToLeft(entries, keyPosition + 1, max);
+  header.keyCount--;
 }

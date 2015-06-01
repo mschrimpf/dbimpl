@@ -27,4 +27,5 @@ void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t 
   entries[insertPosition].key = key;
   entries[insertPosition].value = rightValue;
   entries[insertPosition - 1].value = leftValue;
+  header.keyCount++;
 }
