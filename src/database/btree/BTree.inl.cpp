@@ -96,77 +96,38 @@ inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(Key
 template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::lookup(KeyType key, TID &tid) {
   // start from the root node and receive frame */
-  bool result = searchForKey(key, tid, rootPageId, 0);
-  return result;
+  return searchForKey(key, tid, rootPageId, 0);
 }
 
 template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, uint64_t pageId, uint64_t currentDepth) {
-  BufferFrame * currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
-  bool result = false;
-  if (currentDepth == height) {
-    //we reached maximum height, so nodes are leaves
-    Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
-    result = searchLeafForKey(key, tid, leaf);
-  } else {
-    //we haven't reached the leaves yet
-    InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
-    result = searchNodeForKey(key, tid, curNode, currentDepth);
-  }
-
-  //return page as result was received and page is no longer required
-  bufferManager.unfixPage(* currentFrame, false);
-  return result;
-}
-
-template<typename KeyType, typename KeyComparator>
-inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &tid,
-                                                            InnerNode<KeyType, KeyComparator> *node, uint64_t depth) {
-  uint64_t left = 0;
-  uint64_t right = node->header.keyCount;
-  uint64_t middle = (left + right) / 2;
-
-  while (left != right) {
-    if (comparator(node->entries[middle].key, key)) {
-      //move left end nearer to right end
-      left = middle + 1;
+    BufferFrame *currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
+    bool result = false;
+    if (currentDepth == height) {
+        //we reached maximum height, so nodes are leaves
+        Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
+        try {
+            tid = searchValue<KeyType, KeyComparator, TID>(leaf->entries, key, 1, leaf->header.keyCount);
+            result = true;
+        } catch (const std::invalid_argument &ia) {
+            result = false;
+        }
     } else {
-      right = middle;
+        //we haven't reached the leaves yet
+        InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
+        try {
+            uint64_t pageId = searchValue<KeyType, KeyComparator, uint64_t>(curNode->entries, key, 1, curNode->header.keyCount);
+            result = searchForKey(key, tid, pageId, currentDepth + 1);
+        } catch (const std::invalid_argument &ia) {
+            result = false;
+        }
     }
-    middle = (left + right) / 2;
-  }
-  if (middle < node->header.keyCount) {
-    //value found
 
-    return searchForKey(key, tid, node->entries[middle].value, depth + 1);
-  }
-  return false;
+    //return page as result was received and page is no longer required
+    bufferManager.unfixPage(*currentFrame, false);
+    return result;
 }
 
-template<typename KeyType, typename KeyComparator>
-inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType, KeyComparator> *leaf) {
-  uint64_t left = 0;
-  uint64_t right = leaf->header.keyCount;
-  uint64_t middle = (left + right) / 2;
-
-  while (left != right) {
-    if (comparator(leaf->entries[middle].key, key)) {
-      left = middle + 1;
-    } else {
-      right = middle;
-    }
-    middle = (left + right) / 2;
-  }
-  if (middle < leaf->header.keyCount) {
-    //value found
-    Entry<KeyType, TID> foundEntry = leaf->entries[middle];
-    tid = foundEntry.value;
-    return true;
-  } else {
-    //value not found
-    return false;
-  }
-}
 
 template<typename KeyType, typename KeyComparator>
 inline uint64_t BTree<KeyType, KeyComparator>::size() {
