@@ -46,69 +46,64 @@ private:
   uint64_t segmentId;
   KeyComparator smallerComparator;
 
-    uint64_t rootPageId : 48;
-    size_t treeSize; // number of elements inside of the tree
-    /**
+  uint64_t rootPageId : 48;
+  size_t treeSize; // number of elements inside of the tree
+  /**
    * Longest path from the root to one of the leafs.
    * I.e., a tree with only the root leaf has a height of 0.
    */
-    size_t height;
+  size_t height;
 
-    uint64_t lastPageId;
+  uint64_t lastPageId;
 
-    BufferFrame *findFrameForKey(KeyType key, bool exclusive);
+  BufferFrame *findFrameForKey(KeyType key, bool exclusive);
 
-    inline bool searchForKey(KeyType key, TID &tid, uint64_t pageId, size_t currentHeight);
+  inline bool searchForKey(KeyType key, TID &tid, uint64_t pageId, size_t currentHeight);
 
-    inline bool isLeafHeight(size_t height);
+  inline bool isLeafHeight(size_t height);
 
-    inline FrameNode<KeyType, KeyComparator> splitInnerNode(
-            InnerNode<KeyType, KeyComparator> *node,
-            uint64_t nodePageId,
-            InnerNode<KeyType, KeyComparator> *parent);
+  inline FrameNode<KeyType, KeyComparator> splitInnerNode(
+          InnerNode<KeyType, KeyComparator> *node,
+          uint64_t nodePageId,
+          InnerNode<KeyType, KeyComparator> *parent);
 
-    /**
+  /**
    * Returns the page id of the leaf that contains the key
    */
-    inline FrameLeaf<KeyType, KeyComparator> splitLeaf
-            (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
-             InnerNode<KeyType, KeyComparator> *parentNode,
-             KeyType key);
+  inline FrameLeaf<KeyType, KeyComparator> splitLeaf
+          (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
+           InnerNode<KeyType, KeyComparator> *parentNode,
+           KeyType key);
 
 
-    /**
+  /**
    * returns the most left leaf of the tree
    */
-    Leaf<KeyType, KeyComparator> getMostLeftLeaf();
+  Leaf<KeyType, KeyComparator> getMostLeftLeaf();
 
-    /**
-   * returns the most right leaf of the tree
-   */
-    Leaf<KeyType, KeyComparator> getMostRightLeaf();
+  inline uint64_t nextPageId();
 
-    inline uint64_t nextPageId();
-
-    Leaf<KeyType, KeyComparator> &getLeaf(KeyType key);
+  Leaf<KeyType, KeyComparator> &getLeaf(KeyType key);
 
 public:
   inline BTree(BufferManager &bManager, uint64_t segmentId, KeyComparator &smaller);
 
-    inline void insert(KeyType key, TID tid);
+  inline void insert(KeyType key, TID tid);
 
-    inline bool lookup(KeyType key, TID &tid);
+  inline bool lookup(KeyType key, TID &tid);
 
-    inline std::vector<TID> lookupRange(KeyType begin, KeyType end);
+  inline std::vector<TID> lookupRange(KeyType begin, KeyType end);
 
-    inline void erase(KeyType key);
+  inline void erase(KeyType key);
 
-    inline uint64_t size();
+  inline uint64_t size();
 
-    inline void visualize();
+  inline void visualize();
 
-    inline void visualizeNode(InnerNode<KeyType, KeyComparator> *node, uint64_t *leafId, uint64_t *nodeId,
-                                                             uint64_t curDepth, uint64_t maxDepth);
+  inline void visualizeNode(InnerNode<KeyType, KeyComparator> *node, uint64_t *leafId, uint64_t *nodeId,
+                            uint64_t curDepth, uint64_t maxDepth);
 
-    inline void visualizeLeaf(Leaf<KeyType, KeyComparator> *leaf, uint64_t leafId);
+  inline void visualizeLeaf(Leaf<KeyType, KeyComparator> *leaf, uint64_t leafId);
 };
 
 #include "BTree.inl.cpp"

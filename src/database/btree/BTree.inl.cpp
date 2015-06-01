@@ -303,29 +303,3 @@ Leaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::getMostLeftLeaf() {
   bufferManager.unfixPage(*currentFrame, false);
   return *leaf;
 }
-
-template<typename KeyType, typename KeyComparator>
-Leaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::getMostRightLeaf() {
-  BufferFrame *currentFrame = &bufferManager.fixPage(this->segmentId, rootPageId, false);
-  int currentDepth = 0;
-  BufferFrame *parentFrame = nullptr;
-  while (currentDepth != height) {
-    InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
-    if (parentFrame != nullptr) {
-      bufferManager.unfixPage(*parentFrame, false);
-    }
-    Entry<KeyType, uint64_t> entry = curNode->entries[curNode->header.keyCount]; //most right value = 1 //TODO vllt header.keyCount + 1!!!
-    uint64_t pageId = entry.value;
-    parentFrame = currentFrame;
-    currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
-    currentDepth++;
-  }
-  if (parentFrame != nullptr) {
-    bufferManager.unfixPage(*parentFrame, false);
-  }
-
-  Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
-  Entry<KeyType, TID> entry = leaf->entries[leaf->header.keyCount]; //TODO vllt header.keyCount + 1!!!
-  bufferManager.unfixPage(*currentFrame, false);
-//  return entry;
-}
