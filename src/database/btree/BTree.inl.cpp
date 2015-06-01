@@ -88,6 +88,13 @@ inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(Key
     right = begin;
   }
 
+
+    //find first frame with left-value
+    //go frame along til end of frame or right
+    //if end-of-frame -> get next-frame
+    //repeat.
+
+
   std::vector<TID> vec;
   return vec.begin();
 }
@@ -97,6 +104,35 @@ template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::lookup(KeyType key, TID &tid) {
   // start from the root node and receive frame */
   return searchForKey(key, tid, rootPageId, 0);
+}
+
+template<typename KeyType, typename KeyComparator>
+BufferFrame * BTree<KeyType, KeyComparator>::findFrameForKey(KeyType key, bool exclusive){
+    BufferFrame *currentFrame = &bufferManager.fixPage(this->segmentId, rootPageId, exclusive);
+    int currentDepth = 0;
+    BufferFrame * parentFrame = nullptr;
+    while (currentDepth != height){
+        InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
+        if (parentFrame != nullptr){
+            bufferManager.unfixPage(* parentFrame, false);
+        }
+        int curPosition = findPosition<KeyType, KeyComparator, uint64_t>(curNode->entries, key, 1, curNode->header.keyCount);
+        if (curPosition < curNode->header.keyCount){
+            Entry<KeyType, uint64_t> entry = curNode->entries[curPosition];
+            uint64_t pageId = entry.value;
+            parentFrame = currentFrame;
+            currentFrame = &bufferManager.fixPage(this->segmentId, pageId, exclusive);
+        }else{
+            //value not found
+            //should never happen?
+        }
+        currentDepth++;
+    }
+    if (parentFrame != nullptr){
+        bufferManager.unfixPage(* parentFrame, false);
+    }
+    //frame is fixed and has to be unfixed by the caller!!
+    return currentFrame;
 }
 
 template<typename KeyType, typename KeyComparator>
@@ -210,5 +246,8 @@ inline uint64_t BTree<KeyType, KeyComparator>::nextPageId() {
 
 template<typename KeyType, typename KeyComparator>
 Leaf<KeyType, KeyComparator> &BTree<KeyType, KeyComparator>::getLeaf(KeyType key) {
-  // TODO
+    BufferFrame * frame = findFrameForKey(key, false);
+    Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame->getData());
+    bufferManager.unfixPage(* frame, false);
+    return * leaf;
 }

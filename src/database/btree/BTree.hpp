@@ -53,13 +53,9 @@ private:
 
   uint64_t lastPageId;
 
+  BufferFrame * findFrameForKey(KeyType key, bool exclusive);
+
   inline bool searchForKey(KeyType key, TID &tid, uint64_t pageId, uint64_t depth);
-
-  inline bool searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType, KeyComparator> *leaf);
-
-  inline bool searchNodeForKey(KeyType key, TID &tid,
-                               InnerNode<KeyType, KeyComparator> *node, uint64_t depth);
-
   inline bool isLeafHeight(size_t height);
 
   inline FrameNode<KeyType, KeyComparator> splitInnerNode(
