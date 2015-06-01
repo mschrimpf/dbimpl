@@ -39,29 +39,31 @@ void BTree<KeyType, KeyComparator>::visualize() {
 template<typename KeyType, typename KeyComparator>
 void BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparator> * node, uint64_t *leafId, uint64_t *nodeId,
                                                   uint64_t curDepth, uint64_t maxDepth) {
-    std::stringstream stream;
-    stream << "node" << *nodeId << " [shape=record, label=\n"
-    << "\"<count> " << node->header.keyCount << " | ";
-    for (uint64_t n = 1; n < node->header.keyCount + 1; ++n) {
-        Entry<KeyType, uint64_t> entry = node->entries[n];
-        BufferFrame frame = bufferManager.fixPage(segmentId, entry.value, false);
-        //TODO maybe casting of value
-        stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
-        if (curDepth == maxDepth) {
-            //we have reached the bottom
-            Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame.getData());
-            visualizeLeaf(leaf, *leafId);
-            stream << "node" << nodeId << ":ptr0" << "-> leaf" << leafId << ":keyCount;";
-            (*leafId)++;
-        } else {
-            InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> * >(frame.getData());
-            visualizeNode(curNode, leafId, nodeId, curDepth + 1, maxDepth);
-            stream << "node" << nodeId << ":ptr0 -> node" << nodeId + 1 << ":keyCount;";
-            (*nodeId)++;
-        }
-        bufferManager.unfixPage(frame, false);
+  std::stringstream stream;
+  stream << "node" << *nodeId << " [shape=record, label=\n"
+  << "\"<count> " << node->header.keyCount << " | ";
+  for (uint64_t n = 1; n < node->header.keyCount + 1; ++n) {
+    Entry<KeyType, uint64_t> entry = node->entries[n];
+    BufferFrame frame = bufferManager.fixPage(segmentId, entry.value, false);
+    //TODO maybe casting of value
+    stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
+    if (curDepth == maxDepth) {
+      //we have reached the bottom
+      Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame.getData());
+      (*leafId)++;
+      visualizeLeaf(leaf, *leafId);
+      stream << "node" << nodeId << ":ptr" << n << "-> leaf" << leafId << ":keyCount;";
+    } else {
+      InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> * >(frame.getData());
+      (*nodeId)++;
+      visualizeNode(curNode, leafId, nodeId, curDepth + 1, maxDepth);
+      if (n < node->header.keyCount) {
+        stream << "node" << nodeId - 1 << ":ptr" << n << " -> node" << nodeId << ":keyCount;";
+      }
     }
-    std::cout << stream.str() << std::endl;
+    bufferManager.unfixPage(frame, false);
+  }
+  std::cout << stream.str() << std::endl;
 }
 
 template<class KeyType, class KeyComparator>
