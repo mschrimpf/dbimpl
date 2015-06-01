@@ -11,7 +11,7 @@
 #include "Entry.hpp"
 #include "InnerNodeHeader.hpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 struct InnerNode {
   InnerNodeHeader header;
 

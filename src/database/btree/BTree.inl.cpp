@@ -6,7 +6,7 @@
 #include <sstream>
 #include <stdio.h>
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t segmentId)
     : bufferManager(bManager), segmentId(segmentId),
       lastPageId(0), treeSize(0), height(0) {
@@ -20,7 +20,7 @@ inline BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t se
 /**
  * Note: this implementation assumes that all keys are unique.
  */
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
   size_t currHeight = 0;
   uint64_t currPageId = rootPageId;
@@ -70,7 +70,7 @@ inline bool BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
   return true;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::erase(KeyType key) {
   //Remove first
   //Check if Node Size < min-Capacity
@@ -80,13 +80,13 @@ inline bool BTree<KeyType, KeyComparator>::erase(KeyType key) {
   return true;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(KeyType key) {
   return NULL;
 }
 
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::lookup(KeyType key, TID &tid) {
   if (height == 0) {
     // no element found
@@ -96,7 +96,7 @@ inline bool BTree<KeyType, KeyComparator>::lookup(KeyType key, TID &tid) {
 //	return searchForKey(key, tid, rootNode, 1); // TODO
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, void *node, uint64_t currentDepth) {
   if (currentDepth == height) {
     //we reached maximum height, so nodes are leaves
@@ -109,7 +109,7 @@ inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, v
   }
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &tid,
                                                             InnerNode<KeyType, KeyComparator> *node, uint64_t depth) {
   uint64_t left = 0;
@@ -132,7 +132,7 @@ inline bool BTree<KeyType, KeyComparator>::searchNodeForKey(KeyType key, TID &ti
   return false;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &tid, Leaf<KeyType, KeyComparator> *leaf) {
   uint64_t left = 0;
   uint64_t right = leaf->header.keyCount;
@@ -157,17 +157,17 @@ inline bool BTree<KeyType, KeyComparator>::searchLeafForKey(KeyType key, TID &ti
   }
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline uint64_t BTree<KeyType, KeyComparator>::size() {
   return this->treeSize;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::isLeafHeight(size_t height) {
   return height == this->height;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline FrameNode<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitInnerNode
     (InnerNode<KeyType, KeyComparator> *node, uint64_t nodePageId,
      InnerNode<KeyType, KeyComparator> *parent) {
@@ -194,7 +194,7 @@ inline FrameNode<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitInn
   };
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLeaf
     (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
      InnerNode<KeyType, KeyComparator> *parent,
@@ -231,7 +231,7 @@ inline FrameLeaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLea
   }
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline uint64_t BTree<KeyType, KeyComparator>::nextPageId() {
   return lastPageId++;
 }

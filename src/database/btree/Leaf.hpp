@@ -12,7 +12,7 @@
 #include "../slotted_pages/TID.hpp"
 #include "LeafHeader.hpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 struct Leaf {
   LeafHeader header;
 

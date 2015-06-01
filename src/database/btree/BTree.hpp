@@ -13,12 +13,12 @@
 #include "../buffer/BufferManager.hpp"
 #include "../slotted_pages/TID.hpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 struct FrameNode {
   BufferFrame *frame;
   InnerNode<KeyType, KeyComparator> *node;
 };
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 struct FrameLeaf {
   BufferFrame *frame;
   Leaf<KeyType, KeyComparator> *leaf;
@@ -36,7 +36,7 @@ struct FrameLeaf {
  * 1) the parent node of an inner node in an insert call always has space for at least one more entry
  * 2) the parent node of a leaf in an insert call always has space for at least one more entry
  */
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 class BTree {
 private:
   BufferManager &bufferManager;

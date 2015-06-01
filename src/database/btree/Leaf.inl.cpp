@@ -5,12 +5,12 @@
 #include "Leaf.hpp"
 #include "BTreeConstants.hpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool Leaf<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
   return header.keyCount < BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline void Leaf<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, TID tid) {
 
 }

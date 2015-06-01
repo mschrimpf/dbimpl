@@ -10,7 +10,7 @@
 std::vector<std::string> char20;
 std::vector<IntPair> intPairs;
 
-template<class T>
+template<typename T>
 const T &getKey(const uint64_t &i);
 
 template<>
@@ -31,7 +31,7 @@ const IntPair &getKey(const uint64_t &i) {
   return intPairs.back();
 }
 
-template<class T, class CMP>
+template<typename T, typename CMP>
 void test(uint64_t n) {
   // Set up stuff, you probably have to change something here to match to your interfaces
   BufferManager bm(100);

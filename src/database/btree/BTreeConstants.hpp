@@ -10,7 +10,7 @@
 #include "InnerNodeHeader.hpp"
 #include "LeafHeader.hpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 class BTreeConstants {
 public:
   static const uint64_t maxNodeCapacity = (BufferManager::DATA_SIZE_BYTE

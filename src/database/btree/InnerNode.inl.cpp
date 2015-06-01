@@ -5,19 +5,19 @@
 #include "InnerNode.hpp"
 #include "EntriesSearch.inl.cpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key) {
   int min = 1;
   int max = header.keyCount + 1;
   return searchValue<KeyType, KeyComparator, uint64_t>(entries, key, min, max);
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 inline bool InnerNode<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
   return this->header.keyCount < BTreeConstants<KeyType, KeyComparator>::maxNodeCapacity;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue) {
   int insertPosition = searchInsertPosition(key);
   moveEntriesToRight(insertPosition);
@@ -27,7 +27,7 @@ void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t 
 }
 
 // iterative binary search implementation
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 int InnerNode<KeyType, KeyComparator>::searchInsertPosition(KeyType key) {
   int min = 1;
   int max = header.keyCount + 1;
@@ -49,7 +49,7 @@ int InnerNode<KeyType, KeyComparator>::searchInsertPosition(KeyType key) {
   return min;
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 void InnerNode<KeyType, KeyComparator>::moveEntriesToRight(int fromIndex) {
   memcpy(entries + fromIndex + 1 /* move one to right */,
          entries,
