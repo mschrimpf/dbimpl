@@ -82,7 +82,7 @@ public:
 
   inline bool lookup(KeyType key, TID &tid);
 
-  inline std::vector<TID>::iterator lookupRange(KeyType begin, KeyType end);
+  inline std::vector<TID> lookupRange(KeyType begin, KeyType end);
 
   inline bool erase(KeyType key);
 

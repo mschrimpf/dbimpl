@@ -78,25 +78,37 @@ inline bool BTree<KeyType, KeyComparator>::erase(KeyType key) {
 }
 
 template<class KeyType, class KeyComparator>
-inline std::vector<TID>::iterator BTree<KeyType, KeyComparator>::lookupRange(KeyType begin, KeyType end) {
-  KeyType left = begin;
-  KeyType right = end;
+inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin, KeyType end) {
+    KeyType left = begin;
+    KeyType right = end;
 
-  /* if given end-limit is lower than begin, we need to swap both borders*/
-  if (comparator(end, begin)){
-    left = end;
-    right = begin;
-  }
+    /* if given end-limit is lower than begin, we need to swap both borders*/
+    if (comparator(end, begin)) {
+        left = end;
+        right = begin;
+    }
 
-
-    //find first frame with left-value
-    //go frame along til end of frame or right
-    //if end-of-frame -> get next-frame
-    //repeat.
-
-
-  std::vector<TID> vec;
-  return vec.begin();
+    std::vector<TID> lookupSet;
+    Leaf<KeyType, KeyComparator> leftLeaf = getLeaf(left);
+    int position = findPosition<KeyType, KeyComparator, TID>(leftLeaf.entries, left, 1, leftLeaf.header.keyCount + 1);
+    while (true) {
+        while (position < leftLeaf.header.keyCount + 1) {
+            Entry<KeyType, TID> entry = leftLeaf.entries[position];
+            if (entry.key >= begin && entry.key <= end) {
+                lookupSet.push_back(entry.value);
+            } else {
+                return lookupSet;
+            }
+            position++;
+        }
+        if (position == leftLeaf.header.keyCount + 1) {
+            //reached end of leaf and need to check the next leaf
+            leftLeaf =  getLeaf(leftLeaf.header.nextLeafPageId);
+            position = 1;
+        } else {
+            return lookupSet;
+        }
+    }
 }
 
 
@@ -116,7 +128,7 @@ BufferFrame * BTree<KeyType, KeyComparator>::findFrameForKey(KeyType key, bool e
         if (parentFrame != nullptr){
             bufferManager.unfixPage(* parentFrame, false);
         }
-        int curPosition = findPosition<KeyType, KeyComparator, uint64_t>(curNode->entries, key, 1, curNode->header.keyCount);
+        int curPosition = findPosition<KeyType, KeyComparator, uint64_t>(curNode->entries, key, 1, curNode->header.keyCount + 1);
         if (curPosition < curNode->header.keyCount){
             Entry<KeyType, uint64_t> entry = curNode->entries[curPosition];
             uint64_t pageId = entry.value;
@@ -143,7 +155,7 @@ inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, u
         //we reached maximum height, so nodes are leaves
         Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
         try {
-            tid = searchValue<KeyType, KeyComparator, TID>(leaf->entries, key, 1, leaf->header.keyCount);
+            tid = searchValue<KeyType, KeyComparator, TID>(leaf->entries, key, 1, leaf->header.keyCount + 1);
             result = true;
         } catch (const std::invalid_argument &ia) {
             result = false;
@@ -152,7 +164,7 @@ inline bool BTree<KeyType, KeyComparator>::searchForKey(KeyType key, TID &tid, u
         //we haven't reached the leaves yet
         InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
         try {
-            uint64_t pageId = searchValue<KeyType, KeyComparator, uint64_t>(curNode->entries, key, 1, curNode->header.keyCount);
+            uint64_t pageId = searchValue<KeyType, KeyComparator, uint64_t>(curNode->entries, key, 1, curNode->header.keyCount + 1);
             result = searchForKey(key, tid, pageId, currentDepth + 1);
         } catch (const std::invalid_argument &ia) {
             result = false;
