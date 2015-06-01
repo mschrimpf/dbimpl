@@ -42,7 +42,6 @@ TEST_F(BTreeTest, InsertSameKeyTest) {
 
 TEST_F(BTreeTest, TestLookupRange) {
   for (unsigned id = 0; id < 20; ++id){
-    std::cout << "Adding Pair(" << id << ",0) to bTree";
     bTree->insert(id, TID(0, id));
   }
   std::vector<TID> vec = bTree->lookupRange(0, 20);
@@ -57,11 +56,9 @@ TEST_F(BTreeTest, TestLookupRange) {
 
 
 TEST_F(BTreeTest, TestBTreeVisualization) {
-  bTree->visualize();
   for (unsigned id = 0; id < 20; ++id){
-    std::cout << "Adding Pair(" << id << ",0) to bTree";
+    std::cout << "Adding Pair(" << id << ",0) to bTree\n";
     bTree->insert(id, TID(0));
-    bTree->visualize();
   }
   bTree->visualize();
 }
