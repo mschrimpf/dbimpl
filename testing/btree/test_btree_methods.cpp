@@ -1,7 +1,4 @@
-#include <gtest/gtest.h>
-#include "../../src/database/buffer/BufferManager.hpp"
-#include "../../src/database/btree/BTree.hpp"
-#include "KeysAndComparators.hpp"
+#include "BTreeTestFixture.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -11,26 +8,6 @@ using ::testing::TestEventListeners;
 using ::testing::TestInfo;
 using ::testing::TestPartResult;
 using ::testing::UnitTest;
-
-class BTreeTest : public Test {
-private:
-  static const uint64_t SEGMENT_ID = 1;
-
-  BufferManager *bufferManager;
-
-public:
-  BTree<uint64_t, MyCustomUInt64Cmp> *bTree;
-
-  void SetUp() {
-    bufferManager = new BufferManager(65536);
-    bTree = new BTree<uint64_t, MyCustomUInt64Cmp>(*bufferManager, SEGMENT_ID);
-  }
-
-  void TearDown() {
-    delete this->bufferManager;
-    delete this->bTree;
-  };
-};
 
 
 TEST_F(BTreeTest, InsertFindTest) {
