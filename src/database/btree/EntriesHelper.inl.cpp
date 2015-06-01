@@ -8,18 +8,30 @@
 #include "Entry.hpp"
 #include <stdexcept>
 #include <string.h>
+#include <stdio.h>
 
 class EntriesHelper {
 public:
+  template<typename KeyType, typename KeyComparator, typename ValueType>
+  static ValueType safeSearchValue(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max,
+                                   KeyComparator &smaller) {
+    ValueType result;
+    if (!searchValue(entries, key, min, max, smaller, result)) {
+      throw std::invalid_argument("Key does not exist");
+    }
+    return result;
+  }
+
 // iterative binary search implementation
   template<typename KeyType, typename KeyComparator, typename ValueType>
-  static ValueType searchValue(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max,
-                               KeyComparator &smaller) {
+  static bool searchValue(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max,
+                          KeyComparator &smaller, ValueType &result) {
     while (max >= min) {
       int mid = (max + min) / 2;
       KeyType entryKey = entries[mid].key;
       if (!smaller(entryKey, key) && !smaller(key, entryKey)) {
-        return entries[mid].value;
+        result = entries[mid].value;
+        return true;
       } else if (smaller(entryKey, key)) {
         min = mid + 1;
       } else {
@@ -27,7 +39,7 @@ public:
       }
     }
 
-    throw std::invalid_argument("Key does not exist");
+    return false;
   }
 
 // iterative binary search implementation to find the current position

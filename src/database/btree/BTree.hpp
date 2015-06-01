@@ -55,7 +55,7 @@ private:
 
     BufferFrame *findFrameForKey(KeyType key, bool exclusive);
 
-    inline bool searchForKey(KeyType key, TID &tid, uint64_t pageId, uint64_t depth);
+    inline bool searchForKey(KeyType key, TID &tid, uint64_t pageId, size_t currentHeight);
 
     inline bool isLeafHeight(size_t height);
 

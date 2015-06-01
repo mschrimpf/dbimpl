@@ -9,7 +9,7 @@ template<typename KeyType, typename KeyComparator>
 inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key, KeyComparator &smaller) {
   int min = 1;
   int max = header.keyCount + 1;
-  return EntriesHelper::searchValue<KeyType, KeyComparator, uint64_t>(entries, key, min, max, smaller);
+  return EntriesHelper::safeSearchValue<KeyType, KeyComparator, uint64_t>(entries, key, min, max, smaller);
 }
 
 template<typename KeyType, typename KeyComparator>
