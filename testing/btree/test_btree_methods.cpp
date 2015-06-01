@@ -1,6 +1,4 @@
-#include <gtest/gtest.h>
-#include "../../src/database/buffer/BufferManager.hpp"
-#include "../../src/database/btree/BTree.hpp"
+#include "BTreeTestFixture.hpp"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -51,15 +49,6 @@ public:
   };
 };
 
-TEST_F(BTreeTest, TestBTreeVisualization) {
-  bTree->visualize();
-  for (unsigned id = 0; id < 20; ++id){
-    std::cout << "Adding Pair(" << id << ",0) to bTree";
-    bTree->insert(id, TID(0));
-    bTree->visualize();
-  }
-}
-
 TEST_F(BTreeTest, InsertFindTest) {
   TID tid(0);
   ASSERT_EQ(0, bTree->size());
@@ -102,6 +91,16 @@ TEST_F(BTreeTest, TestLookupRange) {
     ASSERT_EQ(tid.slotOffset, 0);
     ASSERT_EQ(tid.pageId, cur);
     iterator++;
+  }
+}
+
+
+TEST_F(BTreeTest, TestBTreeVisualization) {
+  bTree->visualize();
+  for (unsigned id = 0; id < 20; ++id){
+    std::cout << "Adding Pair(" << id << ",0) to bTree";
+    bTree->insert(id, TID(0));
+    bTree->visualize();
   }
 }
 

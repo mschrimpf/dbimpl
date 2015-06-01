@@ -13,12 +13,12 @@
 #include "../buffer/BufferManager.hpp"
 #include "../slotted_pages/TID.hpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 struct FrameNode {
   BufferFrame *frame;
   InnerNode<KeyType, KeyComparator> *node;
 };
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 struct FrameLeaf {
   BufferFrame *frame;
   Leaf<KeyType, KeyComparator> *leaf;
@@ -29,8 +29,14 @@ struct FrameLeaf {
  *
  * The first key in the entries array of InnerNodes and Leafs does not have a meaning,
  * it only fills up the array from the left with the additional necessary value.
+ *
+ * Splits are always done to the right; the new node/leaf will be to the right of the old one.
+ *
+ * Invariants:
+ * 1) the parent node of an inner node in an insert call always has space for at least one more entry
+ * 2) the parent node of a leaf in an insert call always has space for at least one more entry
  */
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 class BTree {
 private:
   BufferManager &bufferManager;
@@ -56,15 +62,18 @@ private:
 
   inline bool isLeafHeight(size_t height);
 
-  inline FrameNode<KeyType, KeyComparator> splitInnerNode(InnerNode<KeyType, KeyComparator> *innerNode,
-                                  InnerNode<KeyType, KeyComparator> *parentNode);
+  inline FrameNode<KeyType, KeyComparator> splitInnerNode(
+      InnerNode<KeyType, KeyComparator> *node,
+      uint64_t nodePageId,
+      InnerNode<KeyType, KeyComparator> *parent);
 
   /**
    * Returns the page id of the leaf that contains the key
    */
-  inline FrameLeaf<KeyType, KeyComparator> splitLeaf(Leaf<KeyType, KeyComparator> *leaf,
-                             InnerNode<KeyType, KeyComparator> *parentNode,
-                             KeyType key);
+  inline FrameLeaf<KeyType, KeyComparator> splitLeaf
+      (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
+       InnerNode<KeyType, KeyComparator> *parentNode,
+       KeyType key);
 
   inline uint64_t nextPageId();
 

@@ -6,7 +6,7 @@
 #include <iostream>
 #include "BTree.hpp"
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 void BTree<KeyType, KeyComparator>::visualize() {
   std::stringstream stream;
   stream << "diagraph myBTree { \n";
@@ -34,7 +34,7 @@ void BTree<KeyType, KeyComparator>::visualize() {
   */
 }
 
-template<class KeyType, class KeyComparator>
+template<typename KeyType, typename KeyComparator>
 void InnerNode<KeyType, KeyComparator>::visualize(uint64_t *leafId, uint64_t *nodeId,
                                                   uint64_t curDepth, uint64_t maxDepth) {
   std::stringstream stream;

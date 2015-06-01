@@ -9,8 +9,8 @@
 #include <stdexcept>
 
 // iterative binary search implementation
-template<class KeyType, class KeyComparator, class ValueType>
-ValueType search(Entry<KeyType, ValueType> entries[], KeyType &key, int &min, int &max) {
+template<typename KeyType, typename KeyComparator, typename ValueType>
+ValueType searchValue(Entry<KeyType, ValueType> entries[], KeyType key, int &min, int &max) {
   while (max >= min) {
     int mid = (max + min) / 2;
     if (entries[mid].key == key) {
