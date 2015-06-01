@@ -11,6 +11,9 @@ void BTree<KeyType, KeyComparator>::visualize() {
     std::stringstream stream;
     stream << "diagraph myBTree { \n";
     stream << "node [shape=record];";
+  std::cout << stream.str() << std::endl;
+  stream.str("");
+  stream.clear();
     BufferFrame frame = bufferManager.fixPage(segmentId, rootPageId, false);
     void *rootNode = frame.getData(); // TODO: retrieve from rootPageId
     if (height == 0) {
@@ -68,12 +71,12 @@ void BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyComparator> *
   << "\"<count> " << leaf->header.keyCount << " | ";
   for (uint64_t e = 0; e < leaf->header.keyCount; ++e) {
     Entry<KeyType, TID> entry = leaf->entries[e];
-    stream << "<key";
-    stream << e << ">";
-    stream << entry.key;
-    stream << "<value" << e;
-    stream << "> " << entry.value.pageId;
-    stream << " | <next> *\"]; \n";
+    stream << "<key" << e << ">" << entry.key << "<value" << e << ">" << entry.value.pageId;
   }
+  stream << " | <next> ";
+  if (leaf->header.nextLeafPageId != LeafHeader::INVALID_PAGE_ID){
+    stream << " *";
+  }
+  stream << "\"];";
   std::cout << stream.str() << std::endl;
 }
