@@ -9,7 +9,7 @@
 template<typename KeyType, typename KeyComparator>
 void BTree<KeyType, KeyComparator>::visualize() {
     std::stringstream stream;
-    stream << "diagraph myBTree { \n";
+    stream << "digraph myBTree { \n";
     stream << "node [shape=record];";
   std::cout << stream.str() << std::endl;
   stream.str("");
