@@ -85,6 +85,7 @@ template<typename KeyType, typename KeyComparator>
 inline FrameNode <KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitInnerNode
     (InnerNode <KeyType, KeyComparator> *node, uint64_t nodePageId,
      InnerNode <KeyType, KeyComparator> *parent) {
+  throw std::invalid_argument("Not implemented");
   // invariant: parent node has space for one more entry
   InnerNode <KeyType, KeyComparator> newNode;
   size_t arraySplitIndex = node->header.keyCount / 2 + 1 /* first key value pair */;
@@ -123,15 +124,13 @@ inline FrameLeaf <KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLe
   size_t splitLength = leaf->header.keyCount - arraySplitIndex;
   KeyType splitKey = leaf->entries[arraySplitIndex].key;
   size_t entrySize = sizeof(leaf->entries[0]);
-  printf("Splitting leaf of size %zu at index %zu | key %lu | length %zu (real %zu with entrySize=%zu)\n",
-         leaf->header.keyCount, arraySplitIndex, splitKey, splitLength, splitLength * entrySize, entrySize);
+  printf("Splitting leaf %lu of size %zu at index %zu | key %lu | length %zu (real %zu with entrySize=%zu)\n",
+         leafPageId, leaf->header.keyCount, arraySplitIndex, splitKey, splitLength, splitLength * entrySize, entrySize);
   uint64_t newPageId = nextPageId();
 
   memcpy(newLeaf.entries, leaf->entries + arraySplitIndex, splitLength * entrySize);
-  printf("newLeaf.entries[0].key=%lu\n", newLeaf.entries[0].key);
-  printf("newLeaf.entries[15].key=%lu\n", newLeaf.entries[15].key);
   leaf->header.keyCount = arraySplitIndex + 1;
-  newLeaf.header.keyCount = splitLength - 1;
+  newLeaf.header.keyCount = splitLength; // TODO: why not -1?
 
   parent->insertDefiniteFit(splitKey, leafPageId, newPageId, smallerComparator);
 
@@ -141,13 +140,13 @@ inline FrameLeaf <KeyType, KeyComparator> BTree<KeyType, KeyComparator>::splitLe
 
   if (smallerComparator(key, splitKey)) {
     bufferManager.unfixPage(newFrame, true);
-    return FrameLeaf < KeyType, KeyComparator > {
+    return FrameLeaf<KeyType, KeyComparator> {
         leafFrame,
         leaf
     };
   } else {
     bufferManager.unfixPage(*leafFrame, true);
-    return FrameLeaf < KeyType, KeyComparator > {
+    return FrameLeaf<KeyType, KeyComparator> {
         &newFrame /* unfixed in calling method */,
         reinterpret_cast<Leaf <KeyType, KeyComparator> *>(newFrameData)
     };
@@ -270,20 +269,24 @@ inline bool BTree<KeyType, KeyComparator>::searchForKey(
   BufferFrame *currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
   bool result;
   if (isLeafHeight(currentHeight)) {
-    Leaf <KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf <KeyType, KeyComparator> *>(
+    Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(
         currentFrame->getData());
-    printf("Searching leaf %lu\n", pageId);
+    printf("Searching leaf %lu (min=%d, max=%d)\n", pageId, leaf->getMinForSearch(), leaf->getMaxForSearch());
     result = EntriesHelper::searchValue(leaf->entries, key,
-                                        0, leaf->getMaxForSearch(),
+                                        leaf->getMinForSearch(), leaf->getMaxForSearch(),
                                         smallerComparator, tid);
     printf("Result: %s\n", result ? "true" : "false");
   } else {
     //we haven't reached the leaves yet
-    InnerNode <KeyType, KeyComparator> *currNode = reinterpret_cast<InnerNode <KeyType, KeyComparator> *> (
+    InnerNode<KeyType, KeyComparator> *currNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (
         currentFrame->getData());
+    printf("Searching for key %lu | entries[0].value=%lu, entries[1].key=%lu, entries[1].value=%lu | min=%d, max=%d\n",
+           key, currNode->entries[0].value, currNode->entries[1].key, currNode->entries[1].value,
+           currNode->getMinForSearch(), currNode->getMaxForSearch());
     pageId = EntriesHelper::searchDirectionValue(currNode->entries, key,
-                                                 1, currNode->getMaxForSearch(),
+                                                 currNode->getMinForSearch(), currNode->getMaxForSearch(),
                                                  smallerComparator);
+    printf("InnerNode result: pageId=%lu\n", pageId);
     result = searchForKey(key, tid, pageId, currentHeight + 1);
   }
 

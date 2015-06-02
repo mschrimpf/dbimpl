@@ -28,7 +28,9 @@ struct Leaf {
 
   inline void erase(KeyType key, KeyComparator &smaller);
 
-  size_t getMaxForSearch();
+  int getMaxForSearch();
+
+  int getMinForSearch();
 };
 
 #include "Leaf.inl.cpp"

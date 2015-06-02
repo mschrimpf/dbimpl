@@ -60,7 +60,7 @@ TEST_F(BTreeTest, InsertToSplitFind) {
   checkInserts(0, valuesToInsert);
 }
 
-TEST_F(BTreeTest, InsertToSplitFindReverse) {
+TEST_F(BTreeTest, DISABLED_InsertToSplitFindReverse) {
   uint64_t valuesToInsert = sizeof(Leaf<uint64_t, TID>::entries) / sizeof(Entry<uint64_t, TID>) + 1;
   checkInserts(valuesToInsert - 1, 0);
 }
