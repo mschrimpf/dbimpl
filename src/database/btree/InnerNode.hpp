@@ -29,6 +29,8 @@ struct InnerNode {
   inline uint64_t getNextNode(KeyType key, KeyComparator &smaller);
 
   void insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue, KeyComparator &smaller);
+
+  int getMaxForSearch();
 };
 
 #include "InnerNode.inl.cpp"

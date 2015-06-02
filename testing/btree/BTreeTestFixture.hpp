@@ -34,6 +34,20 @@ public:
     std::string filename = std::to_string(SEGMENT_ID);
     remove(filename.c_str());
   };
+
+  void checkInserts(uint64_t from, uint64_t to) {
+    for (uint64_t i = from; from <= to ? i < to : i >= to; from <= to ? i++ : i--) {
+      bTree->insert(i, TID(i));
+    }
+    uint64_t expectedSize = from <= to ? to - from : from - to;
+    ASSERT_EQ(expectedSize, bTree->size());
+
+    for (uint64_t i = from; from <= to ? i < to : i >= to; from <= to ? i++ : i--) {
+      TID lookupTid;
+      ASSERT_TRUE(bTree->lookup(i, lookupTid));
+      ASSERT_EQ(i, lookupTid.pageId);
+    }
+  }
 };
 
 #endif //PROJECT_BTREETESTFIXTURE_HPP

@@ -7,13 +7,14 @@
 
 #include <stdint.h>
 #include <functional>
-#include "../buffer/BufferManager.hpp"
 
 struct TID {
+  static const uint64_t SLOT_MASK = 0xFFFF000000000000;
+  static const uint64_t PAGE_MASK = 0xFFFFFFFFFFFF;
+
   TID(uint16_t slotOffset, uint64_t pageId) : slotOffset(slotOffset), pageId(pageId) { }
 
-  TID(uint64_t id) : slotOffset((uint16_t) (id & BufferManager::SEGMENT_MASK)),
-                     pageId(id & BufferManager::PAGE_MASK) { }
+  TID(uint64_t id) : slotOffset((uint16_t) (id & SLOT_MASK)), pageId(id & PAGE_MASK) { }
 
   TID() : slotOffset(0), pageId(0) { }
 

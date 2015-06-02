@@ -13,7 +13,8 @@
 class EntriesHelper {
 public:
   template<typename KeyType, typename KeyComparator, typename ValueType>
-  static ValueType safeSearchValue(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max,
+  static ValueType safeSearchValue(Entry<KeyType, ValueType> entries[], KeyType key,
+                                   int min, int max,
                                    KeyComparator &smaller) {
     ValueType result;
     if (!searchValue(entries, key, min, max, smaller, result)) {
@@ -24,12 +25,15 @@ public:
 
 // iterative binary search implementation
   template<typename KeyType, typename KeyComparator, typename ValueType>
-  static bool searchValue(Entry<KeyType, ValueType> entries[], KeyType key, int min, int max,
+  static bool searchValue(Entry<KeyType, ValueType> entries[], KeyType key,
+                          int min, int max,
                           KeyComparator &smaller, ValueType &result) {
     while (max >= min) {
       int mid = (max + min) / 2;
       KeyType entryKey = entries[mid].key;
+      printf("Compare entryKey[%d]=%lu with key=%lu\n", mid, entryKey, key);
       if (!smaller(entryKey, key) && !smaller(key, entryKey)) {
+        printf("Found!\n");
         result = entries[mid].value;
         return true;
       } else if (smaller(entryKey, key)) {
@@ -43,14 +47,41 @@ public:
   }
 
   /**
+   * Search not exactly the key but the value for its hypothetical position in the InnerNode.
+   */
+  template<typename KeyType, typename KeyComparator>
+  static uint64_t searchDirectionValue(Entry<KeyType, uint64_t> entries[], KeyType key,
+                                       int min, int max,
+                                       KeyComparator &smaller) {
+    while (max >= min) {
+      int mid = (max + min) / 2;
+      KeyType entryKey = entries[mid].key;
+      if (!smaller(entryKey, key) && !smaller(key, entryKey)) {
+        return entries[mid].value;
+      } else if (smaller(entryKey, key)) {
+        min = mid + 1;
+      } else {
+        max = mid - 1;
+      }
+    }
+
+    KeyType entryKey = entries[min].key;
+    if (smaller(key, entryKey)) {
+      return entries[min - 1].value;
+    } else {
+      return entries[min].value;
+    }
+  }
+
+  /**
    * Find the position of a key in an array of entries.
    * Iterative binary search implementation.
    */
   template<typename KeyType, typename KeyComparator, typename ValueType>
   static int findKeyPosition(Entry<KeyType, ValueType> entries[],
-                          KeyType key,
-                          int min, int max,
-                          KeyComparator &smaller) {
+                             KeyType key,
+                             int min, int max,
+                             KeyComparator &smaller) {
     while (max >= min) {
       int mid = (max + min) / 2;
       KeyType entryKey = entries[mid].key;
@@ -87,9 +118,6 @@ public:
                                   KeyType key,
                                   int min, int max,
                                   KeyComparator &smaller) {
-    if (max == min) {
-      return min;
-    }
     while (max >= min) {
       int mid = (max + min) / 2;
       KeyType entryKey = entries[mid].key;

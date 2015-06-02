@@ -8,7 +8,7 @@
 template<typename KeyType, typename KeyComparator>
 inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key, KeyComparator &smaller) {
   int min = 1;
-  int max = header.keyCount + 1;
+  int max = getMaxForSearch();
   return EntriesHelper::safeSearchValue<KeyType, KeyComparator, uint64_t>(entries, key, min, max, smaller);
 }
 
@@ -21,11 +21,17 @@ template<typename KeyType, typename KeyComparator>
 void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue,
                                                           KeyComparator &smaller) {
   int min = 1;
-  int max = header.keyCount + 1;
+  int max = getMaxForSearch();
   int insertPosition = EntriesHelper::searchInsertPosition(entries, key, min, max, smaller);
-  EntriesHelper::moveEntriesToRight(entries, insertPosition, max);
+  EntriesHelper::moveEntriesToRight(entries, insertPosition, header.keyCount + 1);
   entries[insertPosition].key = key;
   entries[insertPosition].value = rightValue;
   entries[insertPosition - 1].value = leftValue;
   header.keyCount++;
+}
+
+template<typename KeyType, typename KeyComparator>
+int InnerNode<KeyType, KeyComparator>::getMaxForSearch() {
+  size_t keyCount = header.keyCount;
+  return keyCount > 0 ? keyCount : 1;
 }

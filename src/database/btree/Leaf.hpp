@@ -27,6 +27,8 @@ struct Leaf {
   inline void insertDefiniteFit(KeyType key, TID tid, KeyComparator &smaller);
 
   inline void erase(KeyType key, KeyComparator &smaller);
+
+  size_t getMaxForSearch();
 };
 
 #include "Leaf.inl.cpp"

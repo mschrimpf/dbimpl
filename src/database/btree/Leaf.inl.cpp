@@ -14,9 +14,9 @@ inline bool Leaf<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
 template<typename KeyType, typename KeyComparator>
 inline void Leaf<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, TID tid, KeyComparator &smaller) {
   int min = 0;
-  int max = header.keyCount;
+  int max = getMaxForSearch();
   int insertPosition = EntriesHelper::searchInsertPosition(entries, key, min, max, smaller);
-  EntriesHelper::moveEntriesToRight(entries, insertPosition, max);
+  EntriesHelper::moveEntriesToRight(entries, insertPosition, header.keyCount);
   entries[insertPosition].key = key;
   entries[insertPosition].value = tid;
   header.keyCount++;
@@ -25,8 +25,13 @@ inline void Leaf<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, TID tid
 template<typename KeyType, typename KeyComparator>
 void Leaf<KeyType, KeyComparator>::erase(KeyType key, KeyComparator &smaller) {
   int min = 0;
-  int max = header.keyCount;
+  int max = getMaxForSearch();
   int keyPosition = EntriesHelper::findKeyPosition(entries, key, min, max, smaller);
-  EntriesHelper::moveEntriesToLeft(entries, keyPosition + 1, max);
+  EntriesHelper::moveEntriesToLeft(entries, keyPosition + 1, header.keyCount);
   header.keyCount--;
+}
+
+template<typename KeyType, typename KeyComparator>
+size_t Leaf<KeyType, KeyComparator>::getMaxForSearch() {
+  return header.keyCount - 1;
 }
