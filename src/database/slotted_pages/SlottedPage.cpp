@@ -32,14 +32,14 @@ void SlottedPage::init() {
 	}
 }
 
-Slot *SlottedPage::retrieveSlot(uint16_t &slotIndex) {
-	slotIndex = header.firstFreeSlot;
-	Slot *slot = &slots[slotIndex];
-	debug("First free slot: %" PRIu16 " | slotCount: %u", slotIndex, header.slotCount);
-	if (slotIndex == header.slotCount) {
+Slot *SlottedPage::retrieveSlot(uint16_t *slotIndex) {
+	slotIndex = &header.firstFreeSlot;
+	Slot *slot = &slots[*slotIndex];
+	debug("First free slot: %" PRIu16 " | slotCount: %u", *slotIndex, header.slotCount);
+	if (*slotIndex == header.slotCount) {
 		header.slotCount++;
 	}
-	uint16_t newFreeSlot = findFirstFreeSlot(slotIndex);
+	uint16_t newFreeSlot = findFirstFreeSlot(*slotIndex);
 	header.firstFreeSlot = newFreeSlot;
 	return slot;
 }

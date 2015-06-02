@@ -26,7 +26,7 @@ TID SPSegment::insert(const Record &record, BufferFrame &frame) {
 	const char *dataPtr = record.getData();
 	size_t data_size = record.getLen();
 	uint16_t slotIndex;
-	Slot *slot = page->retrieveSlot(slotIndex);
+	Slot *slot = page->retrieveSlot(&slotIndex);
 	page->writeSlotData(slot, dataPtr, data_size);
 	uint64_t pageId = frame.getPageId();
 	this->bufferManager.unfixPage(frame, true);

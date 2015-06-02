@@ -69,7 +69,7 @@ struct SlottedPage {
 
 	bool isInRange(uint16_t slotOffset) const;
 
-	Slot *retrieveSlot(uint16_t &slotIndex);
+	Slot *retrieveSlot(uint16_t *slotIndex);
 
 	void writeSlotData(Slot *slot, const char *data, size_t data_size);
 
