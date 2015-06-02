@@ -49,9 +49,9 @@ private:
   uint64_t rootPageId : 48;
   size_t treeSize; // number of elements inside of the tree
   /**
- * Longest path from the root to one of the leafs.
- * I.e., a tree with only the root leaf has a height of 0.
- */
+   * Longest path from the root to one of the leafs.
+   * I.e., a tree with only the root leaf has a height of 0.
+   */
   size_t height;
 
   uint64_t lastPageId;
@@ -63,28 +63,23 @@ private:
   inline bool isLeafHeight(size_t height);
 
   inline FrameNode<KeyType, KeyComparator> splitInnerNode(
-      InnerNode<KeyType, KeyComparator> *node,
-      uint64_t nodePageId,
-      InnerNode<KeyType, KeyComparator> *parent);
+          InnerNode<KeyType, KeyComparator> *node,
+          uint64_t nodePageId,
+          InnerNode<KeyType, KeyComparator> *parent);
 
   /**
- * Returns the page id of the leaf that contains the key
- */
+   * Returns the page id of the leaf that contains the key
+   */
   inline FrameLeaf<KeyType, KeyComparator> splitLeaf
-      (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
-       InnerNode<KeyType, KeyComparator> *parentNode,
-       KeyType key);
+          (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
+           InnerNode<KeyType, KeyComparator> *parentNode,
+           KeyType key);
 
 
   /**
- * returns the most left leaf of the tree
- */
+   * returns the most left leaf of the tree
+   */
   Leaf<KeyType, KeyComparator> getMostLeftLeaf();
-
-  /**
- * returns the most right leaf of the tree
- */
-  Leaf<KeyType, KeyComparator> getMostRightLeaf();
 
   inline uint64_t nextPageId();
 
