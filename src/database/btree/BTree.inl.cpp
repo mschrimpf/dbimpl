@@ -45,7 +45,8 @@ inline void BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
         parentFrame = newNode.first;
         parentNode = newNode.second;
       }
-      auto splitResult = splitInnerNode(currNode, currPageId, parentNode);
+      auto splitResult = splitInnerNode(currNode, currFrame, currPageId,
+                                        parentNode, key);
       currFrame = splitResult.first;
       currNode = splitResult.second;
       continue;
@@ -85,18 +86,19 @@ inline void BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
 template<typename KeyType, typename KeyComparator>
 inline std::pair<BufferFrame *, InnerNode<KeyType, KeyComparator> *>
 BTree<KeyType, KeyComparator>::splitInnerNode
-    (InnerNode<KeyType, KeyComparator> *node, uint64_t nodePageId,
-     InnerNode<KeyType, KeyComparator> *parent) {
-  throw std::invalid_argument("Not implemented");
+    (InnerNode<KeyType, KeyComparator> *node, BufferFrame * nodeFrame, uint64_t nodePageId,
+     InnerNode<KeyType, KeyComparator> *parent,
+     KeyType key) {
   // invariant: parent node has space for one more entry
   InnerNode<KeyType, KeyComparator> newNode;
   size_t arraySplitIndex = node->header.keyCount / 2 + 1 /* first key value pair */;
-  size_t splitLength = node->header.keyCount - arraySplitIndex;
+  size_t splitLength = node->header.keyCount + 1 - arraySplitIndex;
   KeyType splitKey = node->entries[arraySplitIndex].key;
+  size_t entrySize = sizeof(node->entries[0]);
   uint64_t newPageId = nextPageId();
 
-  memcpy(newNode.entries, node->entries + arraySplitIndex, splitLength);
-  node->header.keyCount = arraySplitIndex; // TODO: change method according to the splitLeaf changes
+  memcpy(newNode.entries, node->entries + arraySplitIndex, splitLength * entrySize);
+  node->header.keyCount = arraySplitIndex;
   newNode.header.keyCount = splitLength;
 
   parent->insertDefiniteFit(splitKey, nodePageId, newPageId, smallerComparator);
@@ -105,9 +107,18 @@ BTree<KeyType, KeyComparator>::splitInnerNode
   void *newFrameData = newFrame.getData();
   memcpy(newFrameData, &newNode, sizeof(newNode));
 
-  return std::make_pair(
-      &newFrame /* unfixed in calling method */,
-      reinterpret_cast<InnerNode<KeyType, KeyComparator> *>(newFrameData));
+  if (smallerComparator(key, splitKey)) {
+    bufferManager.unfixPage(newFrame, true);
+    return std::make_pair(
+        nodeFrame,
+        node
+    );
+  } else {
+    bufferManager.unfixPage(*nodeFrame, true);
+    return std::make_pair(
+        &newFrame /* unfixed in calling method */,
+        reinterpret_cast<InnerNode<KeyType, KeyComparator> *>(newFrameData));
+  }
 }
 
 template<typename KeyType, typename KeyComparator>

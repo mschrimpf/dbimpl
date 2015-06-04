@@ -54,9 +54,9 @@ private:
   inline bool isLeafHeight(size_t height);
 
   inline std::pair<BufferFrame *, InnerNode<KeyType, KeyComparator> *> splitInnerNode(
-      InnerNode<KeyType, KeyComparator> *node,
-      uint64_t nodePageId,
-      InnerNode<KeyType, KeyComparator> *parent);
+      InnerNode<KeyType, KeyComparator> *node, BufferFrame * nodeFrame, uint64_t nodePageId,
+      InnerNode<KeyType, KeyComparator> *parent,
+      KeyType key);
 
   /**
    * Returns the page id of the leaf that contains the key
