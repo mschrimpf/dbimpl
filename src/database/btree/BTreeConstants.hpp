@@ -13,16 +13,14 @@
 template<typename KeyType, typename KeyComparator>
 class BTreeConstants {
 public:
-//  static const uint64_t maxNodeCapacity = (BufferManager::DATA_SIZE_BYTE
-//                                           - sizeof(InnerNodeHeader))
-//                                          / sizeof(Entry<KeyType, uint64_t>)
-//                                          - 1 /* one less for the additional K/V pair */;
-  static const uint64_t maxNodeCapacity = 4;
+  static const uint64_t maxNodeCapacity = (BufferManager::DATA_SIZE_BYTE
+                                           - sizeof(InnerNodeHeader))
+                                          / sizeof(Entry<KeyType, uint64_t>)
+                                          - 1 /* one less for the additional K/V pair */;
   static const uint64_t minNodeCapacity = maxNodeCapacity / 2;
-  static const uint64_t maxLeafCapacity = 4;
-//  static const uint64_t maxLeafCapacity = (BufferManager::DATA_SIZE_BYTE
-//                                           - sizeof(LeafHeader))
-//                                          / sizeof(Entry<KeyType, TID>);
+  static const uint64_t maxLeafCapacity = (BufferManager::DATA_SIZE_BYTE
+                                           - sizeof(LeafHeader))
+                                          / sizeof(Entry<KeyType, TID>);
   static const uint64_t minLeafCapacity = maxLeafCapacity / 2;
 };
 

@@ -7,22 +7,13 @@
 
 #include <stdint.h>
 #include <vector>
+#include <tuple>
+#include <utility>
 #include "Entry.hpp"
 #include "InnerNode.hpp"
 #include "Leaf.hpp"
 #include "../buffer/BufferManager.hpp"
 #include "../slotted_pages/TID.hpp"
-
-template<typename KeyType, typename KeyComparator>
-struct FrameNode {
-  BufferFrame *frame;
-  InnerNode<KeyType, KeyComparator> *node;
-};
-template<typename KeyType, typename KeyComparator>
-struct FrameLeaf {
-  BufferFrame *frame;
-  Leaf<KeyType, KeyComparator> *leaf;
-};
 
 /**
  * Entries less than the key are on the left, entries greater than or equal to the key are on the right.
@@ -62,18 +53,18 @@ private:
 
   inline bool isLeafHeight(size_t height);
 
-  inline FrameNode<KeyType, KeyComparator> splitInnerNode(
-          InnerNode<KeyType, KeyComparator> *node,
-          uint64_t nodePageId,
-          InnerNode<KeyType, KeyComparator> *parent);
+  inline std::pair<BufferFrame *, InnerNode<KeyType, KeyComparator> *> splitInnerNode(
+      InnerNode<KeyType, KeyComparator> *node,
+      uint64_t nodePageId,
+      InnerNode<KeyType, KeyComparator> *parent);
 
   /**
    * Returns the page id of the leaf that contains the key
    */
-  inline FrameLeaf<KeyType, KeyComparator> splitLeaf
-          (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
-           InnerNode<KeyType, KeyComparator> *parentNode,
-           KeyType key);
+  inline std::pair<BufferFrame *, Leaf<KeyType, KeyComparator> *> splitLeaf
+      (Leaf<KeyType, KeyComparator> *leaf, BufferFrame *leafFrame, uint64_t leafPageId,
+       InnerNode<KeyType, KeyComparator> *parentNode,
+       KeyType key);
 
 
   /**
@@ -85,10 +76,11 @@ private:
 
   Leaf<KeyType, KeyComparator> &getLeaf(KeyType key);
 
-  FrameNode<KeyType, KeyComparator> createEmptyNode(uint64_t pageId);
+  std::pair<BufferFrame *, InnerNode<KeyType, KeyComparator> *> createEmptyNode(
+      uint64_t currPageId);
 
 public:
-  inline BTree(BufferManager &bManager, uint64_t segmentId, KeyComparator &smaller);
+  BTree(BufferManager &bManager, uint64_t segmentId, KeyComparator &smaller);
 
   inline void insert(KeyType key, TID tid);
 

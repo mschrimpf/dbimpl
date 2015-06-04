@@ -30,9 +30,7 @@ struct InnerNode {
 
   void insertDefiniteFit(KeyType key, uint64_t leftValue, uint64_t rightValue, KeyComparator &smaller);
 
-  int getMaxForSearch();
-
-  int getMinForSearch();
+  std::string print();
 };
 
 #include "InnerNode.inl.cpp"

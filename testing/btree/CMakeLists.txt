@@ -5,6 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 add_executable(btree_unit_tests
     ../run_all_tests.cpp
     size_tests.cpp
+    EntriesHelperTests.cpp
     BTreeTestFixture.hpp
     unit_tests.cpp
     VisualizationTest.cpp)

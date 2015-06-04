@@ -55,12 +55,28 @@ TEST_F(BTreeTest, InsertFindTidMultiple) {
   }
 }
 
-TEST_F(BTreeTest, InsertToSplitFind) {
-  uint64_t valuesToInsert = sizeof(Leaf<uint64_t, TID>::entries) / sizeof(Entry<uint64_t, TID>) + 1;
-  checkInserts(0, valuesToInsert);
+TEST_F(BTreeTest, InsertFindTidScrambled) {
+  uint64_t keys[] = {1, 9, 2, 8, 3, 7, 4, 6, 5};
+  int count = 0;
+  for (const uint64_t key : keys) {
+    TID tid(key);
+    bTree->insert(key, tid);
+    count++;
+    ASSERT_EQ(count, bTree->size());
+
+    TID resultTid(0);
+    ASSERT_TRUE(bTree->lookup(key, resultTid));
+    ASSERT_EQ(tid.pageId, resultTid.pageId);
+    ASSERT_EQ(tid.slotOffset, resultTid.slotOffset);
+  }
 }
 
-TEST_F(BTreeTest, DISABLED_InsertToSplitFindReverse) {
+TEST_F(BTreeTest, InsertToSplitFind) {
+  uint64_t valuesToInsert = sizeof(Leaf<uint64_t, TID>::entries) / sizeof(Entry<uint64_t, TID>) + 1;
+  checkInserts(0, valuesToInsert - 1);
+}
+
+TEST_F(BTreeTest, InsertToSplitFindReverse) {
   uint64_t valuesToInsert = sizeof(Leaf<uint64_t, TID>::entries) / sizeof(Entry<uint64_t, TID>) + 1;
   checkInserts(valuesToInsert - 1, 0);
 }

@@ -40,7 +40,7 @@ set(BTREE_SOURCE_FILES
 #    btree/InnerNode.inl.cpp
 #    btree/Leaf.inl.cpp
 #    btree/BTreeVisualize.inl.cpp
-#    btree/EntriesSearch.inl.cpp
+#    btree/EntriesHelper.inl.cpp
     )
 
 add_library(database

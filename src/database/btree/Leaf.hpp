@@ -14,6 +14,7 @@
 
 template<typename KeyType, typename KeyComparator>
 struct Leaf {
+public:
   LeafHeader header;
 
   Entry<KeyType, TID> entries[
@@ -28,9 +29,13 @@ struct Leaf {
 
   inline void erase(KeyType key, KeyComparator &smaller);
 
-  int getMaxForSearch();
+  int getEntriesRightBound();
 
-  int getMinForSearch();
+  int getEntriesLeftBound();
+
+  std::string print();
+
+  bool lookup(KeyType key, KeyComparator &smaller, TID *resultTid);
 };
 
 #include "Leaf.inl.cpp"

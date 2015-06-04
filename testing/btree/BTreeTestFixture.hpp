@@ -36,16 +36,26 @@ public:
   };
 
   void checkInserts(uint64_t from, uint64_t to) {
-    for (uint64_t i = from; from <= to ? i < to : i >= to; from <= to ? i++ : i--) {
+    for (uint64_t i = from;
+         from <= to ? i <= to : true;
+         from <= to ? i++ : i--) {
       bTree->insert(i, TID(i));
+      if(from >= to && i == to) {
+        break;
+      }
     }
-    uint64_t expectedSize = from <= to ? to - from : from - to;
+    uint64_t expectedSize = from <= to ? to - from + 1 : from - to + 1;
     ASSERT_EQ(expectedSize, bTree->size());
 
-    for (uint64_t i = from; from <= to ? i < to : i >= to; from <= to ? i++ : i--) {
+    for (uint64_t i = from;
+         from <= to ? i <= to : true;
+         from <= to ? i++ : i--) {
       TID lookupTid;
       ASSERT_TRUE(bTree->lookup(i, lookupTid));
       ASSERT_EQ(i, lookupTid.pageId);
+      if(from >= to && i == to) {
+        break;
+      }
     }
   }
 };
