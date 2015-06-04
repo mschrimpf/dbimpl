@@ -45,7 +45,6 @@ void test(uint64_t n) {
     bTree.insert(getKey<T>(i), TID(i * i));
   }
   assert(bTree.size() == n);
-  uint64_t size = bTree.size();
 
   // Check if they can be retrieved
   for (uint64_t i = 0; i < n; ++i) {
@@ -61,6 +60,7 @@ void test(uint64_t n) {
 
   // Check if the right ones have been deleted
   for (uint64_t i = 0; i < n; ++i) {
+    printf("Lookup %lu\n", i);
     TID tid(0);
     if ((i % 7) == 0) {
       assert(!bTree.lookup(getKey<T>(i), tid));
@@ -71,8 +71,12 @@ void test(uint64_t n) {
   }
 
   // Delete everything
-  for (uint64_t i = 0; i < n; ++i)
-    bTree.erase(getKey<T>(i));
+  for (uint64_t i = 0; i < n; ++i) {
+    if ((i % 7) != 0) {
+      printf("Erase %lu\n", i);
+      bTree.erase(getKey<T>(i));
+    }
+  }
   assert(bTree.size() == 0);
 }
 
@@ -81,12 +85,15 @@ int main(int argc, char *argv[]) {
   const uint64_t n = (argc == 2) ? strtoul(argv[1], NULL, 10) : 1000 * 1000ul;
 
   // Test index with 64 bit unsigned integers
+  printf("Test uint64_t\n");
   test<uint64_t, MyCustomUInt64Cmp>(n);
 
   // Test index with 20 character strings
+  printf("Test char<20>\n");
   test<Char<20>, MyCustomCharCmp<20>>(n);
 
   // Test index with compound key
+  printf("Test intpair\n");
   test<IntPair, MyCustomIntPairCmp>(n);
   return 0;
 }
