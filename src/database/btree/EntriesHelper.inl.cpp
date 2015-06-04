@@ -40,8 +40,7 @@ public:
                                  KeyComparator &smaller) {
     int position = searchKeyPosition(entries, key, min, max, smaller);
     if (position < 0) {
-      std::string keyString = std::to_string(key);
-      throw std::invalid_argument("Key '" + keyString + "' not found");
+      throw std::invalid_argument("Key not found");
     }
 
     return position;
@@ -142,10 +141,10 @@ public:
         searchEntry,
         entryComparator);
     unsigned long pos = insertEntry - entries;
-    if(! smaller(insertEntry->key, key) && !smaller(key, insertEntry->key)) {
-      std::string keyString = std::to_string(key);
+    if(! smaller(insertEntry->key, key) && !smaller(key, insertEntry->key)
+        && min != max /* do not check when a new element is inserted */) {
       std::string posString = std::to_string(pos);
-      throw std::invalid_argument("Key '" + keyString + "' already exists at position " + posString);
+      throw std::invalid_argument("Key already exists at position " + posString);
     }
     return pos;
   }

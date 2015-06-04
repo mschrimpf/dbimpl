@@ -33,8 +33,6 @@ public:
 
   int getEntriesLeftBound();
 
-  std::string print();
-
   bool lookup(KeyType key, KeyComparator &smaller, TID *resultTid);
 };
 

@@ -5,6 +5,7 @@
 #include "../../src/database/buffer/BufferManager.hpp"
 #include "../../src/database/btree/BTree.hpp"
 #include "KeysAndComparators.hpp"
+#include "../../src/database/util/debug.h"
 
 std::vector<std::string> char20;
 std::vector<IntPair> intPairs;
@@ -39,8 +40,10 @@ void test(uint64_t n) {
 
 
   // Insert values
-  for (uint64_t i = 0; i < n; ++i)
+  for (uint64_t i = 0; i < n; ++i) {
+    debug("[BTree] Insert %lu\n", i);
     bTree.insert(getKey<T>(i), TID(i * i));
+  }
   assert(bTree.size() == n);
   uint64_t size = bTree.size();
 

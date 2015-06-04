@@ -24,7 +24,6 @@ BTree<KeyType, KeyComparator>::BTree(BufferManager &bManager, uint64_t segmentId
  */
 template<typename KeyType, typename KeyComparator>
 inline void BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
-  debug("Insert %lu=%lu\n", key, tid.pageId);
   size_t currHeight = 0;
   uint64_t currPageId = rootPageId;
   BufferFrame *parentFrame = nullptr;
@@ -127,17 +126,11 @@ BTree<KeyType, KeyComparator>::splitLeaf
   size_t splitLength = leaf->header.keyCount - arraySplitIndex;
   KeyType splitKey = leaf->entries[arraySplitIndex].key;
   size_t entrySize = sizeof(leaf->entries[0]);
-  debug("Splitting leaf %lu of size %zu at index %zu | key %lu | length %zu (real %zu with entrySize=%zu)\n",
-         leafPageId, leaf->header.keyCount, arraySplitIndex, splitKey, splitLength, splitLength * entrySize, entrySize);
-  debug(leaf->print().c_str());
   uint64_t newPageId = nextPageId();
 
   memcpy(newLeaf.entries, leaf->entries + arraySplitIndex, splitLength * entrySize);
   leaf->header.keyCount = arraySplitIndex;
   newLeaf.header.keyCount = splitLength;
-
-  debug(leaf->print().c_str());
-  debug(newLeaf.print().c_str());
 
   parent->insertDefiniteFit(splitKey, leafPageId, newPageId, smallerComparator);
 
@@ -163,14 +156,12 @@ std::pair<BufferFrame *, InnerNode<KeyType, KeyComparator> *>
 BTree<KeyType, KeyComparator>::createEmptyNode(
     uint64_t currPageId) {
   uint64_t newPageId = nextPageId();
-  debug("Create new node #%lu\n", newPageId);
   InnerNode<KeyType, KeyComparator> newNode;
   BufferFrame &newFrame = bufferManager.fixPage(this->segmentId, newPageId, true);
   void *frameData = newFrame.getData();
   memcpy(frameData, &newNode, sizeof(newNode));
   if (currPageId == rootPageId) {
     rootPageId = newPageId;
-    debug("Setting root page id to this page id %lu\n", rootPageId);
   }
   this->height++;
   return std::make_pair(
@@ -277,19 +268,12 @@ inline bool BTree<KeyType, KeyComparator>::searchForKey(
   if (isLeafHeight(currentHeight)) {
     Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(
         currentFrame->getData());
-    debug("Searching key %lu in leaf %lu (min=%d, max=%d)\n",
-           key, pageId, leaf->getEntriesLeftBound(), leaf->getEntriesRightBound());
-    debug(leaf->print().c_str());
     result = leaf->lookup(key, smallerComparator, &tid);
-    if (result) {
-      debug("Found!\n");
-    }
   } else {
     //we haven't reached the leaves yet
     InnerNode<KeyType, KeyComparator> *currNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (
         currentFrame->getData());
     pageId = currNode->getNextNode(key, smallerComparator);
-    debug("InnerNode result: pageId=%lu\n", pageId);
     result = searchForKey(key, tid, pageId, currentHeight + 1);
   }
 
