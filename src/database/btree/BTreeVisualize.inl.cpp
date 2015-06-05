@@ -15,7 +15,9 @@ std::string BTree<KeyType, KeyComparator>::visualize() {
   uint64_t node_id = 0;
   uint64_t leaf_id = 0;
   BufferFrame frame = bufferManager.fixPage(segmentId, rootPageId, false);
-  void *rootNode = frame.getData(); // TODO: retrieve from rootPageId
+  void *rootNode = frame.getData();
+
+  // check whether or not we only have leaves (if height == 0) and handle this case different
   if (height == 0) {
     Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(rootNode);
     stream << visualizeLeaf(leaf, 0);
@@ -25,15 +27,15 @@ std::string BTree<KeyType, KeyComparator>::visualize() {
   }
   bufferManager.unfixPage(frame, false);
 
-  uint64_t leafId = 0;
+  /* connect all leaves with each other (only in one direction) */
+  leaf_id = 0;
   Leaf<KeyType, KeyComparator> currentLeaf = getMostLeftLeaf(); //beginning most left leaf
   while (currentLeaf.header.nextLeafPageId != LeafHeader::INVALID_PAGE_ID) {
-    stream << "leaf" << leafId++ << ":next -> leaf" << leafId << "count;";
+    stream << "\nleaf" << leaf_id++ << ":next -> leaf" << leaf_id << "count;";
     currentLeaf = getLeaf(currentLeaf.header.nextLeafPageId);
   }
   stream << "\n}";
   return stream.str();
-  //std::cout << stream.str() << std::endl;
 }
 
 
@@ -41,35 +43,41 @@ template<typename KeyType, typename KeyComparator>
 std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparator> * node, uint64_t  * leafId, uint64_t * nodeId,
                                                   uint64_t curDepth) {
   std::stringstream stream;
+
+  // visualize node
   stream << "node" << * nodeId << " [shape=record, label=\n"
   << "\"<count> " << node->header.keyCount << " | <isLeaf> false";
-  for (uint64_t n = 1; n < node->header.keyCount + 1; ++n) {
-    Entry<KeyType, uint64_t> entry = node->entries[n];
-    //TODO maybe casting of value
-    stream << " | <key" << n << ">" << entry.key;
+  for (uint64_t n = 0; n < BTreeConstants<KeyType>::maxNodeCapacity; ++n) {
+    stream << " | <key" << n << "> ";
+    if (n < node->header.keyCount){
+      Entry<KeyType, uint64_t> entry = node->entries[n+1];
+      stream << entry.key;
+    }
   }
-  for (uint64_t n = 1; n < node->header.keyCount + 1; ++n) {
-    Entry<KeyType, uint64_t> entry = node->entries[n];
-    //TODO maybe casting of value
-    stream << " | <ptr" << n << "> *";
+  for (uint64_t n = 0; n < BTreeConstants<KeyType>::maxNodeCapacity; ++n) {
+    stream << " | <ptr" << n << ">";
+    if (n < node->header.keyCount){
+      stream << " *";
+    }
   }
-  stream << "\"]; \n";
+  stream << "\"];";
 
-  for (uint64_t n = 1; n < node->header.keyCount + 1; ++n){
+  // visualize all subnodes/leaves
+  for (uint64_t n = 0; n < node->header.keyCount; ++n){
     Entry<KeyType, uint64_t> entry = node->entries[n];
     BufferFrame frame = bufferManager.fixPage(segmentId, entry.value, false);
     if (curDepth == height) {
-      //we have reached the bottom
+      //we've reached the bottom -> all subnodes are leaves
       Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame.getData());
+      stream << "\n" << visualizeLeaf(leaf, * leafId);
       (*leafId)++;
-      visualizeLeaf(leaf, * leafId);
-      stream << "node" << * nodeId << ":ptr" << n << "-> leaf" << * leafId << ":count;";
+      stream << "\nnode" << * nodeId << ":ptr" << n << "-> leaf" << * leafId << ":count;";
     } else {
       InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> * >(frame.getData());
       (*nodeId)++;
-      visualizeNode(curNode, leafId, nodeId, curDepth + 1);
+      stream << "\n" << visualizeNode(curNode, leafId, nodeId, curDepth + 1);
       if (n < node->header.keyCount) {
-        stream << "node" << (* nodeId) - 1 << ":ptr" << n << " -> node" << * nodeId << ":count;";
+        stream << "\nnode" << (* nodeId) - 1 << ":ptr" << n << " -> node" << * nodeId << ":count;";
       }
     }
     bufferManager.unfixPage(frame, false);
@@ -83,14 +91,21 @@ std::string BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyCompar
   std::stringstream stream;
   stream << "leaf" << leafId << " [shape=record, label=\n"
   << "\"<count> " << leaf->header.keyCount << " | <isLeaf> true | ";
-  for (uint64_t e = 0; e < leaf->header.keyCount; ++e) {
-    Entry<KeyType, TID> entry = leaf->entries[e];
-    stream << " <key" << e << "> " << entry.key << " | ";
+  for (uint64_t e = 0; e < BTreeConstants<KeyType>::maxLeafCapacity; ++e) {
+    stream << " <key" << e << "> ";
+    if (e < leaf->header.keyCount){
+      Entry<KeyType, TID> entry = leaf->entries[e];
+      stream << entry.key;
+    }
+    stream << " | ";
   }
-  stream << " | "; //makes image more clear
-  for (uint64_t e = 0; e < leaf->header.keyCount; ++e){
-    Entry<KeyType, TID> entry = leaf->entries[e];
-    stream << " <tid" << e << "> " << entry.value.pageId << " | ";
+  for (uint64_t e = 0; e < BTreeConstants<KeyType>::maxLeafCapacity; ++e) {
+    stream << " <tid" << e << "> ";
+    if (e < leaf->header.keyCount) {
+      Entry<KeyType, TID> entry = leaf->entries[e];
+      stream << entry.value.pageId;
+    }
+    stream << " | ";
   }
   stream << " <next> ";
   if (leaf->header.nextLeafPageId != LeafHeader::INVALID_PAGE_ID){
