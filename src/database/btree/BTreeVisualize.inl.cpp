@@ -21,7 +21,7 @@ std::string BTree<KeyType, KeyComparator>::visualize() {
         stream << visualizeLeaf(leaf, 0);
     } else {
         InnerNode<KeyType, KeyComparator> *node = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (rootNode);
-        stream << visualizeNode(node, &leaf_id, &node_id, 0, height);
+        stream << visualizeNode(node, &leaf_id, &node_id, 0);
     }
     bufferManager.unfixPage(frame, false);
 
@@ -39,7 +39,7 @@ std::string BTree<KeyType, KeyComparator>::visualize() {
 
 template<typename KeyType, typename KeyComparator>
 std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparator> * node, uint64_t  * leafId, uint64_t * nodeId,
-                                                  uint64_t curDepth, uint64_t maxDepth) {
+                                                  uint64_t curDepth) {
   std::stringstream stream;
   stream << "node" << * nodeId << " [shape=record, label=\n"
   << "\"<count> " << node->header.keyCount << " | <isLeaf> false";
@@ -58,7 +58,7 @@ std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyC
   for (uint64_t n = 0; n < node->header.keyCount; ++n){
     Entry<KeyType, uint64_t> entry = node->entries[n];
     BufferFrame frame = bufferManager.fixPage(segmentId, entry.value, false);
-    if (curDepth == maxDepth) {
+    if (curDepth == height) {
       //we have reached the bottom
       Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame.getData());
       (*leafId)++;
@@ -67,7 +67,7 @@ std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyC
     } else {
       InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> * >(frame.getData());
       (*nodeId)++;
-      visualizeNode(curNode, leafId, nodeId, curDepth + 1, maxDepth);
+      visualizeNode(curNode, leafId, nodeId, curDepth + 1);
       if (n < node->header.keyCount) {
         stream << "node" << (* nodeId) - 1 << ":ptr" << n << " -> node" << * nodeId << ":count;";
       }

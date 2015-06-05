@@ -97,7 +97,7 @@ public:
   inline void outputVisualize();
 
   inline std::string visualizeNode(InnerNode<KeyType, KeyComparator> *node, uint64_t *leafId, uint64_t *nodeId,
-                            uint64_t curDepth, uint64_t maxDepth);
+                            uint64_t curDepth);
 
   inline std::string visualizeLeaf(Leaf<KeyType, KeyComparator> *leaf, uint64_t leafId);
 };
