@@ -86,22 +86,31 @@ inline void BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
 template<typename KeyType, typename KeyComparator>
 inline std::pair<BufferFrame *, InnerNode<KeyType, KeyComparator> *>
 BTree<KeyType, KeyComparator>::splitInnerNode
-    (InnerNode<KeyType, KeyComparator> *node, BufferFrame * nodeFrame, uint64_t nodePageId,
+    (InnerNode<KeyType, KeyComparator> *node, BufferFrame *nodeFrame, uint64_t nodePageId,
      InnerNode<KeyType, KeyComparator> *parent,
      KeyType key) {
+  printf(node->print().c_str());
   // invariant: parent node has space for one more entry
   InnerNode<KeyType, KeyComparator> newNode;
-  size_t arraySplitIndex = node->header.keyCount / 2 + 1 /* first key value pair */;
-  size_t splitLength = node->header.keyCount + 1 - arraySplitIndex;
-  KeyType splitKey = node->entries[arraySplitIndex].key;
+  size_t keysHalf = node->header.keyCount / 2;
+  size_t splitKeyIndex = keysHalf + 1 /* first key value pair */;
+  KeyType splitKey = node->entries[splitKeyIndex].key;
+  size_t newKeysCount = node->header.keyCount - keysHalf;
   size_t entrySize = sizeof(node->entries[0]);
   uint64_t newPageId = nextPageId();
 
-  memcpy(newNode.entries, node->entries + arraySplitIndex, splitLength * entrySize);
-  node->header.keyCount = arraySplitIndex;
-  newNode.header.keyCount = splitLength;
+  memcpy(newNode.entries /* start with the first key/value pair */,
+         node->entries + keysHalf /* begin with the first key/value pair (key is irrelevant) */,
+         (newKeysCount + 1) * entrySize /* +1 since the first entry is not relevant */);
+
+  node->header.keyCount = keysHalf;
+  newNode.header.keyCount = newKeysCount;
 
   parent->insertDefiniteFit(splitKey, nodePageId, newPageId, smallerComparator);
+
+  printf(node->print().c_str());
+  printf(newNode.print().c_str());
+  printf(parent->print().c_str());
 
   BufferFrame &newFrame = bufferManager.fixPage(this->segmentId, newPageId, true);
   void *newFrameData = newFrame.getData();

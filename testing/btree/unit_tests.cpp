@@ -72,17 +72,17 @@ TEST_F(BTreeTest, InsertFindTidScrambled) {
 }
 
 TEST_F(BTreeTest, InsertToSplitFind) {
-  uint64_t valuesToInsert = sizeof(Leaf<uint64_t, TID>::entries) / sizeof(Entry<uint64_t, TID>) + 1;
-  checkInserts(0, valuesToInsert - 1);
+  uint64_t valuesToInsert = maxLeafCapacity + 1;
+  checkInserts(0, valuesToInsert);
 }
 
 TEST_F(BTreeTest, InsertToSplitFindReverse) {
-  uint64_t valuesToInsert = sizeof(Leaf<uint64_t, TID>::entries) / sizeof(Entry<uint64_t, TID>) + 1;
-  checkInserts(valuesToInsert - 1, 0);
+  uint64_t valuesToInsert = maxLeafCapacity + 1;
+  checkInserts(valuesToInsert, 0);
 }
 
 TEST_F(BTreeTest, InsertTwoSplitsFind) {
-  uint64_t valuesToInsert = (sizeof(Leaf<uint64_t, TID>::entries) / sizeof(Entry<uint64_t, TID>) + 1) * 2;
+  uint64_t valuesToInsert = (maxLeafCapacity + 1) * 2;
   for (uint64_t i = 0; i < valuesToInsert; ++i) {
     bTree->insert(i, TID(i));
   }
@@ -93,6 +93,11 @@ TEST_F(BTreeTest, InsertTwoSplitsFind) {
     ASSERT_TRUE(bTree->lookup(i, lookupTid));
     ASSERT_EQ(i, lookupTid.pageId);
   }
+}
+
+TEST_F(BTreeTest, InsertNodeSplitFind) {
+  uint64_t valuesToInsert = maxLeafCapacity * maxNodeCapacity + 1;
+  checkInserts(0, valuesToInsert);
 }
 
 TEST_F(BTreeTest, InsertRemoveSize) {

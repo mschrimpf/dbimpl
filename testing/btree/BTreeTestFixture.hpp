@@ -19,6 +19,8 @@ private:
   MyCustomUInt64Cmp cmp;
 
 public:
+  const uint64_t maxLeafCapacity = BTreeConstants<uint64_t>::maxLeafCapacity;
+  const uint64_t maxNodeCapacity = BTreeConstants<uint64_t>::maxNodeCapacity;
   BTree<uint64_t, MyCustomUInt64Cmp> *bTree;
 
   void SetUp() {
@@ -36,24 +38,24 @@ public:
   };
 
   void checkInserts(uint64_t from, uint64_t to) {
-    for (uint64_t i = from;
-         from <= to ? i <= to : true;
+    for (uint64_t i = from <= to ? from : from - 1;
+         from <= to ? i < to : true;
          from <= to ? i++ : i--) {
       bTree->insert(i, TID(i));
-      if(from >= to && i == to) {
+      if (from >= to && i == to) {
         break;
       }
     }
-    uint64_t expectedSize = from <= to ? to - from + 1 : from - to + 1;
+    uint64_t expectedSize = from <= to ? to - from : from - to;
     ASSERT_EQ(expectedSize, bTree->size());
 
-    for (uint64_t i = from;
-         from <= to ? i <= to : true;
+    for (uint64_t i = from <= to ? from : from - 1;
+         from <= to ? i < to : true;
          from <= to ? i++ : i--) {
       TID lookupTid;
       ASSERT_TRUE(bTree->lookup(i, lookupTid));
       ASSERT_EQ(i, lookupTid.pageId);
-      if(from >= to && i == to) {
+      if (from >= to && i == to) {
         break;
       }
     }

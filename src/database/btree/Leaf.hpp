@@ -18,7 +18,7 @@ public:
   LeafHeader header;
 
   Entry<KeyType, TID> entries[
-      BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity];
+      BTreeConstants<KeyType>::maxLeafCapacity];
 
   Leaf(uint64_t previousPageId, uint64_t nextPageId)
       : header(previousPageId, nextPageId) { }

@@ -9,7 +9,7 @@
 
 template<typename KeyType, typename KeyComparator>
 inline bool Leaf<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
-  return header.keyCount < BTreeConstants<KeyType, KeyComparator>::maxLeafCapacity;
+  return header.keyCount < BTreeConstants<KeyType>::maxLeafCapacity;
 }
 
 template<typename KeyType, typename KeyComparator>

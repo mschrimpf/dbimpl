@@ -15,7 +15,7 @@ inline uint64_t InnerNode<KeyType, KeyComparator>::getNextNode(KeyType key, KeyC
 
 template<typename KeyType, typename KeyComparator>
 inline bool InnerNode<KeyType, KeyComparator>::hasSpaceForOneMoreEntry() {
-  return this->header.keyCount < BTreeConstants<KeyType, KeyComparator>::maxNodeCapacity;
+  return this->header.keyCount < BTreeConstants<KeyType>::maxNodeCapacity;
 }
 
 template<typename KeyType, typename KeyComparator>
@@ -29,4 +29,22 @@ void InnerNode<KeyType, KeyComparator>::insertDefiniteFit(KeyType key, uint64_t 
   entries[insertPosition].value = rightValue;
   entries[insertPosition - 1].value = leftValue;
   header.keyCount++;
+}
+
+template<typename KeyType, typename KeyComparator>
+std::string InnerNode<KeyType, KeyComparator>::print() {
+  std::stringstream out;
+  out << "InnerNode[keyCount=" << header.keyCount << "] ";
+  if (header.keyCount > 0) {
+    for (int i = 0; i < header.keyCount + 1; i++) {
+      if (i == 0) {
+        out << "(" << entries[i].value;
+      } else {
+        out << ") " << entries[i].key << " (" << entries[i].value;
+      }
+    }
+    out << ")";
+  }
+  out << "\n";
+  return out.str();
 }

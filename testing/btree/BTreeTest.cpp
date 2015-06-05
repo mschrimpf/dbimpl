@@ -41,7 +41,6 @@ void test(uint64_t n) {
 
   // Insert values
   for (uint64_t i = 0; i < n; ++i) {
-    debug("[BTree] Insert %lu\n", i);
     bTree.insert(getKey<T>(i), TID(i * i));
   }
   assert(bTree.size() == n);
@@ -60,7 +59,6 @@ void test(uint64_t n) {
 
   // Check if the right ones have been deleted
   for (uint64_t i = 0; i < n; ++i) {
-    printf("Lookup %lu\n", i);
     TID tid(0);
     if ((i % 7) == 0) {
       assert(!bTree.lookup(getKey<T>(i), tid));
@@ -73,7 +71,6 @@ void test(uint64_t n) {
   // Delete everything
   for (uint64_t i = 0; i < n; ++i) {
     if ((i % 7) != 0) {
-      printf("Erase %lu\n", i);
       bTree.erase(getKey<T>(i));
     }
   }
