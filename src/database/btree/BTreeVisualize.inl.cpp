@@ -63,13 +63,13 @@ std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyC
       Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame.getData());
       (*leafId)++;
       visualizeLeaf(leaf, * leafId);
-      stream << "node" << * nodeId << ":ptr" << n << "-> leaf" << * leafId << ":keyCount;";
+      stream << "node" << * nodeId << ":ptr" << n << "-> leaf" << * leafId << ":count;";
     } else {
       InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> * >(frame.getData());
       (*nodeId)++;
       visualizeNode(curNode, leafId, nodeId, curDepth + 1, maxDepth);
       if (n < node->header.keyCount) {
-        stream << "node" << (* nodeId) - 1 << ":ptr" << n << " -> node" << * nodeId << ":keyCount;";
+        stream << "node" << (* nodeId) - 1 << ":ptr" << n << " -> node" << * nodeId << ":count;";
       }
     }
     bufferManager.unfixPage(frame, false);
