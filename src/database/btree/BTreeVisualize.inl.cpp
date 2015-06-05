@@ -42,12 +42,22 @@ std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyC
                                                   uint64_t curDepth, uint64_t maxDepth) {
   std::stringstream stream;
   stream << "node" << * nodeId << " [shape=record, label=\n"
-  << "\"<count> " << node->header.keyCount << " | <isLeaf> false | ";
-  for (uint64_t n = 1; n < node->header.keyCount + 1; ++n) {
+  << "\"<count> " << node->header.keyCount << " | <isLeaf> false";
+  for (uint64_t n = 0; n < node->header.keyCount; ++n) {
+    Entry<KeyType, uint64_t> entry = node->entries[n];
+    //TODO maybe casting of value
+    stream << " | <key" << n << ">" << entry.key;
+  }
+  for (uint64_t n = 0; n < node->header.keyCount; ++n) {
+    Entry<KeyType, uint64_t> entry = node->entries[n];
+    //TODO maybe casting of value
+    stream << " | <ptr" << n << "> *";
+  }
+  stream << "\"]; \n";
+
+  for (uint64_t n = 0; n < node->header.keyCount; ++n){
     Entry<KeyType, uint64_t> entry = node->entries[n];
     BufferFrame frame = bufferManager.fixPage(segmentId, entry.value, false);
-    //TODO maybe casting of value
-    stream << "<key" << n << ">" << entry.key << "<value" << n << "> " << entry.value << " | <next> *\"]; \n";
     if (curDepth == maxDepth) {
       //we have reached the bottom
       Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame.getData());
@@ -75,7 +85,11 @@ std::string BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyCompar
   << "\"<count> " << leaf->header.keyCount << " | <isLeaf> true | ";
   for (uint64_t e = 0; e < leaf->header.keyCount; ++e) {
     Entry<KeyType, TID> entry = leaf->entries[e];
-    stream << " <key" << e << "> " << entry.key << " <value" << e << "> " << entry.value.pageId << " | ";
+    stream << " <key" << e << "> " << entry.key << " | ";
+  }
+  for (uint64_t e = 0; e < leaf->header.keyCount; ++e){
+    Entry<KeyType, TID> entry = leaf->entries[e];
+    stream << " <tid" << e << "> " << entry.value.pageId << " | ";
   }
   stream << " <next> ";
   if (leaf->header.nextLeafPageId != LeafHeader::INVALID_PAGE_ID){
