@@ -92,12 +92,12 @@ public:
 
   inline uint64_t size();
 
-  inline void visualize();
+  inline std::string visualize();
 
-  inline void visualizeNode(InnerNode<KeyType, KeyComparator> *node, uint64_t *leafId, uint64_t *nodeId,
+  inline std::string visualizeNode(InnerNode<KeyType, KeyComparator> *node, uint64_t *leafId, uint64_t *nodeId,
                             uint64_t curDepth, uint64_t maxDepth);
 
-  inline void visualizeLeaf(Leaf<KeyType, KeyComparator> *leaf, uint64_t leafId);
+  inline std::string visualizeLeaf(Leaf<KeyType, KeyComparator> *leaf, uint64_t leafId);
 };
 
 #include "BTree.inl.cpp"

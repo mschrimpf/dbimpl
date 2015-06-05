@@ -7,23 +7,20 @@
 #include "BTree.hpp"
 
 template<typename KeyType, typename KeyComparator>
-void BTree<KeyType, KeyComparator>::visualize() {
+std::string BTree<KeyType, KeyComparator>::visualize() {
     std::stringstream stream;
     stream << "digraph myBTree { \n";
-    stream << "node [shape=record];";
-  std::cout << stream.str() << std::endl;
-  stream.str("");
-  stream.clear();
+    stream << "node [shape=record];\n";
   uint64_t node_id = 0;
   uint64_t leaf_id = 0;
     BufferFrame frame = bufferManager.fixPage(segmentId, rootPageId, false);
     void *rootNode = frame.getData(); // TODO: retrieve from rootPageId
     if (height == 0) {
         Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(rootNode);
-        visualizeLeaf(leaf, 0);
+        stream << visualizeLeaf(leaf, 0);
     } else {
         InnerNode<KeyType, KeyComparator> *node = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (rootNode);
-        visualizeNode(node, &leaf_id, &node_id, 0, height);
+        stream << visualizeNode(node, &leaf_id, &node_id, 0, height);
     }
     bufferManager.unfixPage(frame, false);
 
@@ -33,13 +30,14 @@ void BTree<KeyType, KeyComparator>::visualize() {
         stream << "leaf" << leafId++ << ":next -> leaf" << leafId << "count;";
         currentLeaf = getLeaf(currentLeaf.header.nextLeafPageId);
     }
-    stream << "}";
-    std::cout << stream.str() << std::endl;
+    stream << "\n}";
+  return stream.str();
+    //std::cout << stream.str() << std::endl;
 }
 
 
 template<typename KeyType, typename KeyComparator>
-void BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparator> * node, uint64_t  * leafId, uint64_t * nodeId,
+std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparator> * node, uint64_t  * leafId, uint64_t * nodeId,
                                                   uint64_t curDepth, uint64_t maxDepth) {
   std::stringstream stream;
   stream << "node" << * nodeId << " [shape=record, label=\n"
@@ -65,11 +63,12 @@ void BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparat
     }
     bufferManager.unfixPage(frame, false);
   }
-  std::cout << stream.str() << std::endl;
+  return stream.str();
+  //std::cout << stream.str() << std::endl;
 }
 
 template<class KeyType, class KeyComparator>
-void BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyComparator> * leaf, uint64_t leafId) {
+std::string BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyComparator> * leaf, uint64_t leafId) {
   std::stringstream stream;
   stream << "leaf" << leafId << " [shape=record, label=\n"
   << "\"<count> " << leaf->header.keyCount << " | ";
@@ -82,5 +81,6 @@ void BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyComparator> *
     stream << " *";
   }
   stream << "\"];";
-  std::cout << stream.str() << std::endl;
+  return stream.str();
+  //std::cout << stream.str() << std::endl;
 }
