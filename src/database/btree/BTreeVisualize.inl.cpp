@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include "BTree.hpp"
+#include <fcntl.h>
 
 template<typename KeyType, typename KeyComparator>
 std::string BTree<KeyType, KeyComparator>::visualize() {
@@ -41,7 +42,7 @@ std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyC
                                                   uint64_t curDepth, uint64_t maxDepth) {
   std::stringstream stream;
   stream << "node" << * nodeId << " [shape=record, label=\n"
-  << "\"<count> " << node->header.keyCount << " | ";
+  << "\"<count> " << node->header.keyCount << " | <isLeaf> false | ";
   for (uint64_t n = 1; n < node->header.keyCount + 1; ++n) {
     Entry<KeyType, uint64_t> entry = node->entries[n];
     BufferFrame frame = bufferManager.fixPage(segmentId, entry.value, false);
@@ -71,16 +72,35 @@ template<class KeyType, class KeyComparator>
 std::string BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyComparator> * leaf, uint64_t leafId) {
   std::stringstream stream;
   stream << "leaf" << leafId << " [shape=record, label=\n"
-  << "\"<count> " << leaf->header.keyCount << " | ";
+  << "\"<count> " << leaf->header.keyCount << " | <isLeaf> true | ";
   for (uint64_t e = 0; e < leaf->header.keyCount; ++e) {
     Entry<KeyType, TID> entry = leaf->entries[e];
-    stream << "<key" << e << ">" << entry.key << "<value" << e << ">" << entry.value.pageId;
+    stream << " <key" << e << "> " << entry.key << " <value" << e << "> " << entry.value.pageId << " | ";
   }
-  stream << " | <next> ";
+  stream << " <next> ";
   if (leaf->header.nextLeafPageId != LeafHeader::INVALID_PAGE_ID){
     stream << " *";
   }
   stream << "\"];";
   return stream.str();
   //std::cout << stream.str() << std::endl;
+}
+
+template<typename KeyType, typename KeyComparator>
+void BTree<KeyType, KeyComparator>::outputVisualize() {
+  std::string result = visualize();
+  char filename[] = "/tmp/tree.dot";
+  char output[] = "/tmp/tree.png";
+  int fd = open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  if (fd == -1){
+    //ERROR
+    std::cerr << "Could not open file " << filename << std::endl;
+  }
+  write(fd, result.c_str(), strlen(result.c_str()));
+  close(fd);
+  std::stringstream cmd;
+  cmd << "dot -Tpng " << filename << " -o " << output;
+  system(cmd.str().c_str());
+
+  //unlink(filename); //remove file
 }

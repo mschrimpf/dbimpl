@@ -15,5 +15,12 @@ TEST_F(BTreeTest, TestBTreeVisualization) {
     std::cout << "Adding Pair(" << id << ",0) to bTree\n";
     bTree->insert(id, TID(0));
   }
-  std::cout << "Visualization\n" << bTree->visualize();
+  bTree->outputVisualize();
+  //std::cout << "Visualization\n" << bTree->visualize();
 }
+
+
+
+
+
+

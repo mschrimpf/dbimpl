@@ -94,6 +94,8 @@ public:
 
   inline std::string visualize();
 
+  inline void outputVisualize();
+
   inline std::string visualizeNode(InnerNode<KeyType, KeyComparator> *node, uint64_t *leafId, uint64_t *nodeId,
                             uint64_t curDepth, uint64_t maxDepth);
 
