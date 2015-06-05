@@ -87,6 +87,7 @@ std::string BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyCompar
     Entry<KeyType, TID> entry = leaf->entries[e];
     stream << " <key" << e << "> " << entry.key << " | ";
   }
+  stream << " | "; //makes image more clear
   for (uint64_t e = 0; e < leaf->header.keyCount; ++e){
     Entry<KeyType, TID> entry = leaf->entries[e];
     stream << " <tid" << e << "> " << entry.value.pageId << " | ";
@@ -103,8 +104,8 @@ std::string BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyCompar
 template<typename KeyType, typename KeyComparator>
 void BTree<KeyType, KeyComparator>::outputVisualize() {
   std::string result = visualize();
-  char filename[] = "/tmp/tree.dot";
-  char output[] = "/tmp/tree.png";
+  char filename[] = "tree.dot";
+  char output[] = "tree.png";
   int fd = open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if (fd == -1){
     //ERROR
