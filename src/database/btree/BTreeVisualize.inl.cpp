@@ -14,6 +14,8 @@ void BTree<KeyType, KeyComparator>::visualize() {
   std::cout << stream.str() << std::endl;
   stream.str("");
   stream.clear();
+  uint64_t node_id = 0;
+  uint64_t leaf_id = 0;
     BufferFrame frame = bufferManager.fixPage(segmentId, rootPageId, false);
     void *rootNode = frame.getData(); // TODO: retrieve from rootPageId
     if (height == 0) {
@@ -21,7 +23,7 @@ void BTree<KeyType, KeyComparator>::visualize() {
         visualizeLeaf(leaf, 0);
     } else {
         InnerNode<KeyType, KeyComparator> *node = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (rootNode);
-        visualizeNode(node, 0, 0, 0, height);
+        visualizeNode(node, &leaf_id, &node_id, 0, height);
     }
     bufferManager.unfixPage(frame, false);
 
@@ -37,10 +39,10 @@ void BTree<KeyType, KeyComparator>::visualize() {
 
 
 template<typename KeyType, typename KeyComparator>
-void BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparator> * node, uint64_t *leafId, uint64_t *nodeId,
+void BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparator> * node, uint64_t  * leafId, uint64_t * nodeId,
                                                   uint64_t curDepth, uint64_t maxDepth) {
   std::stringstream stream;
-  stream << "node" << *nodeId << " [shape=record, label=\n"
+  stream << "node" << * nodeId << " [shape=record, label=\n"
   << "\"<count> " << node->header.keyCount << " | ";
   for (uint64_t n = 1; n < node->header.keyCount + 1; ++n) {
     Entry<KeyType, uint64_t> entry = node->entries[n];
@@ -51,14 +53,14 @@ void BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyComparat
       //we have reached the bottom
       Leaf<KeyType, KeyComparator> *leaf = reinterpret_cast<Leaf<KeyType, KeyComparator> *>(frame.getData());
       (*leafId)++;
-      visualizeLeaf(leaf, *leafId);
-      stream << "node" << nodeId << ":ptr" << n << "-> leaf" << leafId << ":keyCount;";
+      visualizeLeaf(leaf, * leafId);
+      stream << "node" << * nodeId << ":ptr" << n << "-> leaf" << * leafId << ":keyCount;";
     } else {
       InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> * >(frame.getData());
       (*nodeId)++;
       visualizeNode(curNode, leafId, nodeId, curDepth + 1, maxDepth);
       if (n < node->header.keyCount) {
-        stream << "node" << nodeId - 1 << ":ptr" << n << " -> node" << nodeId << ":keyCount;";
+        stream << "node" << (* nodeId) - 1 << ":ptr" << n << " -> node" << * nodeId << ":keyCount;";
       }
     }
     bufferManager.unfixPage(frame, false);
