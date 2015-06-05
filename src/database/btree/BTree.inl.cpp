@@ -336,7 +336,7 @@ Leaf<KeyType, KeyComparator> BTree<KeyType, KeyComparator>::getMostLeftLeaf() {
     if (parentFrame != nullptr) {
       bufferManager.unfixPage(*parentFrame, false);
     }
-    Entry<KeyType, uint64_t> entry = curNode->entries[1]; //most left value = 1
+    Entry<KeyType, uint64_t> entry = curNode->entries[0]; //most left value = 1
     uint64_t pageId = entry.value;
     parentFrame = currentFrame;
     currentFrame = &bufferManager.fixPage(this->segmentId, pageId, false);
