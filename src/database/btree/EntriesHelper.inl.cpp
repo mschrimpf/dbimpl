@@ -105,7 +105,7 @@ public:
                           int min, int max,
                           KeyComparator &smaller) {
     validateMinLessEqualMax(min, max);
-    while (max != min) {
+    while (min < max) {
       int mid = (max + min) / 2;
       KeyType entryKey = entries[mid].key;
       if (smaller(entryKey, key)) {
