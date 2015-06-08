@@ -208,10 +208,11 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
   Leaf<KeyType, KeyComparator> leftLeaf = getLeaf(left);
   int position = EntriesHelper::findPosition<KeyType, KeyComparator, TID>(
       leftLeaf.entries, left,
-      1, leftLeaf.header.keyCount + 1,
+      0, leftLeaf.header.keyCount,
       smallerComparator);
+  BufferFrame * currentFrame = nullptr;
   while (true) {
-    while (position < leftLeaf.header.keyCount + 1) {
+    while (position < leftLeaf.header.keyCount) {
       Entry<KeyType, TID> entry = leftLeaf.entries[position];
       if (entry.key >= begin && entry.key <= end) {
         lookupSet.push_back(entry.value);
@@ -220,13 +221,18 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
       }
       position++;
     }
-    if (position == leftLeaf.header.keyCount + 1) {
+    if (position == leftLeaf.header.keyCount) {
       //reached end of leaf and need to check the next leaf
       uint64_t nextLeaf = leftLeaf.header.nextLeafPageId;
       if (nextLeaf != LeafHeader::INVALID_PAGE_ID) {
         // set next leaf and reset position to first entry
-        leftLeaf = getLeaf(nextLeaf);
-        position = 1;
+
+        if (currentFrame != nullptr){
+          bufferManager.unfixPage(*currentFrame, false);
+        }
+        currentFrame = &bufferManager.fixPage(this->segmentId, nextLeaf, true);
+        leftLeaf = * reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
+        position = 0;
       } else {
         // end of leaves reached, we cannot look further so we return the set
         return lookupSet;
@@ -236,6 +242,7 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
     }
   }
 }
+
 
 
 template<typename KeyType, typename KeyComparator>
