@@ -116,18 +116,20 @@ TEST_F(BTreeTest, InsertSameKeyThrowsAndSizeStaysTheSame) {
   ASSERT_EQ(1, bTree->size());
 }
 
-TEST_F(BTreeTest, LookupRange) {
-  for (unsigned id = 0; id < 20; ++id) {
-    bTree->insert(id, TID(0, id));
+TEST_F(BTreeTest, LookupAfterDelete_TreeAfterFirstSplit) {
+  for (uint64_t i = 0; i <= 11; i++) {
+    bTree->insert(i, TID(i));
   }
-  int cur = 0;
-  std::vector<TID> vec = bTree->lookupRange(cur, 20);
-  ASSERT_EQ(vec.size(), 20);
-  for (std::vector<TID>::iterator it = vec.begin(); it != vec.end(); ++it) {
-    TID tid = *it;
-    ASSERT_EQ(tid.slotOffset, 0);
-    ASSERT_EQ(tid.pageId, cur);
-    cur++;
+  bTree->erase(0);
+  bTree->erase(7);
+  bTree->outputVisualize();
+  TID resultTid;
+  for (uint64_t i = 1; i <= 11; i++) {
+    if ((i % 7) == 0) {
+      ASSERT_FALSE(bTree->lookup(i, resultTid));
+    } else {
+      ASSERT_TRUE(bTree->lookup(i, resultTid));
+    }
   }
 }
 
