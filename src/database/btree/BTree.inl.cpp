@@ -44,6 +44,7 @@ inline void BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
         auto newNode = createEmptyNode(currPageId);
         parentFrame = newNode.first;
         parentNode = newNode.second;
+        currHeight++;
       }
       auto splitResult = splitInnerNode(currNode, currFrame, currPageId,
                                         parentNode, key);
@@ -310,6 +311,9 @@ inline uint64_t BTree<KeyType, KeyComparator>::size() {
 
 template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::isLeafHeight(size_t height) {
+  if (height > this->height){
+    throw std::invalid_argument("Height > this.height");
+  }
   return height == this->height;
 }
 
