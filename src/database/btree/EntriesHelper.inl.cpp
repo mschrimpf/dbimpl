@@ -120,9 +120,9 @@ public:
   // lower bound implementation using iterative binary search
   template<typename KeyType, typename KeyComparator, typename ValueType>
   static unsigned long findInsertPosition(Entry<KeyType, ValueType> entries[],
-                                KeyType key,
-                                int min, int max,
-                                KeyComparator &smaller) {
+                                          KeyType key,
+                                          int min, int max,
+                                          KeyComparator &smaller) {
     struct EntryComparator {
       KeyComparator smaller;
 
@@ -141,7 +141,7 @@ public:
         searchEntry,
         entryComparator);
     unsigned long pos = insertEntry - entries;
-    if(! smaller(insertEntry->key, key) && !smaller(key, insertEntry->key)
+    if (!smaller(insertEntry->key, key) && !smaller(key, insertEntry->key)
         && min != max /* do not check when a new element is inserted */) {
       std::string posString = std::to_string(pos);
       throw std::invalid_argument("Key already exists at position " + posString);
