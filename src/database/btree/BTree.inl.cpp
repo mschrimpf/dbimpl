@@ -49,7 +49,6 @@ inline void BTree<KeyType, KeyComparator>::insert(KeyType key, TID tid) {
                                         parentNode, key);
       currFrame = splitResult.first;
       currNode = splitResult.second;
-      continue;
     }
     currPageId = currNode->getNextNode(key, this->smallerComparator);
     currHeight++;
@@ -147,6 +146,7 @@ BTree<KeyType, KeyComparator>::splitLeaf
   KeyType splitKey = leaf->entries[arraySplitIndex].key;
   size_t entrySize = sizeof(leaf->entries[0]);
   uint64_t newPageId = nextPageId();
+  leaf->header.nextLeafPageId = newPageId;
 
   memcpy(newLeaf.entries, leaf->entries + arraySplitIndex, splitLength * entrySize);
   leaf->header.keyCount = arraySplitIndex;
