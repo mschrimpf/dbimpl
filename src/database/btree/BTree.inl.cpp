@@ -217,7 +217,7 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
       if (entry.key >= begin && entry.key <= end) {
         lookupSet.push_back(entry.value);
       } else {
-        return lookupSet;
+        break;
       }
       position++;
     }
@@ -228,24 +228,23 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
         // set next leaf and reset position to first entry
         if (currentFrame != nullptr){
           bufferManager.unfixPage(*currentFrame, false);
+          currentFrame = nullptr;
         }
         currentFrame = &bufferManager.fixPage(this->segmentId, nextLeaf, true);
         leftLeaf = * reinterpret_cast<Leaf<KeyType, KeyComparator> *>(currentFrame->getData());
         position = 0;
       } else {
-        if (currentFrame != nullptr){
-          bufferManager.unfixPage(*currentFrame, false);
-        }
         // end of leaves reached, we cannot look further so we return the set
-        return lookupSet;
+        break;
       }
     } else {
-      if (currentFrame != nullptr){
-        bufferManager.unfixPage(*currentFrame, false);
-      }
-      return lookupSet;
+      break;
     }
   }
+  if (currentFrame != nullptr){
+    bufferManager.unfixPage(*currentFrame, false);
+  }
+  return lookupSet;
 }
 
 
