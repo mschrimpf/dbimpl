@@ -6,6 +6,7 @@
 #include <iostream>
 #include "BTree.hpp"
 #include <fcntl.h>
+#include <unistd.h>
 
 template<typename KeyType, typename KeyComparator>
 std::string BTree<KeyType, KeyComparator>::visualize() {
