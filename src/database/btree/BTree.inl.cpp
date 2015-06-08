@@ -89,7 +89,6 @@ BTree<KeyType, KeyComparator>::splitInnerNode
     (InnerNode<KeyType, KeyComparator> *node, BufferFrame *nodeFrame, uint64_t nodePageId,
      InnerNode<KeyType, KeyComparator> *parent,
      KeyType key) {
-  printf(node->print().c_str());
   // invariant: parent node has space for one more entry
   InnerNode<KeyType, KeyComparator> newNode;
   size_t keysHalf = node->header.keyCount / 2;
@@ -107,10 +106,6 @@ BTree<KeyType, KeyComparator>::splitInnerNode
   newNode.header.keyCount = newKeysCount;
 
   parent->insertDefiniteFit(splitKey, nodePageId, newPageId, smallerComparator);
-
-  printf(node->print().c_str());
-  printf(newNode.print().c_str());
-  printf(parent->print().c_str());
 
   BufferFrame &newFrame = bufferManager.fixPage(this->segmentId, newPageId, true);
   void *newFrameData = newFrame.getData();
@@ -254,24 +249,14 @@ BufferFrame *BTree<KeyType, KeyComparator>::findFrameForKey(KeyType key, bool ex
   BufferFrame *currentFrame = &bufferManager.fixPage(this->segmentId, rootPageId, exclusive);
   int currentDepth = 0;
   BufferFrame *parentFrame = nullptr;
-  while (currentDepth != height) {
+  while (!isLeafHeight(currentDepth)) {
     InnerNode<KeyType, KeyComparator> *curNode = reinterpret_cast<InnerNode<KeyType, KeyComparator> *> (currentFrame->getData());
     if (parentFrame != nullptr) {
       bufferManager.unfixPage(*parentFrame, false);
     }
-    int curPosition = EntriesHelper::findPosition<KeyType, KeyComparator, uint64_t>(
-        curNode->entries, key, 1,
-        curNode->header.keyCount + 1,
-        smallerComparator);
-    if (curPosition < curNode->header.keyCount) {
-      Entry<KeyType, uint64_t> entry = curNode->entries[curPosition];
-      uint64_t pageId = entry.value;
-      parentFrame = currentFrame;
-      currentFrame = &bufferManager.fixPage(this->segmentId, pageId, exclusive);
-    } else {
-      //value not found
-      //should never happen?
-    }
+    int nextPageId = curNode->getNextNode(key, smallerComparator);
+    parentFrame = currentFrame;
+    currentFrame = &bufferManager.fixPage(this->segmentId, nextPageId, exclusive);
     currentDepth++;
   }
   if (parentFrame != nullptr) {
@@ -311,7 +296,7 @@ inline uint64_t BTree<KeyType, KeyComparator>::size() {
 
 template<typename KeyType, typename KeyComparator>
 inline bool BTree<KeyType, KeyComparator>::isLeafHeight(size_t height) {
-  if (height > this->height){
+  if (height > this->height) {
     throw std::invalid_argument("Height > this.height");
   }
   return height == this->height;
