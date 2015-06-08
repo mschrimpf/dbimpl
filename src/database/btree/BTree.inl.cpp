@@ -214,10 +214,8 @@ inline std::vector<TID> BTree<KeyType, KeyComparator>::lookupRange(KeyType begin
   while (true) {
     while (position < leftLeaf.header.keyCount) {
       Entry<KeyType, TID> entry = leftLeaf.entries[position];
-      if (entry.key >= begin && entry.key <= end) {
+      if (begin <= entry.key && entry.key <= end){
         lookupSet.push_back(entry.value);
-      } else {
-        break;
       }
       position++;
     }

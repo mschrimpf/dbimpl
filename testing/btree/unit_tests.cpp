@@ -120,8 +120,39 @@ TEST_F(BTreeTest, LookupRange) {
   for (unsigned id = 0; id < 20; ++id) {
     bTree->insert(id, TID(0, id));
   }
-  std::vector<TID> vec = bTree->lookupRange(0, 20);
   int cur = 0;
+  std::vector<TID> vec = bTree->lookupRange(cur, 20);
+  ASSERT_EQ(vec.size(), 20);
+  for (std::vector<TID>::iterator it = vec.begin(); it != vec.end(); ++it) {
+    TID tid = *it;
+    ASSERT_EQ(tid.slotOffset, 0);
+    ASSERT_EQ(tid.pageId, cur);
+    cur++;
+  }
+}
+
+TEST_F(BTreeTest, LookupOutOfRange) {
+  for (unsigned id = 0; id < 20; ++id) {
+    bTree->insert(id, TID(0, id));
+  }
+  int cur = 15;
+  std::vector<TID> vec = bTree->lookupRange(cur, 35);
+  ASSERT_EQ(vec.size(), 5);
+  for (std::vector<TID>::iterator it = vec.begin(); it != vec.end(); ++it) {
+    TID tid = *it;
+    ASSERT_EQ(tid.slotOffset, 0);
+    ASSERT_EQ(tid.pageId, cur);
+    cur++;
+  }
+}
+
+TEST_F(BTreeTest, LookupEmpty) {
+  for (unsigned id = 0; id < 20; ++id) {
+    bTree->insert(id, TID(0, id));
+  }
+  int cur = 35;
+  std::vector<TID> vec = bTree->lookupRange(cur, 200);
+  ASSERT_EQ(vec.size(), 0);
   for (std::vector<TID>::iterator it = vec.begin(); it != vec.end(); ++it) {
     TID tid = *it;
     ASSERT_EQ(tid.slotOffset, 0);
