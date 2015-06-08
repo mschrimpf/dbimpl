@@ -11,11 +11,12 @@ using ::testing::UnitTest;
 
 
 TEST_F(BTreeTest, TestBTreeVisualization) {
-  for (unsigned id = 0; id < 50; ++id){
+  for (unsigned id = 0; id < 13; ++id){
     std::cout << "Adding Pair(" << id << ",0) to bTree\n";
     bTree->insert(id, TID(0));
   }
   bTree->outputVisualize();
+  std::cout << "Success" << std::endl;
   //std::cout << "Visualization\n" << bTree->visualize();
 }
 

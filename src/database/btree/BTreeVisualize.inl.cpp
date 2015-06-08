@@ -11,7 +11,7 @@ template<typename KeyType, typename KeyComparator>
 std::string BTree<KeyType, KeyComparator>::visualize() {
   std::stringstream stream;
   stream << "digraph myBTree { \n";
-  stream << "node [shape=record];\n";
+  stream << "node [shape=record,height=.5];\n";
   uint64_t node_id = 0;
   uint64_t leaf_id = 0;
   BufferFrame frame = bufferManager.fixPage(segmentId, rootPageId, false);
@@ -87,7 +87,6 @@ std::string BTree<KeyType, KeyComparator>::visualizeNode(InnerNode<KeyType, KeyC
   return stream.str();
   //std::cout << stream.str() << std::endl;
 }
-
 template<class KeyType, class KeyComparator>
 std::string BTree<KeyType, KeyComparator>::visualizeLeaf(Leaf<KeyType, KeyComparator> * leaf, uint64_t leafId) {
   std::stringstream stream;
