@@ -22,9 +22,9 @@ TEST(PrintOperatorTest, PrintSingleIntRegister) {
   std::stringstream stream;
   PrintOperator<uint64_t> printOperator(tableVector, stream);
 
+  printOperator.open();
   ASSERT_TRUE(printOperator.next());
   ASSERT_EQ(1, printOperator.getOutput().size());
   ASSERT_EQ(1337, (printOperator.getOutput()[0])->getValue());
   ASSERT_EQ("1337", stream.str());
-
 }

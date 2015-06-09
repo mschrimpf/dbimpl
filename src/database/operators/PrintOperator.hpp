@@ -6,10 +6,14 @@
 #define PROJECT_PRINTOPERATOR_H
 
 #include "Operator.hpp"
+#include <vector>
 
 template<typename Type>
 class PrintOperator : Operator<Type> {
 private:
+  uint64_t index;
+  bool isOpen;
+  std::vector<Register<Type> *> output;
   std::vector<std::vector<Register<Type> *>> relation;
   std::ostream &outputStream;
 
@@ -17,7 +21,7 @@ private:
 
 public:
   PrintOperator(std::vector<std::vector<Register<Type> *>> relation, std::ostream &outputStream)
-          : relation(relation), outputStream(outputStream) { };
+          : relation(relation), outputStream(outputStream), isOpen(false) { };
 
   void open();
 

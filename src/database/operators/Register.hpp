@@ -46,6 +46,7 @@ namespace std {
 
 }
 
+#include "ImplRegister.cpp"
 #include "IntRegister.cpp"
 
 #endif //PROJECT_REGISTER_H
