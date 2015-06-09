@@ -20,5 +20,6 @@ add_subdirectory(testing/buffer)
 add_subdirectory(testing/slotted_pages)
 add_subdirectory(testing/relations)
 add_subdirectory(testing/btree)
+add_subdirectory(testing/operators)
 
 
