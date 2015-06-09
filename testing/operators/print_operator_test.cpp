@@ -22,6 +22,7 @@ TEST(PrintOperatorTest, PrintSingleIntRegister) {
   std::stringstream stream;
   PrintOperator<uint64_t> printOperator(tableVector, stream);
 
+  ASSERT_THROW(printOperator.next(), std::invalid_argument);
   printOperator.open();
   ASSERT_TRUE(printOperator.next());
   ASSERT_EQ(1, printOperator.getOutput().size());
