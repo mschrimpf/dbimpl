@@ -8,19 +8,18 @@
 #include "Operator.hpp"
 #include <vector>
 
-template<typename Type>
-class PrintOperator : Operator<Type> {
+class PrintOperator : Operator {
 private:
   uint64_t index;
   bool isOpen;
-  std::vector<Register<Type> *> output;
-  std::vector<std::vector<Register<Type> *>> relation;
+  std::vector<Register *> output;
+  std::vector<std::vector<Register *>> relation;
   std::ostream &outputStream;
 
-  std::string toString(Type val);
+  std::string toString(Register &reg);
 
 public:
-  PrintOperator(std::vector<std::vector<Register<Type> *>> relation, std::ostream &outputStream)
+  PrintOperator(std::vector<std::vector<Register *>> relation, std::ostream &outputStream)
           : relation(relation), outputStream(outputStream), isOpen(false) { };
 
   void open();
@@ -29,7 +28,7 @@ public:
 
   void close();
 
-  std::vector<Register<Type> *> getOutput();
+  std::vector<Register *> getOutput();
 };
 
 

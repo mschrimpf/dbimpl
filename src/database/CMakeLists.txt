@@ -44,7 +44,6 @@ set(BTREE_SOURCE_FILES
     )
 set(OPEREATOR_SOURCE_FILES
     operators/Register.hpp
-    #operators/IntRegister.cpp
     operators/Operator.hpp
     operators/PrintOperator.hpp
     )

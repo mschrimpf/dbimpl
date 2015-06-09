@@ -5,8 +5,7 @@
 #include "PrintOperator.hpp"
 #include "Register.hpp"
 
-template<typename Type>
-void PrintOperator<Type>::open() {
+void PrintOperator::open() {
   if (isOpen) {
     std::__throw_invalid_argument("Operator has been opened before.");
   }
@@ -15,21 +14,25 @@ void PrintOperator<Type>::open() {
   isOpen = true;
 }
 
-template<typename Type>
-std::string PrintOperator<Type>::toString(Type val) {
-  return std::to_string(val);
+
+std::string PrintOperator::toString(Register &reg) {
+  switch (reg.currentType) {
+    case Register::type::STRING:
+      return reg.getStringValue();
+    case Register::type::INTEGER:
+      return std::to_string(reg.getIntegerValue());
+  }
 }
 
-template<typename Type>
-bool PrintOperator<Type>::next() {
+bool PrintOperator::next() {
   if (!isOpen) {
     std::__throw_invalid_argument("Operator has to be opened before.");
   }
   if (index < relation.size()) {
-    std::vector<Register<Type> *> vector = relation[index];
+    std::vector<Register *> vector = relation[index];
     for (auto reg : vector) {
       output.push_back(reg);
-      outputStream << toString(reg->getValue());
+      outputStream << toString(reg);
     }
     index++;
     return true;
@@ -38,8 +41,7 @@ bool PrintOperator<Type>::next() {
   }
 };
 
-template<typename Type>
-void PrintOperator<Type>::close() {
+void PrintOperator::close() {
   if (!isOpen) {
     std::__throw_invalid_argument("Operator has to be opened before.");
   }
@@ -47,9 +49,7 @@ void PrintOperator<Type>::close() {
   output.clear();
 };
 
-template<typename Type>
-std::vector<Register<Type> *>
-PrintOperator<Type>::getOutput() {
+std::vector<Register *> PrintOperator::getOutput() {
   if (!isOpen) {
     std::__throw_invalid_argument("Operator has to be opened before.");
   }

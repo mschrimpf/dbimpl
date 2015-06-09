@@ -7,14 +7,13 @@
 
 #include <vector>
 
-template<typename RegisterValue>
 class Operator {
 public:
   virtual void open() = 0;
 
   virtual bool next() = 0;
 
-  virtual std::vector<Register<RegisterValue> *> getOutput() = 0;
+  virtual std::vector<Register> getOutput() = 0;
 
   virtual void close() = 0;
 };
