@@ -36,17 +36,14 @@ set(BTREE_SOURCE_FILES
     btree/InnerNode.hpp
     btree/LeafHeader.hpp
     btree/Leaf.hpp
-#    btree/BTree.inl.cpp
-#    btree/InnerNode.inl.cpp
-#    btree/Leaf.inl.cpp
-#    btree/BTreeVisualize.inl.cpp
-#    btree/EntriesHelper.inl.cpp
     )
 set(OPERATOR_SOURCE_FILES
     operators/Register.hpp
     operators/Operator.hpp
     operators/PrintOperator.hpp
     operators/PrintOperator.cpp
+    operators/SelectionOperator.hpp
+    operators/SelectionOperator.cpp
     )
 
 add_library(database

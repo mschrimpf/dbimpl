@@ -1,5 +1,23 @@
-//
-// Created by daniel on 6/9/15.
-//
+#include "SelectionOperator.hpp"
 
-#include "SelectionOperator.h"
+void SelectionOperator::open() {
+  input->open();
+}
+
+bool SelectionOperator::next() {
+  while(input->next()) {
+    output = input->getOutput();
+    if(condition(output)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::vector<Register *> SelectionOperator::getOutput() {
+  return output;
+}
+
+void SelectionOperator::close() {
+  input->close();
+}
