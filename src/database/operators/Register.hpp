@@ -71,7 +71,16 @@ public:
   }
 
   inline size_t hashValue() const {
-    throw;
+    switch (currentType) {
+      case INTEGER:
+        return std::hash<uint64_t>()(intValue);
+      case STRING:
+        return std::hash<const char *>()(stringValue);
+      case UNDEFINED:
+        return 0;
+      default:
+        throw std::invalid_argument("invalid state");
+    }
   };
 };
 
