@@ -46,6 +46,8 @@ set(OPERATOR_SOURCE_FILES
     operators/SelectionOperator.cpp
     operators/ProjectionOperator.hpp
     operators/ProjectionOperator.cpp
+    operators/HashJoinOperator.hpp
+    operators/HashJoinOperator.cpp
     )
 
 add_library(database
