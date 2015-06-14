@@ -42,7 +42,7 @@ namespace selection_operator_tests {
     return row[0]->getIntegerValue() == 2;
   }
 
-  TEST(SelectionOperatorTest, SelectSingleColumnInteger) {
+  TEST(SelectionOperatorTest, SelectSingleIntegerColumn) {
     DummyOperator input = init();
     SelectionOperator op(&input, accept_twos);
 
@@ -57,7 +57,7 @@ namespace selection_operator_tests {
     return false;
   }
 
-  TEST(SelectionOperatorTest, SelectSingleColumnNothingInteger) {
+  TEST(SelectionOperatorTest, SelectSingleColumnIntegerNothing) {
     DummyOperator input = init();
     SelectionOperator op(&input, accept_nothing);
 

@@ -43,7 +43,7 @@ namespace projection_operator_tests {
     return DummyOperator(tableVector);
   }
 
-  TEST(SelectionOperatorTest, ProjectAll) {
+  TEST(ProjectionOperatorTest, ProjectAll) {
     DummyOperator input = init();
     ProjectionOperator op(&input, std::vector<int>{0, 1, 2, 3, 4});
 
@@ -58,7 +58,7 @@ namespace projection_operator_tests {
     ASSERT_FALSE(op.next());
   }
 
-  TEST(SelectionOperatorTest, ProjectNothing) {
+  TEST(ProjectionOperatorTest, ProjectNothing) {
     DummyOperator input = init();
     ProjectionOperator op(&input, std::vector<int>{});
 
@@ -70,7 +70,7 @@ namespace projection_operator_tests {
     ASSERT_FALSE(op.next());
   }
 
-  TEST(SelectionOperatorTest, ProjectSecond) {
+  TEST(ProjectionOperatorTest, ProjectSecond) {
     DummyOperator input = init();
     ProjectionOperator op(&input, std::vector<int>{1});
 
