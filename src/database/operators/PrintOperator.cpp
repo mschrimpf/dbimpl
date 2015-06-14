@@ -1,19 +1,9 @@
-//
-// Created by daniel on 6/9/15.
-//
-
 #include "PrintOperator.hpp"
 #include "Register.hpp"
 
 void PrintOperator::open() {
-  if (isOpen) {
-    std::__throw_invalid_argument("Operator has been opened before.");
-  }
-  output.clear();
-  index = 0;
-  isOpen = true;
+  input->open();
 }
-
 
 std::string PrintOperator::toString(Register &reg) {
   switch (reg.currentType) {
@@ -25,33 +15,20 @@ std::string PrintOperator::toString(Register &reg) {
 }
 
 bool PrintOperator::next() {
-  if (!isOpen) {
-    std::__throw_invalid_argument("Operator has to be opened before.");
-  }
-  if (index < relation.size()) {
-    std::vector<Register *> vector = relation[index];
-    for (auto reg : vector) {
-      output.push_back(reg);
-      outputStream << toString(*reg);
-    }
-    index++;
-    return true;
-  } else {
+  if(! input->next()) {
     return false;
   }
+  output = input->getOutput();
+  for (auto reg : output) {
+    outputStream << toString(*reg);
+  }
+  return true;
 };
 
 void PrintOperator::close() {
-  if (!isOpen) {
-    std::__throw_invalid_argument("Operator has to be opened before.");
-  }
-  isOpen = false;
-  output.clear();
+  input->close();
 };
 
 std::vector<Register *> PrintOperator::getOutput() {
-  if (!isOpen) {
-    std::__throw_invalid_argument("Operator has to be opened before.");
-  }
   return output;
 };

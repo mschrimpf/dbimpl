@@ -8,19 +8,20 @@
 #include "Operator.hpp"
 #include <vector>
 
-class PrintOperator : Operator {
+/**
+ * Prints when #next() is called.
+ */
+class PrintOperator : public Operator {
 private:
-  uint64_t index;
-  bool isOpen;
-  std::vector<Register *> output;
-  std::vector<std::vector<Register *>> relation;
+  Operator *input;
   std::ostream &outputStream;
+  std::vector<Register *> output;
 
   std::string toString(Register &reg);
 
 public:
-  PrintOperator(std::vector<std::vector<Register *>> relation, std::ostream &outputStream)
-          : relation(relation), outputStream(outputStream), isOpen(false) { };
+  PrintOperator(Operator *input, std::ostream &outputStream)
+      : input(input), outputStream(outputStream) { };
 
   void open();
 

@@ -1,6 +1,7 @@
 #include <stdint-gcc.h>
 #include <gtest/gtest.h>
 #include "../../src/database/operators/Register.hpp"
+#include "DummyOperator.hpp"
 #include "../../src/database/operators/PrintOperator.hpp"
 
 using ::testing::EmptyTestEventListener;
@@ -18,11 +19,11 @@ TEST(PrintOperatorTest, PrintSingleIntRegister) {
   std::vector<Register *> rowVector;
   rowVector.push_back(&reg);
   tableVector.push_back(rowVector);
+  DummyOperator dummyOperator(tableVector);
 
   std::stringstream stream;
-  PrintOperator printOperator(tableVector, stream);
+  PrintOperator printOperator(&dummyOperator, stream);
 
-  ASSERT_THROW(printOperator.next(), std::invalid_argument);
   printOperator.open();
   ASSERT_TRUE(printOperator.next());
   ASSERT_EQ(1, printOperator.getOutput().size());
@@ -31,19 +32,19 @@ TEST(PrintOperatorTest, PrintSingleIntRegister) {
 }
 
 TEST(PrintOperatorTest, PrintCharRegister) {
-  Register reg("Hallo Welt");
+  Register reg("Hello World");
   std::vector<std::vector<Register *>> tableVector;
   std::vector<Register *> rowVector;
   rowVector.push_back(&reg);
   tableVector.push_back(rowVector);
+  DummyOperator dummyOperator(tableVector);
 
   std::stringstream stream;
-  PrintOperator printOperator(tableVector, stream);
+  PrintOperator printOperator(&dummyOperator, stream);
 
-  ASSERT_THROW(printOperator.next(), std::invalid_argument);
   printOperator.open();
   ASSERT_TRUE(printOperator.next());
   ASSERT_EQ(1, printOperator.getOutput().size());
-  ASSERT_EQ("Hallo Welt", (printOperator.getOutput()[0])->getStringValue());
-  ASSERT_EQ("Hallo Welt", stream.str());
+  ASSERT_EQ("Hello World", (printOperator.getOutput()[0])->getStringValue());
+  ASSERT_EQ("Hello World", stream.str());
 }
