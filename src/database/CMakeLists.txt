@@ -42,10 +42,11 @@ set(BTREE_SOURCE_FILES
 #    btree/BTreeVisualize.inl.cpp
 #    btree/EntriesHelper.inl.cpp
     )
-set(OPEREATOR_SOURCE_FILES
+set(OPERATOR_SOURCE_FILES
     operators/Register.hpp
     operators/Operator.hpp
     operators/PrintOperator.hpp
+    operators/PrintOperator.cpp
     )
 
 add_library(database

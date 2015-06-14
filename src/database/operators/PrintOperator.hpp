@@ -31,8 +31,4 @@ public:
   std::vector<Register *> getOutput();
 };
 
-
-#include "PrintOperator.inl.cpp"
-
-
 #endif //PROJECT_PRINTOPERATOR_H

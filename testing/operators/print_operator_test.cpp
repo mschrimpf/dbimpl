@@ -20,13 +20,13 @@ TEST(PrintOperatorTest, PrintSingleIntRegister) {
   tableVector.push_back(rowVector);
 
   std::stringstream stream;
-  PrintOperator<uint64_t> printOperator(tableVector, stream);
+  PrintOperator printOperator(tableVector, stream);
 
   ASSERT_THROW(printOperator.next(), std::invalid_argument);
   printOperator.open();
   ASSERT_TRUE(printOperator.next());
   ASSERT_EQ(1, printOperator.getOutput().size());
-  ASSERT_EQ(1337, (printOperator.getOutput()[0])->getValue());
+  ASSERT_EQ(1337, (printOperator.getOutput()[0])->getIntegerValue());
   ASSERT_EQ("1337", stream.str());
 }
 
@@ -38,12 +38,12 @@ TEST(PrintOperatorTest, PrintCharRegister) {
   tableVector.push_back(rowVector);
 
   std::stringstream stream;
-  PrintOperator<const char *> printOperator(tableVector, stream);
+  PrintOperator printOperator(tableVector, stream);
 
   ASSERT_THROW(printOperator.next(), std::invalid_argument);
   printOperator.open();
   ASSERT_TRUE(printOperator.next());
   ASSERT_EQ(1, printOperator.getOutput().size());
-  ASSERT_EQ("Hallo Welt", (printOperator.getOutput()[0])->getValue());
+  ASSERT_EQ("Hallo Welt", (printOperator.getOutput()[0])->getStringValue());
   ASSERT_EQ("Hallo Welt", stream.str());
 }

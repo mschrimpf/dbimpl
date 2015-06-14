@@ -32,7 +32,7 @@ bool PrintOperator::next() {
     std::vector<Register *> vector = relation[index];
     for (auto reg : vector) {
       output.push_back(reg);
-      outputStream << toString(reg);
+      outputStream << toString(*reg);
     }
     index++;
     return true;
