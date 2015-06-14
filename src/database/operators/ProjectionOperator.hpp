@@ -3,7 +3,7 @@
 
 #include "Operator.hpp"
 
-class ProjectionOperator {
+class ProjectionOperator : public Operator {
 private:
   Operator *input;
   std::vector<Register *> output;
