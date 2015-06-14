@@ -6,7 +6,8 @@ add_executable(operators_unit_tests
     DummyOperator.cpp
     ../run_all_tests.cpp
     print_operator_test.cpp
-    selection_operator_tests.cpp)
+    selection_operator_tests.cpp
+    projection_operator_tests.cpp)
 set_target_properties(operators_unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
 target_link_libraries(operators_unit_tests database)
 target_link_libraries(operators_unit_tests gtest_main)

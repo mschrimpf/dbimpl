@@ -44,6 +44,8 @@ set(OPERATOR_SOURCE_FILES
     operators/PrintOperator.cpp
     operators/SelectionOperator.hpp
     operators/SelectionOperator.cpp
+    operators/ProjectionOperator.hpp
+    operators/ProjectionOperator.cpp
     )
 
 add_library(database
