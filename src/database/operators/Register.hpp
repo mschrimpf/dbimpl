@@ -28,24 +28,30 @@ public:
 
   Register(const char *val) : stringValue(val), currentType(Register::type::STRING) { };
 
-  inline bool operator<(Register val) {
+  inline bool operator<(const Register &val) const {
     switch (currentType) {
       case INTEGER:
         return intValue < val.getIntegerValue();
       case STRING:
         return stringValue < val.getStringValue();
+      case UNDEFINED:
+        return false;
+      default:
+        throw std::invalid_argument("invalid state");
     }
-    return false;
   }
 
-  inline bool operator==(Register val) {
+  inline bool operator==(const Register &val) const {
     switch (currentType) {
       case INTEGER:
         return intValue == val.getIntegerValue();
       case STRING:
         return stringValue == val.getStringValue();
+      case UNDEFINED:
+        return false;
+      default:
+        throw std::invalid_argument("invalid state");
     }
-    return false;
   }
 
   inline void setStringValue(const char *val) {
@@ -56,32 +62,26 @@ public:
     intValue = val;
   }
 
-  inline const char *getStringValue() {
+  inline const char *getStringValue() const {
     return stringValue;
   }
 
-  inline uint64_t getIntegerValue() {
+  inline uint64_t getIntegerValue() const {
     return intValue;
   }
 
   inline size_t hashValue() const {
-    switch (currentType) {
-      case INTEGER:
-        break;
-      case STRING:
-        break;
-    }
+    throw;
   };
-
 };
 
 namespace std {
-    template<>
-    struct hash<Register> {
-      size_t operator()(const Register &reg) const {
-        return reg.hashValue();
-      }
-    };
+  template<>
+  struct hash<Register> {
+    size_t operator()(const Register &reg) const {
+      return reg.hashValue();
+    }
+  };
 }
 
 #endif //PROJECT_REGISTER_H
