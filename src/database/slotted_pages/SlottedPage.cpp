@@ -122,7 +122,7 @@ Slot *SlottedPage::getExistingSlot(uint16_t slotOffset) {
 	return &this->slots[slotOffset];
 }
 
-char *SlottedPage::getSlotData(Slot &slot) const {
+char *SlottedPage::getSlotData(const Slot &slot) const {
 	return (char *) &this->slots[0] + (intptr_t) slot.O;
 }
 

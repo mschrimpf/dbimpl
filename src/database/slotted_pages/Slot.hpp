@@ -15,30 +15,30 @@
  * Actual implementation: T | O | O | O | L | L | L | O due to alignment issues
  */
 struct Slot {
-	static const uint8_t T_NO_TID_VALUE = (uint8_t) 0x11111111b;
+  static const uint8_t T_NO_TID_VALUE = (uint8_t) 0x11111111b;
 
-	uint32_t T : 8;
-	/** Memory address */
-	uint32_t O : 24;
-	uint32_t L : 24;
+  uint32_t T : 8;
+  /** Memory address */
+  uint32_t O : 24;
+  uint32_t L : 24;
 
-	uint32_t S : 8;
+  uint32_t S : 8;
 
-	bool isTid();
+  bool isTid() const;
 
-	TID getTid();
+  TID getTid();
 
-	bool wasRedirect();
+  bool wasRedirect();
 
-	void nullTS();
+  void nullTS();
 
-	void markAsFree();
+  void markAsFree();
 
-	bool isFree();
+  bool isFree() const;
 
-	bool isEmptyData();
+  bool isEmptyData() const;
 
-	void redirectTo(TID redirectTid);
+  void redirectTo(TID redirectTid);
 };
 
 #endif //PROJECT_SLOT_H
