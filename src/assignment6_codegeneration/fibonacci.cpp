@@ -23,6 +23,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <iostream>
 #include "llvm/IR/Verifier.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/ExecutionEngine/Interpreter.h"
@@ -36,36 +37,57 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
-static Function *CreateFibFunction(Module *M, LLVMContext &Context) {
+struct FunctionContext {
+  LLVMContext Context;
+  std::unique_ptr<Module> Owner;
+  Module *M;
+  std::string errStr;
+  ExecutionEngine *EE;
+
+  FunctionContext () {
+    InitializeNativeTarget();
+    Owner = std::unique_ptr<Module>(new Module("test", Context));
+    M = Owner.get();
+
+    // Now we going to create JIT
+    std::string errStr;
+    EE = EngineBuilder(std::move(Owner))
+                    .setErrorStr(&errStr)
+                    .setEngineKind(EngineKind::Interpreter)
+                    .create();
+  }
+};
+
+static Function *CreateFibFunction(FunctionContext &functionContext) {
   // Create the fib function and insert it into module M. This function is said
   // to return an int and take an int parameter.
   Function *FibF =
-          cast<Function>(M->getOrInsertFunction("fib", Type::getInt32Ty(Context),
-                                                Type::getInt32Ty(Context),
+          cast<Function>(functionContext.M->getOrInsertFunction("fib", Type::getInt32Ty(functionContext.Context),
+                                                Type::getInt32Ty(functionContext.Context),
                                                 (Type *)0));
 
   // Add a basic block to the function.
-  BasicBlock *BB = BasicBlock::Create(Context, "EntryBlock", FibF);
+  BasicBlock *BB = BasicBlock::Create(functionContext.Context, "EntryBlock", FibF);
 
   // Get pointers to the constants.
-  Value *One = ConstantInt::get(Type::getInt32Ty(Context), 1);
-  Value *Two = ConstantInt::get(Type::getInt32Ty(Context), 2);
+  Value *One = ConstantInt::get(Type::getInt32Ty(functionContext.Context), 1);
+  Value *Two = ConstantInt::get(Type::getInt32Ty(functionContext.Context), 2);
 
   // Get pointer to the integer argument of the add1 function...
   Argument *ArgX = FibF->arg_begin();   // Get the arg.
   ArgX->setName("AnArg");            // Give it a nice symbolic name for fun.
 
   // Create the true_block.
-  BasicBlock *RetBB = BasicBlock::Create(Context, "return", FibF);
+  BasicBlock *RetBB = BasicBlock::Create(functionContext.Context, "return", FibF);
   // Create an exit block.
-  BasicBlock* RecurseBB = BasicBlock::Create(Context, "recurse", FibF);
+  BasicBlock* RecurseBB = BasicBlock::Create(functionContext.Context, "recurse", FibF);
 
   // Create the "if (arg <= 2) goto exitbb"
   Value *CondInst = new ICmpInst(*BB, ICmpInst::ICMP_SLE, ArgX, Two, "cond");
   BranchInst::Create(RetBB, RecurseBB, CondInst, BB);
 
   // Create: ret int 1
-  ReturnInst::Create(Context, One, RetBB);
+  ReturnInst::Create(functionContext.Context, One, RetBB);
 
   // create fib(x-1)
   Value *Sub = BinaryOperator::CreateSub(ArgX, One, "arg", RecurseBB);
@@ -83,56 +105,49 @@ static Function *CreateFibFunction(Module *M, LLVMContext &Context) {
                                          "addresult", RecurseBB);
 
   // Create the return instruction and add it to the basic block
-  ReturnInst::Create(Context, Sum, RecurseBB);
+  ReturnInst::Create(functionContext.Context, Sum, RecurseBB);
 
   return FibF;
 }
 
 
-int main(int argc, char **argv) {
-  int n = argc > 1 ? atol(argv[1]) : 24;
-
-  InitializeNativeTarget();
-  LLVMContext Context;
-
-  // Create some module to put our function into it.
-  std::unique_ptr<Module> Owner(new Module("test", Context));
-  Module *M = Owner.get();
-
-  // We are about to create the "fib" function:
-  Function *FibF = CreateFibFunction(M, Context);
-
-  // Now we going to create JIT
-  std::string errStr;
-  ExecutionEngine *EE =
-          EngineBuilder(std::move(Owner))
-                  .setErrorStr(&errStr)
-                  .setEngineKind(EngineKind::Interpreter)
-                  .create();
-
-  if (!EE) {
-    errs() << argv[0] << ": Failed to construct ExecutionEngine: " << errStr
+bool doFunction(FunctionContext &context, Function * function, std::vector<GenericValue> &params, GenericValue &value){
+  if (!context.EE) {
+    errs() <<  "Failed to construct ExecutionEngine: " << context.errStr
     << "\n";
-    return 1;
+    return false;
   }
 
   errs() << "verifying... ";
-  if (verifyModule(*M)) {
-    errs() << argv[0] << ": Error constructing function!\n";
-    return 1;
+  if (verifyModule(*context.M)) {
+    errs() << ": Error constructing function!\n";
+    return false;
   }
 
   errs() << "OK\n";
-  errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
-  errs() << "---------\nstarting fibonacci(" << n << ") with JIT...\n";
+  errs() << "We just constructed this LLVM module:\n\n---------\n" << *context.M;
+  errs() << "---------\nstarting function with JIT...\n";
 
-  // Call the Fibonacci function with argument n:
+  value = context.EE->runFunction(function, params);
+  return true;
+}
+
+APInt fibonacci(unsigned n){
+  FunctionContext context;
+  // We are about to create the "fib" function:
+  Function *FibF = CreateFibFunction(context);
   std::vector<GenericValue> Args(1);
   Args[0].IntVal = APInt(32, n);
-  GenericValue GV = EE->runFunction(FibF, Args);
+  GenericValue result;
+  if (doFunction(context, FibF, Args, result)){
+    return result.IntVal;
+  }
+  return APInt(0,0,false);
+}
 
-  // import result of execution
-  outs() << "Result: " << GV.IntVal << "\n";
-
+int main(int argc, char **argv) {
+  APInt result = fibonacci(10);
+  outs() << "fibonacci(10): " << result;
   return 0;
 }
+
