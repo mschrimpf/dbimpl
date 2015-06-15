@@ -18,8 +18,10 @@ set(SLOTTED_PAGES_SOURCE_FILES
     slotted_pages/Slot.cpp
     slotted_pages/SlottedPage.hpp
     slotted_pages/SlottedPage.cpp
+    slotted_pages/SlottedPageIterator.cpp
     slotted_pages/SPSegment.hpp
     slotted_pages/SPSegment.cpp
+    slotted_pages/SPSegmentIterator.cpp
     slotted_pages/Record.hpp)
 set(RELATIONS_SOURCE_FILES
     relations/Schema.hpp

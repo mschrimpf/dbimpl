@@ -15,65 +15,92 @@
 // TODO: might have to implement redirects
 // (initial implementation could be to just throw an exception when the page is full)
 struct SlottedPage {
-	struct SPHeader {
-		uint64_t LSN;
-		/**
-		 * Size of the slot array.
-		 * Unless the very last slot is deleted, this value only grows, but never decreases.
-		 */
-		unsigned slotCount;
-		uint16_t firstFreeSlot;
-		char *dataStart;
-		/**
-		 * This will always be zero when data is inserted one after another.
-		 * However, when data is deleted, space might become free
-		 * and fragment our total available space.
-		 */
-		unsigned fragmentedSpace;
-	} header;
+  struct SPHeader {
+    uint64_t LSN;
+    /**
+     * Size of the slot array.
+     * Unless the very last slot is deleted, this value only grows, but never decreases.
+     */
+    unsigned slotCount;
+    uint16_t firstFreeSlot;
+    char *dataStart;
+    /**
+     * This will always be zero when data is inserted one after another.
+     * However, when data is deleted, space might become free
+     * and fragment our total available space.
+     */
+    unsigned fragmentedSpace;
+  } header;
 
-	union {
-		/*
-		 * Variable-sized array -> store at the end.
-		 * Since the SlottedPage will be allocated with a variable length,
-		 * this variable can be used as the offset within the struct
-		 * using reinterpret_cast.
-		 */
-		Slot slots[(BufferManager::DATA_SIZE_BYTE - sizeof(SPHeader)) / sizeof(Slot)];
-		char data[BufferManager::DATA_SIZE_BYTE - sizeof(SPHeader)];
-	};
+  union {
+    /*
+     * Variable-sized array -> store at the end.
+     * Since the SlottedPage will be allocated with a variable length,
+     * this variable can be used as the offset within the struct
+     * using reinterpret_cast.
+     */
+    Slot slots[(BufferManager::DATA_SIZE_BYTE - sizeof(SPHeader)) / sizeof(Slot)];
+    char data[BufferManager::DATA_SIZE_BYTE - sizeof(SPHeader)];
+  };
 
-	static const unsigned int MAX_DATA_SIZE;
+  static const unsigned int MAX_DATA_SIZE;
 
-	SlottedPage();
+  SlottedPage();
 
-	bool hasSpaceAtDataFront(size_t data_size) const;
+  bool hasSpaceAtDataFront(size_t data_size) const;
 
-	bool canMakeEnoughSpace(size_t necessary_space) const;
+  bool canMakeEnoughSpace(size_t necessary_space) const;
 
-	size_t spaceBetweenSlotsAndData() const;
+  size_t spaceBetweenSlotsAndData() const;
 
-	void compactify();
+  void compactify();
 
-	char *getSlotData(Slot &slot) const;
+  char *getSlotData(const Slot &slot) const;
 
-	void setSlotOffset(Slot &slot, char *data_ptr);
+  void setSlotOffset(Slot &slot, char *data_ptr);
 
-	void init();
+  void init();
 
-	Slot *getExistingSlot(uint16_t slotOffset);
+  Slot *getExistingSlot(uint16_t slotOffset);
 
-	uint16_t findFirstFreeSlot(uint16_t lastFreeSlot) const;
+  uint16_t findFirstFreeSlot(uint16_t lastFreeSlot) const;
 
-	bool isLastSlot(Slot &slot) const;
+  bool isLastSlot(Slot &slot) const;
 
-	bool isInRange(uint16_t slotOffset) const;
+  bool isInRange(uint16_t slotOffset) const;
 
-	Slot *retrieveSlot(uint16_t *slotIndex);
+  Slot *retrieveSlot(uint16_t *slotIndex);
 
-	void writeSlotData(Slot *slot, const char *data, size_t data_size);
+  void writeSlotData(Slot *slot, const char *data, size_t data_size);
 
-	Slot *retrieveSlotIfPossible(uint16_t slotOffset);
+  Slot *retrieveSlotIfPossible(uint16_t slotOffset);
+
+  //////////////////////////////////////////////////////////////////
+  // Iterator
+  //////////////////////////////////////////////////////////////////
+
+  class iterator : public std::iterator<std::forward_iterator_tag, Slot> {
+  private:
+    unsigned index;
+    const Slot *slots;
+
+  public:
+    iterator() : index(0), slots(nullptr) { }
+
+    iterator(unsigned index, const Slot *slots) : index(index), slots(slots) { }
+
+    iterator &operator++();
+
+    bool operator==(const iterator &other) const;
+
+    bool operator!=(const iterator &other) const;
+
+    const Slot &operator*() const;
+  };
+
+  iterator begin() const;
+
+  iterator end() const;
 };
 
 #endif //PROJECT_SLOTTEDPAGE_H
