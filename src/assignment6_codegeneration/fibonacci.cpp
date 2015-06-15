@@ -58,6 +58,29 @@ struct FunctionContext {
   }
 };
 
+// Method to execute a function where the result is saved in value
+bool doFunction(FunctionContext &context, Function * function, std::vector<GenericValue> &params, GenericValue &value){
+  if (!context.EE) {
+    errs() <<  "Failed to construct ExecutionEngine: " << context.errStr
+    << "\n";
+    return false;
+  }
+
+  errs() << "verifying... ";
+  if (verifyModule(*context.M)) {
+    errs() << ": Error constructing function!\n";
+    return false;
+  }
+
+  errs() << "OK\n";
+  errs() << "We just constructed this LLVM module:\n\n---------\n" << *context.M;
+  errs() << "---------\nstarting function with JIT...\n";
+
+  value = context.EE->runFunction(function, params);
+  return true;
+}
+
+
 static Function *CreateFibFunction(FunctionContext &functionContext) {
   // Create the fib function and insert it into module M. This function is said
   // to return an int and take an int parameter.
@@ -110,29 +133,7 @@ static Function *CreateFibFunction(FunctionContext &functionContext) {
   return FibF;
 }
 
-
-bool doFunction(FunctionContext &context, Function * function, std::vector<GenericValue> &params, GenericValue &value){
-  if (!context.EE) {
-    errs() <<  "Failed to construct ExecutionEngine: " << context.errStr
-    << "\n";
-    return false;
-  }
-
-  errs() << "verifying... ";
-  if (verifyModule(*context.M)) {
-    errs() << ": Error constructing function!\n";
-    return false;
-  }
-
-  errs() << "OK\n";
-  errs() << "We just constructed this LLVM module:\n\n---------\n" << *context.M;
-  errs() << "---------\nstarting function with JIT...\n";
-
-  value = context.EE->runFunction(function, params);
-  return true;
-}
-
-APInt fibonacci(unsigned n){
+uint64_t fibonacci(unsigned n){
   FunctionContext context;
   // We are about to create the "fib" function:
   Function *FibF = CreateFibFunction(context);
@@ -140,14 +141,14 @@ APInt fibonacci(unsigned n){
   Args[0].IntVal = APInt(32, n);
   GenericValue result;
   if (doFunction(context, FibF, Args, result)){
-    return result.IntVal;
+    return result.IntVal.getLimitedValue();
   }
-  return APInt(0,0,false);
+  return 0;
 }
 
 int main(int argc, char **argv) {
-  APInt result = fibonacci(10);
-  outs() << "fibonacci(10): " << result;
+  uint64_t result = fibonacci(10);
+  outs() << "fibonacci(10): " << result << "\n";
   return 0;
 }
 
