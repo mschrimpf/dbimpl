@@ -2,10 +2,13 @@
 // Created by daniel on 6/15/15.
 //
 
-#include "fibonacci.h"
+#include <stdint.h>
+#include <sstream>
+#include "FunctionContext.h"
+#include "arithmetic_expressions.h"
 
-Function *CreateFibFunction(FunctionContext & functionContext) {
-  // Create the fib function and insert it into module M. This function is said
+Function *CreateArithmeticFunction(FunctionContext & functionContext, const char * expression){
+/*// Create the fib function and insert it into module M. This function is said
   // to return an int and take an int parameter.
   Function *FibF =
           cast<Function>(functionContext.M->getOrInsertFunction("fib", Type::getInt32Ty(functionContext.Context),
@@ -54,19 +57,24 @@ Function *CreateFibFunction(FunctionContext & functionContext) {
   ReturnInst::Create(functionContext.Context, Sum, RecurseBB);
 
   return FibF;
+  */
 }
 
-uint64_t fibonacci(unsigned n) {
-  FunctionContext context;
+uint64_t calculate(Node node, std::vector<uint64_t> arguments){
+  /*FunctionContext context;
   // We are about to create the "fib" function:
-  Function *FibF = CreateFibFunction(context);
-  std::vector <GenericValue> Args(1);
-  Args[0].IntVal = APInt(32, n);
+  Function *FibF = CreateArithmeticFunction(context, node);
+  std::vector <GenericValue> Args(arguments.size());
+  std::stringstream stream;
+  for (int i = 0; i < arguments.size(); ++i){
+    Args[i].IntVal = APInt(64, arguments[i]);
+    stream << arguments[i] << ",";
+  }
   GenericValue result;
   if (context.execute(FibF, Args, result)) {
     uint64_t value = result.IntVal.getLimitedValue();
-    outs() << "fibonacci(" << n << "): " << value << "\n";
+    outs() << "calculate(" << node.string() << ") with values: " << stream.str() <<  "\n";
     return value;
   }
-  return 0;
+  return 0;*/
 }
