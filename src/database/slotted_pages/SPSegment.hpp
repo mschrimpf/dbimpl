@@ -52,7 +52,7 @@ public:
 
   class iterator : public std::iterator<std::forward_iterator_tag, Record> {
   private:
-    const SPSegment &segment;
+    const SPSegment *segment;
     uint64_t pageId;
     BufferFrame *currFrame;
     SlottedPage *currPage;
@@ -60,12 +60,14 @@ public:
     SlottedPage::iterator slotEnd;
 
   public:
-    static iterator fromSegmentAndPage(const SPSegment &segment, uint64_t pageId);
+    static iterator fromSegmentAndPage(const SPSegment *segment, uint64_t pageId);
 
-    iterator(const SPSegment &segment, uint64_t pageId, BufferFrame *frame);
+    iterator(const SPSegment *segment, uint64_t pageId, BufferFrame *frame);
 
-    iterator(const SPSegment &segment, uint64_t pageId)
+    iterator(const SPSegment *segment, uint64_t pageId)
         : iterator(segment, pageId, nullptr) { }
+
+    iterator() : iterator(nullptr, 0) { }
 
     iterator &operator++();
 
