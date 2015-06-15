@@ -6,7 +6,7 @@
 
 
 // Method to execute a function where the result is saved in value
-bool FunctionContext::execute(Function *function, std::vector<GenericValue> &params, GenericValue &value) {
+bool FunctionContext::execute(Function *function, std::vector<GenericValue> &params, GenericValue &returnValue) {
   if (!EE) {
     errs() << "Failed to construct ExecutionEngine: " << errStr
     << "\n";
@@ -23,6 +23,6 @@ bool FunctionContext::execute(Function *function, std::vector<GenericValue> &par
   errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
   errs() << "---------\nstarting function with JIT...\n";
 
-  value = EE->runFunction(function, params);
+  returnValue = EE->runFunction(function, params);
   return true;
 }

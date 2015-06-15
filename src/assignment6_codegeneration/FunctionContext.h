@@ -26,6 +26,7 @@ public:
   Module *M;
   std::string errStr;
   ExecutionEngine *EE;
+  Function::arg_iterator iterator;
 
   FunctionContext() {
     InitializeNativeTarget();
@@ -40,7 +41,7 @@ public:
             .create();
   }
 
-  bool execute(Function *function, std::vector<GenericValue> &params, GenericValue &value);
+  bool execute(Function *function, std::vector<GenericValue> &params, GenericValue &returnValue);
 };
 
 
