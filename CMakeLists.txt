@@ -22,4 +22,6 @@ add_subdirectory(testing/relations)
 add_subdirectory(testing/btree)
 add_subdirectory(testing/operators)
 
+add_subdirectory(src/assignment6_codegeneration)
+
 
