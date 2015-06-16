@@ -36,7 +36,7 @@ int64_t calculate(std::vector<uint64_t> arguments, Node node) {
   std::vector<GenericValue> Args(arguments.size());
   std::stringstream stream;
   for (int i = 0; i < arguments.size(); ++i) {
-    Args[i].IntVal = APInt(64, arguments[i], true);
+    Args[arguments.size() - 1 - i].IntVal = APInt(64, arguments[i], true); //somehow the values are read backwards, so we add them backwards here
     stream << arguments[i] << ",";
   }
   GenericValue result;

@@ -7,6 +7,7 @@
 
 // Method to execute a function where the result is saved in value
 bool FunctionContext::execute(Function *function, std::vector<GenericValue> &params, GenericValue &returnValue) {
+
   if (!EE) {
     errs() << "Failed to construct ExecutionEngine: " << errStr
     << "\n";

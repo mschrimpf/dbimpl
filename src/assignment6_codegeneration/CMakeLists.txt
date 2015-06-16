@@ -23,8 +23,7 @@ set(SOURCE_FILES arithmetic_expressions.h
                  fibonacci.h
                  fibonacci.cpp
                  FunctionContext.h
-                 FunctionContext.cpp
-                 main.cpp)
+                 FunctionContext.cpp)
 add_executable(cg ${SOURCE_FILES})
 
 
