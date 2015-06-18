@@ -16,7 +16,14 @@ add_definitions(${LLVM_DEFINITIONS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES fibonacci.cpp)
+set(SOURCE_FILES arithmetic_expressions.h
+                 arithmetic_expressions.cpp
+                 Node.h
+                 Node.cpp
+                 fibonacci.h
+                 fibonacci.cpp
+                 FunctionContext.h
+                 FunctionContext.cpp)
 add_executable(cg ${SOURCE_FILES})
 
 
@@ -26,3 +33,4 @@ llvm_map_components_to_libnames(llvm_libs core executionengine interpreter mc mc
 
 # Link against LLVM libraries
 target_link_libraries(cg ${llvm_libs})
+add_library(code_generation ${SOURCE_FILES})
