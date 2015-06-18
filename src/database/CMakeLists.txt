@@ -50,6 +50,8 @@ set(OPERATOR_SOURCE_FILES
     operators/ProjectionOperator.cpp
     operators/HashJoinOperator.hpp
     operators/HashJoinOperator.cpp
+    operators/TableScanOperator.hpp
+    operators/TableScanOperator.cpp
     )
 
 add_library(database
