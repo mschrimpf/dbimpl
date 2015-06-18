@@ -6,10 +6,10 @@ void PrintOperator::open() {
 }
 
 std::string PrintOperator::toString(Register &reg) {
-  switch (reg.currentType) {
-    case Register::type::STRING:
+  switch (reg.type) {
+    case Register::TYPE::STRING:
       return reg.getStringValue();
-    case Register::type::INTEGER:
+    case Register::TYPE::INTEGER:
       return std::to_string(reg.getIntegerValue());
   }
 }

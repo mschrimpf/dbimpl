@@ -9,27 +9,28 @@
 #include <stdint.h>
 #include <functional>
 #include <stddef.h>
+#include <string>
+#include "../relations/Types.hpp"
 
 //The register class can be used to store and retrieve values of any type
 class Register {
 
 private:
-  const char *stringValue;
-  uint64_t intValue;
+  std::string stringValue;
+  Integer intValue;
 public:
-  enum type {
+  enum TYPE {
     UNDEFINED, INTEGER, STRING
-  };
-  type currentType;
+  } type;
 
-  Register() : currentType(Register::type::UNDEFINED) { };
+  Register() : type(Register::TYPE::UNDEFINED) { };
 
-  Register(uint64_t val) : intValue(val), currentType(Register::type::INTEGER) { };
+  Register(Integer val) : intValue(val), type(Register::TYPE::INTEGER) { };
 
-  Register(const char *val) : stringValue(val), currentType(Register::type::STRING) { };
+  Register(std::string val) : stringValue(val), type(Register::TYPE::STRING) { };
 
   inline bool operator<(const Register &val) const {
-    switch (currentType) {
+    switch (type) {
       case INTEGER:
         return intValue < val.getIntegerValue();
       case STRING:
@@ -42,7 +43,7 @@ public:
   }
 
   inline bool operator==(const Register &val) const {
-    switch (currentType) {
+    switch (type) {
       case INTEGER:
         return intValue == val.getIntegerValue();
       case STRING:
@@ -54,28 +55,30 @@ public:
     }
   }
 
-  inline void setStringValue(const char *val) {
+  inline void setStringValue(std::string val) {
+    type = TYPE::STRING;
     stringValue = val;
   }
 
-  inline void setIntegerValue(uint64_t val) {
+  inline void setIntegerValue(Integer val) {
+    type = TYPE::INTEGER;
     intValue = val;
   }
 
-  inline const char *getStringValue() const {
+  inline std::string getStringValue() const {
     return stringValue;
   }
 
-  inline uint64_t getIntegerValue() const {
+  inline Integer getIntegerValue() const {
     return intValue;
   }
 
   inline size_t hashValue() const {
-    switch (currentType) {
+    switch (type) {
       case INTEGER:
-        return std::hash<uint64_t>()(intValue);
+        return std::hash<Integer>()(intValue);
       case STRING:
-        return std::hash<const char *>()(stringValue);
+        return std::hash<std::string>()(stringValue);
       case UNDEFINED:
         return 0;
       default:
