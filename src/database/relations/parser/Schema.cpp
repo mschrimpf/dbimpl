@@ -34,3 +34,7 @@ std::string Schema::toString() const {
    }
    return out.str();
 }
+
+void Schema::Relation::addAttribute(Schema::Relation::Attribute attribute) {
+   attributes.push_back(attribute);
+}
