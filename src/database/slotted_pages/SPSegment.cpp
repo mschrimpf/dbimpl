@@ -18,7 +18,9 @@
 TID SPSegment::insert(const Record &record) {
   size_t data_size = record.getLen();
   BufferFrame &frame = this->findOrCreatePage(data_size);
-  return insert(record, frame);
+  TID tid = insert(record, frame);
+  numRecords++;
+  return tid;
 }
 
 TID SPSegment::insert(const Record &record, BufferFrame &frame) {
@@ -116,6 +118,7 @@ bool SPSegment::remove(TID tid) {
   slot->markAsFree();
 
   this->bufferManager.unfixPage(frame, true);
+  numRecords--;
   return true;
 }
 
@@ -186,4 +189,8 @@ Record SPSegment::getSlotRecord(SlottedPage &page, const Slot &slot) const {
   char *dataPtr = page.getSlotData(slot);
   uint32_t length = slot.L;
   return Record(length, dataPtr);
+}
+
+uint64_t SPSegment::getNumRecords() const {
+  return numRecords;
 }

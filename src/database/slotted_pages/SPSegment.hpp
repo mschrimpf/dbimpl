@@ -21,6 +21,7 @@ private:
   uint64_t segmentId;
   /** Page count or max page (equivalent) */
   uint64_t maxPageId;
+  uint64_t numRecords;
 
   TID insert(const Record &record, BufferFrame &frame);
 
@@ -45,6 +46,8 @@ public:
   bool update(TID tid, const Record &record);
 
   Record getSlotRecord(SlottedPage &page, const Slot &slot) const;
+
+  uint64_t getNumRecords() const;
 
   //////////////////////////////////////////////////////////////////
   // Iterator
