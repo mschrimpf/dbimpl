@@ -5,6 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 add_executable(operators_tests
     DummyOperator.cpp
     ../run_all_tests.cpp
+    register_tests.cpp
     print_operator_test.cpp
     selection_operator_tests.cpp
     projection_operator_tests.cpp
