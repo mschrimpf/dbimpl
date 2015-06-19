@@ -6,8 +6,9 @@ Exercise implementation by
 * Martin Schrimpf <martin.schrimpf@tum.de> and 
 * Daniel Langerenken <daniel.langerenken@gmail.com>
 
-C++ Code style according to the [Google Styleguide] (https://google-styleguide.googlecode.com/svn/trunk/cppguide.html)
+C++ Code style according to the [Google Styleguide] (https://google-styleguide.googlecode.com/svn/trunk/cppguide.html).
 
+Compiled for Ubuntu (you need CMake and dev-tools to compile the source).
 
 ## Assignment 1: External Sort
 To run the test sorting 5 GB of data:
@@ -63,3 +64,24 @@ To run the unit tests and given integration test:
     
     make -C ../.. BTreeTest
     ./BTreeTest
+
+## Assignment 5: Operators
+To run the iteration over SPSegment:
+    
+    # inside dbimpl directory
+    cmake .
+    cd testing/slotted_pages
+    
+    make -C ../.. slotted_pages_unit_tests
+    ./slotted_pages_unit_tests --gtest_filter=SPSegmentIterationTest.*
+    
+    cd ../..
+
+To run the operator tests:
+
+    # inside dbimpl directory
+    cmake .
+    cd testing/operators
+    
+    make -C ../.. operators_tests
+    ./operators_tests
