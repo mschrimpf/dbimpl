@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 #include "../../src/assignment6_parallelhashjoin/LinearProbingHT.hpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.hpp"
+#include "../../src/assignment6_parallelhashjoin/ChainingHT.hpp"
 
 
 using ::testing::EmptyTestEventListener;
@@ -56,18 +57,18 @@ public:
 
 //Time-tests
 TEST_F(ParallelHashJoinTest, ChainingWithLockingInsert) {
-  LinearProbingHT linearProbingHT(testSize);
-  insertLookup<LinearProbingHT, LinearProbingHT::Entry>(&linearProbingHT);
+  ChainingLockingHT hashTable(testSize);
+  insertLookup<ChainingLockingHT, ChainingLockingHT::Entry>(&hashTable);
 }
 
 TEST_F(ParallelHashJoinTest, ChainingInsert) {
-  ChainingLockingHT chainingLockingHT(testSize);
-  insertLookup<ChainingLockingHT, ChainingLockingHT::ChainingLockingHT>(&chainingLockingHT);
+  ChainingHT hashTable(testSize);
+  insertLookup<ChainingHT, ChainingHT::Entry>(&hashTable);
 }
 
 TEST_F(ParallelHashJoinTest, LinearProbingInsert) {
-  LinearProbingHT linearProbingHT(testSize);
-  insertLookup<LinearProbingHT, LinearProbingHT::Entry::>(&linearProbingHT);
+  LinearProbingHT hashTable(testSize);
+  insertLookup<LinearProbingHT, LinearProbingHT::Entry::>(&hashTable);
 }
 
 //time-tests

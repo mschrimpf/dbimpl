@@ -1,6 +1,9 @@
 #ifndef PROJECT_LINEARPROBING_H
 #define PROJECT_LINEARPROBING_H
 
+#include <atomic>
+#include "stdint.h"
+
 class LinearProbingHT {
 public:
   // Entry

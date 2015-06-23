@@ -1,10 +1,12 @@
 #ifndef PROJECT_CHAININGLOCKINGHT_H
 #define PROJECT_CHAININGLOCKINGHT_H
 
+#include "stdint.h"
+
 class ChainingLockingHT {
 public:
   // Chained tuple entry
-  struct ChainingLockingHT {
+  struct Entry {
     uint64_t key;
     uint64_t value;
     Entry *next;
