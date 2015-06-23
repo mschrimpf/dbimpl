@@ -34,38 +34,32 @@ Value *Node::calculate(BasicBlock *basicBlock, FunctionContext &functionContext)
   switch (operation) {
     case Operation::CONSTANTS: {
       return ConstantInt::get(Type::getInt64Ty(functionContext.Context), constant, true);
-      break;
     };
     case Operation::VARIABLES: {
       Value *val = functionContext.iterator++;
       val->setName(variable);
       return val;
-      break;
     }
     case Operation::ADDITION: {
       return BinaryOperator::CreateAdd(left->calculate(basicBlock, functionContext),
                                        right->calculate(basicBlock, functionContext), "Addition",
                                        basicBlock);
-      break;
     }
     case Operation::SUBTRACTION: {
       return BinaryOperator::CreateSub(left->calculate(basicBlock, functionContext),
                                        right->calculate(basicBlock, functionContext), "Subtraction",
                                        basicBlock);
-      break;
     }
     case Operation::MULTIPLICATION: {
       return BinaryOperator::CreateMul(left->calculate(basicBlock, functionContext),
                                        right->calculate(basicBlock, functionContext),
                                        "Multiplication",
                                        basicBlock);
-      break;
     }
     case Operation::DIVISION: {
       return BinaryOperator::CreateSDiv(left->calculate(basicBlock, functionContext),
                                         right->calculate(basicBlock, functionContext), "Division",
                                         basicBlock);
-      break;
     }
   }
 }
