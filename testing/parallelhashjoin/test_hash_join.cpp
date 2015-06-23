@@ -3,6 +3,7 @@
 //
 
 #include "gtest/gtest.h"
+#include "../parallelhashjoin"
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -25,11 +26,18 @@ public:
   void TearDown() {
 
   };
+
+  template<typename ParallelHashJoin>
+  inline bool insertLookup(ParallelHashJoin parallelHashJoin, uint64_t hashValue) {
+    parallelHashJoin.insert(1, 1);
+    Entry *entry = parallelHashJoin.lookup(1);
+    ASSERT_EQ(1, entry->value);
+  }
 };
 
 //Time-tests
 TEST_F(ParallelHashJoinTest, ChainingWithLockingTime) {
-
+  LinearProbingHT linearProbingHT;
 }
 
 TEST_F(ParallelHashJoinTest, ChainingTime) {
@@ -54,15 +62,15 @@ TEST_F(ParallelHashJoinTest, LinearProbingInsert) {
 }
 
 //get-tests
-TEST_F(ParallelHashJoinTest, ChainingWithLockingGet) {
+TEST_F(ParallelHashJoinTest, ChainingWithLockingLookup) {
 
 }
 
-TEST_F(ParallelHashJoinTest, ChainingGet) {
+TEST_F(ParallelHashJoinTest, ChainingLookup) {
 
 }
 
-TEST_F(ParallelHashJoinTest, LinearProbingGet) {
+TEST_F(ParallelHashJoinTest, LinearProbingLookup) {
 
 }
 

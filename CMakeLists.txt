@@ -22,6 +22,9 @@ add_subdirectory(testing/relations)
 add_subdirectory(testing/btree)
 add_subdirectory(testing/operators)
 
+add_subdirectory(src/assignment6_parallelhashjoin)
+add_subdirectory(testing/parallelhashjoin)
+
 #add_subdirectory(src/assignment7_codegeneration)
 #add_subdirectory(testing/code_generation)
 

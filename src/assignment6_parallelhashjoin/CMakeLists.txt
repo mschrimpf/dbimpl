@@ -8,4 +8,4 @@ set(PARALLELHASHJOIN_SOURCE_FILES
     ChainingHT.hpp
     LinearProbingHT.hpp)
 
-add_executable(parallelhashjoin ${SOURCE_FILES})
+add_executable(parallelhashjoin ${PARALLELHASHJOIN_SOURCE_FILES})
