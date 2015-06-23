@@ -28,7 +28,7 @@ public:
 
   inline Entry *lookup(uint64_t key) {
     uint64_t hash = hashKey(key);
-    return entries[hash];
+    return &entries[hash];
   }
 
   inline void insert(Entry *entry) {
