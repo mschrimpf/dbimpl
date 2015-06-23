@@ -11,4 +11,4 @@ set(PARALLELHASHJOIN_SOURCE_FILES
     LinearProbingHT.cpp
     LinearProbingHT.cpp)
 
-add_executable(parallelhashjoin ${SOURCE_FILES})
+add_executable(parallelhashjoin ${PARALLELHASHJOIN_SOURCE_FILES})
