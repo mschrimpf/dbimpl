@@ -67,7 +67,7 @@ TEST_F(ParallelHashJoinTest, ChainingInsert) {
 
 TEST_F(ParallelHashJoinTest, LinearProbingInsert) {
   LinearProbingHT linearProbingHT(testSize);
-  insertLookup<LinearProbingHT, LinearProbingHT::Entry>(&linearProbingHT);
+  insertLookup<LinearProbingHT, LinearProbingHT::Entry::>(&linearProbingHT);
 }
 
 //time-tests
