@@ -7,6 +7,7 @@
 class ChainingHT {
 private:
   Entry *entries;
+  uint64_t size;
 
 public:
   // Chained tuple entry
@@ -17,7 +18,7 @@ public:
   };
 
   // Constructor
-  ChainingHT(uint64_t size) {
+  ChainingHT(uint64_t size) : size(size) {
     entries = new Entry[size];
   }
 
@@ -27,20 +28,18 @@ public:
   }
 
   inline Entry *lookup(uint64_t key) {
-    uint64_t hash = hashKey(key);
+    uint64_t hash = hashKey(key) % size;
     return &entries[hash];
   }
 
-  inline void insert(Entry *entry) {
-    uint64_t key = entry->key;
-    uint64_t val = entry->value;
+  inline void insert(uint64_t key, uint64_t value) {
     Entry newEntry;
     newEntry.key = key;
-    newEntry.value = val;
-    uint64_t hash = hashKey(key);
+    newEntry.value = value;
+    uint64_t hash = hashKey(key) % size;
 
     do {
-      newEntry.next = entries[hash];
+      newEntry.next = &entries[hash];
     } while (compare_exchange_strong(entries[hash], newEntry, std::memory_order_relaxed));
   }
 };

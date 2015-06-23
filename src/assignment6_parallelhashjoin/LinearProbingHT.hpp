@@ -56,7 +56,8 @@ public:
     uint64_t hash = hashKey(key);
     for (uint64_t i = hash; i < size; i++) {
       Entry *entry = &entries[i % size];
-      if (!entry->marker) {
+      //TODO compare and exchange marker, otherwise try next entry
+      if (compare_exchange_strong(!entry->marker, true, std::memory_order_relaxed)) {
         //value added
         entry->key = key;
         entry->value = value;
