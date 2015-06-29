@@ -1,6 +1,7 @@
 #ifndef PROJECT_CHAININGLOCKINGHT_H
 #define PROJECT_CHAININGLOCKINGHT_H
 
+#include "hash.hpp"
 #include "stdint.h"
 #include <mutex>
 

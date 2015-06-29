@@ -1,6 +1,7 @@
 #ifndef PROJECT_LINEARPROBING_H
 #define PROJECT_LINEARPROBING_H
 
+#include "hash.hpp"
 #include <atomic>
 #include "stdint.h"
 #include "hashjoinskeleton.cpp"
