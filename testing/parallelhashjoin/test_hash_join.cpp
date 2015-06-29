@@ -3,8 +3,9 @@
 //
 
 #include "gtest/gtest.h"
-#include "../../src/assignment6_parallelhashjoin/LinearProbingHT.hpp"
-#include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.hpp"
+#include "../../src/assignment6_parallelhashjoin/LinearProbingHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/ChainingHT.cpp"
 
 
 using ::testing::EmptyTestEventListener;
@@ -32,7 +33,7 @@ public:
   };
 
   template<typename ParallelHashJoin, typename ReturnValue>
-  inline bool insertLookup(ParallelHashJoin *parallelHashJoin) {
+  inline void insertLookup(ParallelHashJoin *parallelHashJoin) {
     for (uint64_t t = 0; t < 100; t++) {
       if (t % 2 == 0) {
         continue;
@@ -43,11 +44,12 @@ public:
     for (uint64_t t = 0; t < 100; t++) {
       if (t % 2 == 0) {
         ReturnValue *returnValue = parallelHashJoin->lookup(t);
-        ASSERT_NE(returnValue, nullptr);
-        ASSERT_EQ(1, returnValue->value);
+        ASSERT_NE(nullptr, returnValue);
+        uint64_t val = returnValue->value;
+        ASSERT_EQ(1, val);
       } else {
         ReturnValue *notFoundValue = parallelHashJoin->lookup(t);
-        ASSERT_EQ(notFoundValue, nullptr);
+        ASSERT_EQ(nullptr, notFoundValue);
       }
     }
   }
@@ -56,18 +58,18 @@ public:
 
 //Time-tests
 TEST_F(ParallelHashJoinTest, ChainingWithLockingInsert) {
-  LinearProbingHT linearProbingHT(testSize);
-  insertLookup<LinearProbingHT, LinearProbingHT::Entry>(&linearProbingHT);
+  ChainingLockingHT hashTable(testSize);
+  insertLookup<ChainingLockingHT, ChainingLockingHT::Entry>(&hashTable);
 }
 
 TEST_F(ParallelHashJoinTest, ChainingInsert) {
-  ChainingLockingHT chainingLockingHT(testSize);
-  insertLookup<ChainingLockingHT, ChainingLockingHT::ChainingLockingHT>(&chainingLockingHT);
+  ChainingHT hashTable(testSize);
+  insertLookup<ChainingHT, ChainingHT::Entry>(&hashTable);
 }
 
 TEST_F(ParallelHashJoinTest, LinearProbingInsert) {
-  LinearProbingHT linearProbingHT(testSize);
-  insertLookup<LinearProbingHT, LinearProbingHT::Entry::>(&linearProbingHT);
+  LinearProbingHT hashTable(testSize);
+  insertLookup<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
 }
 
 //time-tests
