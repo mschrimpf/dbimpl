@@ -31,14 +31,6 @@ public:
 
   // Destructor
   ~ChainingHT() {
-    for (int i = 0; i < size; ++i) {
-      Entry *entry = atomicEntries[i];
-      while (entry != nullptr) {
-        Entry *next = entry->next;
-        delete entry;
-        entry = next;
-      }
-    }
     delete[] atomicEntries;
   }
 
@@ -46,13 +38,14 @@ public:
   inline uint64_t lookup(uint64_t key) {
     uint64_t hash = hashKey(key) % size;
     Entry *entry = atomicEntries[hash];
+    uint64_t count = 0;
     while (entry != nullptr) {
       if (entry->key == key) {
-        return entry;
+        count++;
       }
       entry = entry->next;
     }
-    return nullptr;
+    return count;
   }
 
   inline void insert(Entry *newEntry) {
