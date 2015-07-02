@@ -3,7 +3,7 @@
 //
 
 #include "gtest/gtest.h"
-//#include "../../src/assignment6_parallelhashjoin/LinearProbingHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/LinearProbingHT.cpp"
 //#include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingHT.cpp"
 
@@ -67,6 +67,8 @@ public:
       parallelHashJoin->insert(entry);
     }
 
+//    parallelHashJoin->print();
+
     for (uint64_t t = 0; t < 100; t++) {
       uint64_t count = parallelHashJoin->lookup(t);
       if (t % 2 == 0) {
@@ -99,9 +101,19 @@ TEST_F(ParallelHashJoinTest, ChainingInsert50) {
   insertLookup50<ChainingHT, ChainingHT::Entry>(&hashTable);
 }
 
-TEST_F(ParallelHashJoinTest, DISABLED_LinearProbingInsert50) {
-//  LinearProbingHT hashTable(testSize);
-//  insertLookup50<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
+TEST_F(ParallelHashJoinTest, LinearProbingInsertOnce) {
+  LinearProbingHT hashTable(testSize);
+  insertLookupOnce<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
+}
+
+TEST_F(ParallelHashJoinTest, LinearProbingInsertLookupSameKey) {
+  LinearProbingHT hashTable(testSize);
+  insertLookupSameKey<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
+}
+
+TEST_F(ParallelHashJoinTest, LinearProbingInsert50) {
+  LinearProbingHT hashTable(testSize);
+  insertLookup50<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
 }
 
 TEST_F(ParallelHashJoinTest, DISABLED_ChainingWithLockingInsert50) {

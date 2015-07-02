@@ -3,22 +3,27 @@
 
 #include "hash.hpp"
 #include <atomic>
+#include <stdio.h>
 #include "stdint.h"
-#include "hashjoinskeleton.cpp"
+#include "hash.hpp"
 
 class LinearProbingHT {
-private:
-  Entry *entries;
-  uint64_t size;
 public:
-
-  // Entry
   struct Entry {
     uint64_t key;
     uint64_t value;
     std::atomic<bool> marker;
+
+    Entry() : Entry(0, 0) { }
+
+    Entry(uint64_t key, uint64_t value) : key(key), value(value), marker(false) { }
   };
 
+private:
+  Entry *entries;
+  uint64_t size;
+
+public:
   // Constructor
   LinearProbingHT(uint64_t size) : size(size) {
     entries = new Entry[size];
@@ -32,42 +37,58 @@ public:
   // Returns the number of hits
   inline uint64_t lookup(uint64_t key) {
     uint64_t hash = hashKey(key);
-    for (uint64_t i = 0; i < size; i++) {
-      Entry *entry = &entries[hash % size];
-      if (entry->key == key) {
-        //correct position found
-        if (entry->marker) {
-          // value set-> return entry
-          return entry;
-        } else {
-          //value not set -> return nothing
-          return nullptr;
-        }
-      } else {
-        if (!entry->marker) {
-          //empty spot available -> our entry is not inside of the map
-          return nullptr;
-        }
+    uint64_t pos = hash % size;
+
+    uint64_t count = 0;
+    while (entries[pos].marker) {
+      if (entries[pos].key == key) {
+        count++;
       }
+      pos++;
     }
-    // no key matched -> no value found
-    return nullptr;
+    return count;
+  }
+
+  // this method exists for testing purposes
+  // as it allows a general interface for all parallel hash join implementations
+  // accepting an entry pointer
+  inline void insert(Entry *entry) {
+    insert(entry->key, entry->value);
   }
 
   inline void insert(uint64_t key, uint64_t value) {
-    uint64_t hash = hashKey(key);
-    for (uint64_t i = hash; i < size; i++) {
-      Entry *entry = &entries[i % size];
-      //TODO compare and exchange marker, otherwise try next entry
-      if (compare_exchange_strong(!entry->marker, true, std::memory_order_relaxed)) {
-        //value added
-        entry->key = key;
-        entry->value = value;
-        entry->marker = true;
+    uint64_t pos = hashKey(key) % size;
+    // if the table is full, this loops forever.
+    // derived from practical experience however,
+    // we assume that the table will never be full.
+    for (uint64_t i = pos; ; i = (i + 1) % size) {
+      Entry &entry = entries[i];
+      bool currMarker = entry.marker;
+      // check entry
+      if (!currMarker && entry.marker
+          .compare_exchange_strong(currMarker, true,
+                                   std::memory_order_seq_cst, std::memory_order_seq_cst)) {
+        entry.key = key;
+        entry.value = value;
+        entry.marker = true;
         break;
       }
     }
-    //value not added
+  }
+
+  inline void print() {
+    for (unsigned i = 0; i < size; i++) {
+      Entry *entry = &entries[i];
+      if (!entry->marker) {
+        printf("x");
+      } else {
+        printf("%llu=%llu", entry->key, entry->value);
+      }
+      if (i + 1 < size) {
+        printf("|");
+      }
+    }
+    printf("\n");
   }
 };
 
