@@ -6,19 +6,28 @@
 #include <mutex>
 
 class ChainingLockingHT {
-
 public:
-
   // Chained tuple entry
   struct Entry {
     uint64_t key;
     uint64_t value;
     Entry *next;
+
+    Entry(uint64_t key, uint64_t value) : key(key), value(value), next(nullptr) { }
   };
 
+private:
+  Entry **entries;
+  uint64_t size;
+  std::mutex *locks; //TODO andere mutexe nehmen
+
+public:
   // Constructor
   ChainingLockingHT(uint64_t size) : size(size) {
-    entries = new Entry[size];
+    entries = new Entry *[size];
+    for (uint64_t i = 0; i < size; i++) {
+      entries[i] = nullptr;
+    }
     locks = new std::mutex[size];
   }
 
@@ -31,43 +40,24 @@ public:
   // Returns the number of hits
   inline uint64_t lookup(uint64_t key) {
     uint64_t hash = hashKey(key) % size;
-    Entry *entry = &entries[hash];
-    while (entry->next != entry && entry->key != key) {
+    Entry *entry = entries[hash];
+    uint64_t count = 0;
+    while (entry != nullptr) {
+      if (entry->key == key) {
+        count++;
+      }
       entry = entry->next;
     }
-    if (entry->key == key) {
-      //found
-      return entry;
-    }
-    //not found
-    return nullptr;
+    return count;
   }
 
-  inline void insert(Entry* entry) {
-    uint64_t hash = hashKey(entry->key) % size;
-    locks[hash].lock();
-    Entry *entry = &entries[hash];
-    while (entry->next != nullptr && entry->next != entry) {
-      entry = entry->next;
-    }
-    if (entry->next == entry) {
-      //entry is set
-      Entry *newEntry = new Entry();
-      newEntry->key = key;
-      newEntry->value = value;
-      newEntry->next = newEntry;
-      entry->next = newEntry;
-    } else {
-      entry->key = key;
-      entry->value = value;
-    }
-    locks[hash].unlock();
+  inline void insert(Entry *newEntry) {
+    uint64_t hash = hashKey(newEntry->key) % size;
+    std::lock_guard<std::mutex> lock(locks[hash]);
+    Entry *currHead = entries[hash];
+    entries[hash] = newEntry;
+    newEntry->next = currHead;
   }
-
-private:
-  Entry *entries;
-  uint64_t size;
-  std::mutex *locks; //TODO andere mutexe nehmen
 };
 
 #endif //PROJECT_CHAININGLOCKINGHT_H
