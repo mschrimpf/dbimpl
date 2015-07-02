@@ -28,7 +28,8 @@ public:
     delete[] locks;
   }
 
-  inline Entry *lookup(uint64_t key) {
+  // Returns the number of hits
+  inline uint64_t lookup(uint64_t key) {
     uint64_t hash = hashKey(key) % size;
     Entry *entry = &entries[hash];
     while (entry->next != entry && entry->key != key) {
@@ -42,8 +43,8 @@ public:
     return nullptr;
   }
 
-  inline void insert(uint64_t key, uint64_t value) {
-    uint64_t hash = hashKey(key) % size;
+  inline void insert(Entry* entry) {
+    uint64_t hash = hashKey(entry->key) % size;
     locks[hash].lock();
     Entry *entry = &entries[hash];
     while (entry->next != nullptr && entry->next != entry) {

@@ -31,14 +31,23 @@ public:
 
   // Destructor
   ~ChainingHT() {
+    for (int i = 0; i < size; ++i) {
+      Entry *entry = atomicEntries[i];
+      while (entry != nullptr) {
+        Entry *next = entry->next;
+        delete entry;
+        entry = next;
+      }
+    }
     delete[] atomicEntries;
   }
 
-  inline Entry *lookup(uint64_t key) {
+  // Returns the number of hits
+  inline uint64_t lookup(uint64_t key) {
     uint64_t hash = hashKey(key) % size;
-    Entry * entry = atomicEntries[hash];
-    while(entry != nullptr) {
-      if(entry->key == key) {
+    Entry *entry = atomicEntries[hash];
+    while (entry != nullptr) {
+      if (entry->key == key) {
         return entry;
       }
       entry = entry->next;
@@ -46,15 +55,15 @@ public:
     return nullptr;
   }
 
-  inline void insert(uint64_t key, uint64_t value) {
-    Entry *newEntry = new Entry(key, value);
-    uint64_t hash = hashKey(key) % size;
+  inline void insert(Entry *newEntry) {
+    uint64_t hash = hashKey(newEntry->key) % size;
 
     Entry *oldEntry = atomicEntries[hash];
     do {
       newEntry->next = atomicEntries[hash];
-    } while (!atomicEntries[hash].compare_exchange_strong(oldEntry, newEntry,
-                                                          std::memory_order_relaxed, std::memory_order_relaxed));
+    } while (!atomicEntries[hash]
+        .compare_exchange_strong(oldEntry, newEntry,
+                                 std::memory_order_seq_cst, std::memory_order_seq_cst));
   }
 
   inline void print() {

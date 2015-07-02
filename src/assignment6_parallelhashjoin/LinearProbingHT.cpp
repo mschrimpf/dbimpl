@@ -29,7 +29,8 @@ public:
     delete[] entries;
   }
 
-  inline Entry *lookup(uint64_t key) {
+  // Returns the number of hits
+  inline uint64_t lookup(uint64_t key) {
     uint64_t hash = hashKey(key);
     for (uint64_t i = 0; i < size; i++) {
       Entry *entry = &entries[hash % size];
