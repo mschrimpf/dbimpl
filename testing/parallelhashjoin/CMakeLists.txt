@@ -1,7 +1,12 @@
 add_test(NAME unit_tests COMMAND $<TARGET_FILE:database>)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-set(PARALLEL_HASH_JOIN_TEST_SOURCES test_hash_join.cpp)
-add_executable(parallel_hash_join_tests ${PARALLEL_HASH_JOIN_TEST_SOURCES})
+
+add_executable(parallel_hash_join_tests test_hash_join.cpp)
 set_target_properties(parallel_hash_join_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
 target_link_libraries(parallel_hash_join_tests gtest_main)
+
+set(PARALLEL_HASH_JOIN_BENCHMARK_SOURCES test_hash_join.cpp)
+add_executable(parallel_hash_join_benchmark hashjoinskeleton.cpp)
+set_target_properties(parallel_hash_join_benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
+target_link_libraries(parallel_hash_join_benchmark gtest_main)
