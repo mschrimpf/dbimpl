@@ -21,7 +21,7 @@ public:
     uint64_t key;
     Entry *next;
 
-    Entry(uint64_t key, uint64_t value) : key(key), next(nullptr) { }
+    Entry(uint64_t key) : key(key), next(nullptr) { }
   };
 
 private:

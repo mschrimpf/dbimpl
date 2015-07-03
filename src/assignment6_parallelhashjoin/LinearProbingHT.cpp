@@ -11,12 +11,11 @@ class LinearProbingHT {
 public:
   struct Entry {
     uint64_t key;
-    uint64_t value;
     std::atomic<bool> marker;
 
-    Entry() : Entry(0, 0) { }
+    Entry() : Entry(0) { }
 
-    Entry(uint64_t key, uint64_t value) : key(key), value(value), marker(false) { }
+    Entry(uint64_t key) : key(key), marker(false) { }
   };
 
 private:
@@ -53,10 +52,10 @@ public:
   // as it allows a general interface for all parallel hash join implementations
   // accepting an entry pointer
   inline void insert(Entry *entry) {
-    insert(entry->key, entry->value);
+    insert(entry->key);
   }
 
-  inline void insert(uint64_t key, uint64_t value) {
+  inline void insert(uint64_t key) {
     uint64_t pos = hashKey(key) % size;
     // if the table is full, this loops forever.
     // derived from practical experience however,
@@ -69,7 +68,6 @@ public:
           .compare_exchange_strong(currMarker, true,
                                    std::memory_order_seq_cst, std::memory_order_seq_cst)) {
         entry.key = key;
-        entry.value = value;
         entry.marker = true;
         break;
       }
@@ -82,7 +80,7 @@ public:
       if (!entry->marker) {
         printf("x");
       } else {
-        printf("%llu=%llu", entry->key, entry->value);
+        printf("%llu", entry->key);
       }
       if (i + 1 < size) {
         printf("|");

@@ -10,10 +10,9 @@ public:
   // Chained tuple entry
   struct Entry {
     uint64_t key;
-    uint64_t value;
     Entry *next;
 
-    Entry(uint64_t key, uint64_t value) : key(key), value(value), next(nullptr) { }
+    Entry(uint64_t key) : key(key), next(nullptr) { }
   };
 
 private:
@@ -68,7 +67,7 @@ public:
       }
       printf("[%u]", i);
       while (entry != nullptr) {
-        printf(" -> (%llu, %llu)", entry->key, entry->value);
+        printf(" -> (%llu)", entry->key);
         entry = entry->next;
       }
       printf("\n");

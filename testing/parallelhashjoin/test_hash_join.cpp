@@ -20,7 +20,7 @@ public:
 
   template<typename ParallelHashJoin, typename Entry>
   inline void insertLookupOnce(ParallelHashJoin *parallelHashJoin) {
-    Entry *entry = new Entry(1, 1);
+    Entry *entry = new Entry(1);
     parallelHashJoin->insert(entry);
 
     uint64_t count = parallelHashJoin->lookup(1);
@@ -30,8 +30,8 @@ public:
 
   template<typename ParallelHashJoin, typename Entry>
   inline void insertLookupSameKey(ParallelHashJoin *parallelHashJoin) {
-    Entry *entry1 = new Entry(1, 1);
-    Entry *entry2 = new Entry(1, 1);
+    Entry *entry1 = new Entry(1);
+    Entry *entry2 = new Entry(1);
 
     parallelHashJoin->insert(entry1);
     parallelHashJoin->insert(entry2);
@@ -50,7 +50,7 @@ public:
       if (t % 2 == 0) {
         continue;
       }
-      Entry *entry = new Entry(t, 1);
+      Entry *entry = new Entry(t);
       entryPointers.push_back(entry);
       parallelHashJoin->insert(entry);
     }
