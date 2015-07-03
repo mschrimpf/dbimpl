@@ -1,11 +1,8 @@
-//
-// Created by daniel on 6/23/15.
-//
-
 #include "gtest/gtest.h"
 #include "../../src/assignment6_parallelhashjoin/LinearProbingHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/ChainingBloomHT.cpp"
 
 
 using ::testing::EmptyTestEventListener;
@@ -38,8 +35,10 @@ public:
 
     parallelHashJoin->insert(entry1);
     parallelHashJoin->insert(entry2);
+
     uint64_t count = parallelHashJoin->lookup(1);
     ASSERT_EQ(2, count);
+
     delete entry1;
     delete entry2;
   }
@@ -116,4 +115,19 @@ TEST_F(ParallelHashJoinTest, LockingChainingInsertLookupSameKey) {
 TEST_F(ParallelHashJoinTest, LockingChainingInsert50) {
   ChainingLockingHT hashTable(testSize);
   insertLookup50<ChainingLockingHT, ChainingLockingHT::Entry>(&hashTable);
+}
+
+TEST_F(ParallelHashJoinTest, ChainingBloomHTInsertOnce) {
+  ChainingBloomHT hashTable(testSize);
+  insertLookupOnce<ChainingBloomHT, ChainingBloomHT::Entry>(&hashTable);
+}
+
+TEST_F(ParallelHashJoinTest, ChainingBloomHTInsertLookupSameKey) {
+  ChainingBloomHT hashTable(testSize);
+  insertLookupSameKey<ChainingBloomHT, ChainingBloomHT::Entry>(&hashTable);
+}
+
+TEST_F(ParallelHashJoinTest, ChainingBloomHTInsert50) {
+  ChainingBloomHT hashTable(testSize);
+  insertLookup50<ChainingBloomHT, ChainingBloomHT::Entry>(&hashTable);
 }
