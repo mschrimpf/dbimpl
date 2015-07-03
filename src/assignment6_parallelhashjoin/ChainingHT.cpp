@@ -51,9 +51,10 @@ public:
   inline void insert(Entry *newEntry) {
     uint64_t hash = hashKey(newEntry->key) % size;
 
-    Entry *oldEntry = atomicEntries[hash];
+    Entry *oldEntry;
     do {
-      newEntry->next = atomicEntries[hash];
+      oldEntry = atomicEntries[hash];
+      newEntry->next = oldEntry;
     } while (!atomicEntries[hash]
         .compare_exchange_strong(oldEntry, newEntry,
                                  std::memory_order_seq_cst, std::memory_order_seq_cst));
