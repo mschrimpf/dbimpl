@@ -4,6 +4,7 @@
 #include "hash.hpp"
 #include "stdint.h"
 #include <mutex>
+#include <stdio.h>
 
 class ChainingLockingHT {
 public:
@@ -57,6 +58,21 @@ public:
     Entry *currHead = entries[hash];
     entries[hash] = newEntry;
     newEntry->next = currHead;
+  }
+
+  inline void print() {
+    for (unsigned i = 0; i < size; i++) {
+      Entry *entry = entries[i];
+      if (entry == nullptr) {
+        continue;
+      }
+      printf("[%u]", i);
+      while (entry != nullptr) {
+        printf(" -> (%llu=%llu)", entry->key, entry->value);
+        entry = entry->next;
+      }
+      printf("\n");
+    }
   }
 };
 
