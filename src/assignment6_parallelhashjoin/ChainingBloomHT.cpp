@@ -31,7 +31,7 @@ private:
   /** MSB: 16 1-bits */
   const uint64_t POINTER_CONTROL_MASK = ((uint64_t) 0b1111111111111111) << POINTER_CONTROL_SHIFT_LENGTH;
   /** LSB: 48 1-bits */
-  const uint64_t POINTER_POINTER_MASK = POINTER_CONTROL_MASK ^((uint64_t) 18446744073709551615 /* 2^64 - 1 */);
+  const uint64_t POINTER_POINTER_MASK = POINTER_CONTROL_MASK ^((uint64_t) 18446744073709551615LLU /* 2^64 - 1 */);
   std::atomic<Entry *> *atomicEntries;
   uint64_t size;
 
