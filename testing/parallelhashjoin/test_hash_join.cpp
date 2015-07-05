@@ -3,6 +3,7 @@
 #include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingBloomHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/MatrixHT.cpp"
 
 
 using ::testing::EmptyTestEventListener;
@@ -71,63 +72,24 @@ public:
 
 };
 
-// Insert
-TEST_F(ParallelHashJoinTest, ChainingInsertOnce) {
-  ChainingHT hashTable(testSize);
-  insertLookupOnce<ChainingHT, ChainingHT::Entry>(&hashTable);
-}
+#define HT_TESTS(TABLE_NAME) \
+  TEST_F(ParallelHashJoinTest, TABLE_NAME ## InsertOnce) {\
+    TABLE_NAME hashTable(testSize);\
+    insertLookupOnce<TABLE_NAME, TABLE_NAME::Entry>(&hashTable);\
+  }\
+  \
+  TEST_F(ParallelHashJoinTest, TABLE_NAME ## InsertLookupSameKey) {\
+    TABLE_NAME hashTable(testSize);\
+    insertLookupSameKey<TABLE_NAME, TABLE_NAME::Entry>(&hashTable);\
+  }\
+  \
+  TEST_F(ParallelHashJoinTest, TABLE_NAME ## Insert50) {\
+    TABLE_NAME hashTable(testSize);\
+    insertLookup50<TABLE_NAME, TABLE_NAME::Entry>(&hashTable);\
+  }
 
-TEST_F(ParallelHashJoinTest, ChainingInsertLookupSameKey) {
-  ChainingHT hashTable(testSize);
-  insertLookupSameKey<ChainingHT, ChainingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, ChainingInsert50) {
-  ChainingHT hashTable(testSize);
-  insertLookup50<ChainingHT, ChainingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, LinearProbingInsertOnce) {
-  LinearProbingHT hashTable(testSize);
-  insertLookupOnce<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, LinearProbingInsertLookupSameKey) {
-  LinearProbingHT hashTable(testSize);
-  insertLookupSameKey<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, LinearProbingInsert50) {
-  LinearProbingHT hashTable(testSize);
-  insertLookup50<LinearProbingHT, LinearProbingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, LockingChainingInsertOnce) {
-  ChainingLockingHT hashTable(testSize);
-  insertLookupOnce<ChainingLockingHT, ChainingLockingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, LockingChainingInsertLookupSameKey) {
-  ChainingLockingHT hashTable(testSize);
-  insertLookupSameKey<ChainingLockingHT, ChainingLockingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, LockingChainingInsert50) {
-  ChainingLockingHT hashTable(testSize);
-  insertLookup50<ChainingLockingHT, ChainingLockingHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, ChainingBloomHTInsertOnce) {
-  ChainingBloomHT hashTable(testSize);
-  insertLookupOnce<ChainingBloomHT, ChainingBloomHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, ChainingBloomHTInsertLookupSameKey) {
-  ChainingBloomHT hashTable(testSize);
-  insertLookupSameKey<ChainingBloomHT, ChainingBloomHT::Entry>(&hashTable);
-}
-
-TEST_F(ParallelHashJoinTest, ChainingBloomHTInsert50) {
-  ChainingBloomHT hashTable(testSize);
-  insertLookup50<ChainingBloomHT, ChainingBloomHT::Entry>(&hashTable);
-}
+HT_TESTS(ChainingHT)
+HT_TESTS(LinearProbingHT)
+HT_TESTS(ChainingLockingHT)
+HT_TESTS(ChainingBloomHT)
+HT_TESTS(MatrixHT)
