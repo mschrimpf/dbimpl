@@ -3,6 +3,7 @@
 
 #include "hash.hpp"
 #include "stdint.h"
+#include "inttypes_wrapper.hpp"
 #include <mutex>
 #include <stdio.h>
 
@@ -67,7 +68,7 @@ public:
       }
       printf("[%u]", i);
       while (entry != nullptr) {
-        printf(" -> (%llu)", entry->key);
+        printf(" -> (%" PRIu64 ")", entry->key);
         entry = entry->next;
       }
       printf("\n");

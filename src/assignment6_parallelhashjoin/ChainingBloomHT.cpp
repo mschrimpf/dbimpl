@@ -2,6 +2,7 @@
 #define PROJECT_CHAININGBLOOMHT_H
 
 #include "hash.hpp"
+#include "inttypes_wrapper.hpp"
 #include <atomic>
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +13,7 @@
  * - store no values
  * - memset entries to zero instead of settings every single entry to null
  * - use first bits of pointer to store whether a specific entry is in the list (second hash)
- * - sort lists
+ * - sort lists and aggregate the counts
  */
 class ChainingBloomHT {
 public:
@@ -68,6 +69,7 @@ public:
     uint64_t count = 0;
     entry = (Entry *) (((uint64_t) entry) & POINTER_POINTER_MASK);
     while (entry != nullptr) {
+      // TODO: jump table instead of branching
       if (entry->key == key) {
         count++;
       }
@@ -119,7 +121,7 @@ public:
       entry = (Entry *) (((uint64_t) entry) & POINTER_POINTER_MASK);
       printf("[%u]", i);
       while (entry != nullptr) {
-        printf(" -> (%llu)", entry->key);
+        printf(" -> (%" PRIu64 ")", entry->key);
         entry = entry->next;
       }
       printf("\n");

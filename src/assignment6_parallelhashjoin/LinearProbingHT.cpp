@@ -4,6 +4,7 @@
 #include "hash.hpp"
 #include <atomic>
 #include <stdio.h>
+#include "inttypes_wrapper.hpp"
 #include "stdint.h"
 #include "hash.hpp"
 
@@ -80,7 +81,7 @@ public:
       if (!entry->marker) {
         printf("x");
       } else {
-        printf("%llu", entry->key);
+        printf("%" PRIu64, entry->key);
       }
       if (i + 1 < size) {
         printf("|");

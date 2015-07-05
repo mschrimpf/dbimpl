@@ -2,6 +2,7 @@
 #define PROJECT_CHAININGHT_H
 
 #include "hash.hpp"
+#include "inttypes_wrapper.hpp"
 #include <atomic>
 #include <stdio.h>
 
@@ -67,7 +68,7 @@ public:
       }
       printf("[%u]", i);
       while (entry != nullptr) {
-        printf(" -> (%llu)", entry->key);
+        printf(" -> (%" PRIu64 ")", entry->key);
         entry = entry->next;
       }
       printf("\n");
