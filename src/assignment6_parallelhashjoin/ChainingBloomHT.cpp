@@ -13,7 +13,6 @@
  * - store no values
  * - memset entries to zero instead of settings every single entry to null
  * - use first bits of pointer to store whether a specific entry is in the list (second hash)
- * - sort lists and aggregate the counts
  */
 class ChainingBloomHT {
 public:
@@ -35,7 +34,7 @@ private:
   std::atomic<Entry *> *atomicEntries;
   uint64_t size;
 
-  inline uint64_t controlHash(uint64_t key) {
+  inline uint64_t controlHash(uint64_t key) const {
     return (key % POINTER_CONTROL_LENGTH) << POINTER_CONTROL_SHIFT_LENGTH;
   }
 
@@ -56,7 +55,7 @@ public:
   }
 
   // Returns the number of hits
-  inline uint64_t lookup(uint64_t key) {
+  inline uint64_t lookup(uint64_t key) const {
     uint64_t hash = hashKey(key) % size;
     Entry *entry = atomicEntries[hash];
     if (entry == nullptr) {
@@ -66,8 +65,8 @@ public:
     if ((((uint64_t) entry) & hash2) != hash2) {
       return 0;
     }
-    uint64_t count = 0;
     entry = (Entry *) (((uint64_t) entry) & POINTER_POINTER_MASK);
+    uint64_t count = 0;
     while (entry != nullptr) {
       // TODO: jump table instead of branching
       if (entry->key == key) {
@@ -80,8 +79,8 @@ public:
 
   inline void insert(Entry *newEntry) {
     uint64_t hash = hashKey(newEntry->key) % size;
+    uint64_t hash2 = controlHash(newEntry->key);
 
-    // TODO: sort and aggregate
     Entry *modifiedPtr;
     Entry *currHead;
     do {
@@ -91,7 +90,6 @@ public:
       modifiedPtr->next = plainHead;
 
       uint64_t currHash = ((uint64_t) currHead) & POINTER_CONTROL_MASK;
-      uint64_t hash2 = controlHash(newEntry->key);
       modifiedPtr = (Entry *) (((uint64_t) modifiedPtr) | hash2 | currHash);
 
 #if CHAININGBLOOMHT_DEBUG == 1

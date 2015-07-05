@@ -39,7 +39,7 @@ public:
   }
 
   // Returns the number of hits
-  inline uint64_t lookup(uint64_t key) {
+  inline uint64_t lookup(uint64_t key) const {
     uint64_t hash = hashKey(key) % size;
     Entry *entry = entries[hash];
     uint64_t count = 0;
