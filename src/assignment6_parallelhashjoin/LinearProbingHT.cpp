@@ -14,7 +14,7 @@ public:
     uint64_t key;
     std::atomic<bool> marker;
 
-    Entry() : Entry(0) { }
+    Entry() { }
 
     Entry(uint64_t key) : key(key), marker(false) { }
   };

@@ -17,6 +17,7 @@ public:
     uint64_t key;
     Entry *next;
 
+    Entry(){}
     Entry(uint64_t key) : key(key), next(nullptr) { }
   };
 

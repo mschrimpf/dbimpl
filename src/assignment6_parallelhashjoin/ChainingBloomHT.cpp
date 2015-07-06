@@ -22,6 +22,7 @@ public:
     Entry *next;
 
     Entry(uint64_t key) : key(key), next(nullptr) { }
+    Entry(){}
   };
 
 private:

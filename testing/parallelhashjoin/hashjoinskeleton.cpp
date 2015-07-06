@@ -1,12 +1,18 @@
 #include <iostream>
 #include <cstdlib>
 #include <atomic>
-//#include <tbb/tbb.h>
+#include <tbb/tbb.h>
 #include <unordered_map>
-#include "hash.hpp"
+#include <utility>
+#include <ext/mt_allocator.h>
+#include "../../src/assignment6_parallelhashjoin/ChainingBloomHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/ChainingHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/LinearProbingHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/MatrixHT.cpp"
 
-//using namespace tbb;
-using namespace std;
+using namespace tbb;
+//using namespace std;
 
 
 /**
@@ -51,11 +57,12 @@ int main(int argc,char** argv) {
   {
     // Build hash table (single threaded)
     tick_count buildTS=tick_count::now();
-    unordered_multimap<uint64_t,uint64_t> ht(sizeR);
+    std::unordered_multimap<uint64_t,uint64_t, std::hash<uint64_t >, std::equal_to<uint64_t>,
+            __gnu_cxx::__mt_alloc<std::pair<const uint64_t, uint64_t >>> ht(sizeR);
     for (uint64_t i=0; i<sizeR; i++)
       ht.emplace(R[i],0);
     tick_count probeTS=tick_count::now();
-    cout << "STL      build:" << (sizeR/1e6)/(probeTS-buildTS).seconds() << "MT/s ";
+    std::cout << "STL      build:" << (sizeR/1e6)/(probeTS-buildTS).seconds() << "MT/s " << std::endl;
 
     // Probe hash table and count number of hits
     std::atomic<uint64_t> hitCounter;
@@ -64,18 +71,162 @@ int main(int argc,char** argv) {
       uint64_t localHitCounter=0;
       for (size_t i=range.begin(); i!=range.end(); ++i) {
         auto range=ht.equal_range(S[i]);
-        for (unordered_multimap<uint64_t,uint64_t>::iterator it=range.first; it!=range.second; ++it)
+        for (std::unordered_multimap<uint64_t,uint64_t>::iterator it=range.first; it!=range.second; ++it)
           localHitCounter++;
       }
       hitCounter+=localHitCounter;
     });
     tick_count stopTS=tick_count::now();
-    cout << "probe: " << (sizeS/1e6)/(stopTS-probeTS).seconds() << "MT/s "
+    std::cout << "probe: " << (sizeS/1e6)/(stopTS-probeTS).seconds() << "MT/s "
     << "total: " << ((sizeR+sizeS)/1e6)/(stopTS-buildTS).seconds() << "MT/s "
-    << "count: " << hitCounter << endl;
+    << "count: " << hitCounter << std::endl;
   }
 
   // Test you implementation here... (like the STL test above)
 
+  // ChainingBloomHT
+  {
+    // Build hash table (single threaded)
+    tick_count buildTS=tick_count::now();
+
+    ChainingBloomHT ht(sizeR);
+    ChainingBloomHT::Entry* data = new ChainingBloomHT::Entry[sizeR];
+    for (uint64_t i=0; i<sizeR; i++){
+      data[i].key = R[i];
+      data[i].next = nullptr;
+      ht.insert(&data[i]);
+    }
+    tick_count probeTS=tick_count::now();
+    std::cout << "ChainingBloomHT      build:" << (sizeR/1e6)/(probeTS-buildTS).seconds() << "MT/s " << std::endl;
+
+    // Probe hash table and count number of hits
+    std::atomic<uint64_t> hitCounter;
+    hitCounter=0;
+    parallel_for(blocked_range<size_t>(0, sizeS), [&](const blocked_range<size_t>& range) {
+        for (size_t i=range.begin(); i!=range.end(); ++i) {
+          hitCounter+=ht.lookup(S[i]);
+        }
+    });
+    tick_count stopTS=tick_count::now();
+    std::cout << "probe: " << (sizeS/1e6)/(stopTS-probeTS).seconds() << "MT/s "
+    << "total: " << ((sizeR+sizeS)/1e6)/(stopTS-buildTS).seconds() << "MT/s "
+    << "count: " << hitCounter << std::endl;
+  }
+
+  // ChainingHT
+  {
+    // Build hash table (single threaded)
+    tick_count buildTS=tick_count::now();
+
+    ChainingHT ht(sizeR);
+    ChainingHT::Entry * data = new ChainingHT::Entry[sizeR];
+    for (uint64_t i=0; i<sizeR; i++){
+      data[i].key = R[i];
+      data[i].next = nullptr;
+      ht.insert(&data[i]);
+    }
+    tick_count probeTS=tick_count::now();
+    std::cout << "ChainingHT      build:" << (sizeR/1e6)/(probeTS-buildTS).seconds() << "MT/s " << std::endl;
+
+    // Probe hash table and count number of hits
+    std::atomic<uint64_t> hitCounter;
+    hitCounter=0;
+    parallel_for(blocked_range<size_t>(0, sizeS), [&](const blocked_range<size_t>& range) {
+        for (size_t i=range.begin(); i!=range.end(); ++i) {
+          hitCounter+=ht.lookup(S[i]);
+        }
+    });
+    tick_count stopTS=tick_count::now();
+    std::cout << "probe: " << (sizeS/1e6)/(stopTS-probeTS).seconds() << "MT/s "
+    << "total: " << ((sizeR+sizeS)/1e6)/(stopTS-buildTS).seconds() << "MT/s "
+    << "count: " << hitCounter << std::endl;
+  }
+
+  // ChainingLocking
+  {
+    // Build hash table (single threaded)
+    tick_count buildTS=tick_count::now();
+    ChainingLockingHT ht(sizeR);
+    ChainingLockingHT::Entry * data = new ChainingLockingHT::Entry [sizeR];
+    for (uint64_t i=0; i<sizeR; i++){
+      data[i].key = R[i];
+      data[i].next = nullptr;
+      ht.insert(&data[i]);
+    }
+    tick_count probeTS=tick_count::now();
+    std::cout << "ChainingLockingHT      build:" << (sizeR/1e6)/(probeTS-buildTS).seconds() << "MT/s " << std::endl;
+
+    // Probe hash table and count number of hits
+    std::atomic<uint64_t> hitCounter;
+    hitCounter=0;
+    parallel_for(blocked_range<size_t>(0, sizeS), [&](const blocked_range<size_t>& range) {
+        for (size_t i=range.begin(); i!=range.end(); ++i) {
+          hitCounter += ht.lookup(S[i]);
+        }
+        });
+    tick_count stopTS=tick_count::now();
+    std::cout << "probe: " << (sizeS/1e6)/(stopTS-probeTS).seconds() << "MT/s "
+    << "total: " << ((sizeR+sizeS)/1e6)/(stopTS-buildTS).seconds() << "MT/s "
+    << "count: " << hitCounter << std::endl;
+  }
+
+  // LinearProbingHT
+  {
+    // Build hash table (single threaded)
+    tick_count buildTS=tick_count::now();
+
+    LinearProbingHT ht(sizeR);
+    LinearProbingHT::Entry * data  = new LinearProbingHT::Entry[sizeR];
+    for (uint64_t i=0; i<sizeR; i++){
+      data[i].key = R[i];
+      data[i].marker = false;
+
+      ht.insert(&data[i]);
+    }
+
+    tick_count probeTS=tick_count::now();
+    std::cout << "LinearProbingHT      build:" << (sizeR/1e6)/(probeTS-buildTS).seconds() << "MT/s " << std::endl;
+
+    // Probe hash table and count number of hits
+    std::atomic<uint64_t> hitCounter;
+    hitCounter=0;
+    parallel_for(blocked_range<size_t>(0, sizeS), [&](const blocked_range<size_t>& range) {
+        for (size_t i=range.begin(); i!=range.end(); ++i) {
+          hitCounter+=ht.lookup(S[i]);
+        }
+    });
+    tick_count stopTS=tick_count::now();
+    std::cout << "probe: " << (sizeS/1e6)/(stopTS-probeTS).seconds() << "MT/s "
+    << "total: " << ((sizeR+sizeS)/1e6)/(stopTS-buildTS).seconds() << "MT/s "
+    << "count: " << hitCounter << std::endl;
+  }
+  // MatrixHT
+  {
+    // Build hash table (single threaded)
+    tick_count buildTS=tick_count::now();
+    MatrixHT ht(sizeR);
+    MatrixHT::Entry * data = new MatrixHT::Entry[sizeR];
+    for (uint64_t i=0; i<sizeR; i++){
+      data[i].key = R[i];
+      data[i].next = nullptr;
+      ht.insert(&data[i]);
+    }
+
+    tick_count probeTS=tick_count::now();
+    std::cout << "MatrixHT      build:" << (sizeR/1e6)/(probeTS-buildTS).seconds() << "MT/s " << std::endl;
+
+    // Probe hash table and count number of hits
+    std::atomic<uint64_t> hitCounter;
+    hitCounter=0;
+    parallel_for(blocked_range<size_t>(0, sizeS), [&](const blocked_range<size_t>& range) {
+        for (size_t i=range.begin(); i!=range.end(); ++i) {
+          hitCounter+=ht.lookup(S[i]);
+        }
+    });
+    tick_count stopTS=tick_count::now();
+    std::cout << "probe: " << (sizeS/1e6)/(stopTS-probeTS).seconds() << "MT/s "
+    << "total: " << ((sizeR+sizeS)/1e6)/(stopTS-buildTS).seconds() << "MT/s "
+    << "count: " << hitCounter << std::endl;
+  }
   return 0;
 }
