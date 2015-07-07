@@ -10,6 +10,11 @@
 
 #define MATRIX_DEBUG 1
 
+/**
+ * Matrix of keys that fully use the allowed memory
+ * with chained lists beginning in the last column
+ * if the columns are not enough
+ */
 class MatrixHT {
 public:
   // Chained tuple entry
@@ -22,7 +27,8 @@ public:
   };
 
 private:
-  const unsigned COLUMNS = 5;
+  // constraint: (max 48 byte - sizeof(previously allocated entry)) / sizeof(key) = (48 - 16) / 8 = 4
+  const unsigned COLUMNS = 4;
   const uint64_t INVALID_FLAG = std::numeric_limits<uint64_t>::max();
   std::atomic<uint64_t> *entries;
   uint64_t size;
