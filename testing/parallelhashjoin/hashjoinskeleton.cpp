@@ -166,8 +166,8 @@ int main(int argc, char **argv) {
     << "total: " << ((sizeR + sizeS) / 1e6) / (stopTS - buildTS).seconds() << "MT/s "
     << "count: " << hitCounter << std::endl;
   }
-//  runBenchmark<MatrixHT, MatrixHT::Entry>(
-//      "MatrixHT                  ", sizeR, sizeS);
+  runBenchmark<MatrixHT, MatrixHT::Entry>(
+      "MatrixHT                  ", sizeR, sizeS);
 
   return 0;
 }
