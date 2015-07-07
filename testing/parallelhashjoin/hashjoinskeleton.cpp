@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     // Build hash table (single threaded)
     tick_count buildTS = tick_count::now();
 
-    LinearProbingHT ht(sizeR);
+    LinearProbingHT ht(sizeR, false);
     parallel_for(blocked_range<size_t>(0, sizeR),
                  [&](const blocked_range <size_t> &range) {
                    for (size_t i = range.begin(); i != range.end(); ++i) {
@@ -166,8 +166,8 @@ int main(int argc, char **argv) {
     << "total: " << ((sizeR + sizeS) / 1e6) / (stopTS - buildTS).seconds() << "MT/s "
     << "count: " << hitCounter << std::endl;
   }
-  runBenchmark<MatrixHT, MatrixHT::Entry>(
-      "MatrixHT                  ", sizeR, sizeS);
+//  runBenchmark<MatrixHT, MatrixHT::Entry>(
+//      "MatrixHT                  ", sizeR, sizeS);
 
   return 0;
 }
