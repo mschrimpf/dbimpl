@@ -6,6 +6,7 @@
 #include "inttypes_wrapper.hpp"
 #include <mutex>
 #include <stdio.h>
+#include <string.h>
 
 class ChainingLockingCachelineHT {
 public:
@@ -34,9 +35,7 @@ public:
   // Constructor
   ChainingLockingCachelineHT(uint64_t size) : size(size) {
     buckets = new Bucket[size];
-    for (uint64_t i = 0; i < size; i++) {
-      buckets[i].entry = nullptr;
-    }
+    memset(buckets, 0, (size_t) size * sizeof(Bucket));
   }
 
   // Destructor

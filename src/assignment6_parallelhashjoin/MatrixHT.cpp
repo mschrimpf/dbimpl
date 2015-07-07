@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <limits>
 #include <stdexcept>
+#include <string.h>
 
 #define MATRIX_DEBUG 1
 
@@ -39,9 +40,8 @@ public:
   MatrixHT(uint64_t size) : numRows(size) {
     uint64_t entriesSize = size * COLUMNS;
     entries = new std::atomic<uint64_t>[entriesSize];
-    for (unsigned i = 0; i < entriesSize; i++) {
-      entries[i] = INVALID_FLAG;
-    }
+    int invalid_int_flag = std::numeric_limits<int>::max();
+    memset(entries, invalid_int_flag, (size_t) entriesSize * sizeof(std::atomic<uint64_t>));
   }
 
   // Destructor

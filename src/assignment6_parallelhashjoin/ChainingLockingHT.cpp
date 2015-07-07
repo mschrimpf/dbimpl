@@ -6,6 +6,7 @@
 #include "inttypes_wrapper.hpp"
 #include <mutex>
 #include <stdio.h>
+#include <string.h>
 
 class ChainingLockingHT {
 public:
@@ -15,7 +16,8 @@ public:
     Entry *next;
 
     Entry(uint64_t key) : key(key), next(nullptr) { }
-    Entry(){}
+
+    Entry() { }
   };
 
 private:
@@ -27,9 +29,7 @@ public:
   // Constructor
   ChainingLockingHT(uint64_t size) : size(size) {
     entries = new Entry *[size];
-    for (uint64_t i = 0; i < size; i++) {
-      entries[i] = nullptr;
-    }
+    memset(entries, 0, (size_t) size * sizeof(Entry *));
     locks = new std::mutex[size];
   }
 

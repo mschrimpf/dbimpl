@@ -5,6 +5,7 @@
 #include "inttypes_wrapper.hpp"
 #include <atomic>
 #include <stdio.h>
+#include <string.h>
 
 class ChainingHT {
 public:
@@ -26,9 +27,7 @@ public:
   // Constructor
   ChainingHT(uint64_t buildSize) : size(buildSize * 3 /* 48 max per entry / sizeof(Entry) = 48 / (8 + 8) */) {
     atomicEntries = new std::atomic<Entry *>[size];
-    for (unsigned i = 0; i < size; i++) {
-      atomicEntries[i] = nullptr;
-    }
+    memset(atomicEntries, 0, (size_t) size * sizeof(std::atomic<Entry *>));
   }
 
   // Destructor
