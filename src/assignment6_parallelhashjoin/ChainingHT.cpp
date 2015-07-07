@@ -23,7 +23,7 @@ private:
 
 public:
   // Constructor
-  ChainingHT(uint64_t size) : size(size) {
+  ChainingHT(uint64_t buildSize) : size(buildSize * 3 /* 48 max per entry / sizeof(Entry) = 48 / (8 + 8) */) {
     atomicEntries = new std::atomic<Entry *>[size];
     for (unsigned i = 0; i < size; i++) {
       atomicEntries[i] = nullptr;

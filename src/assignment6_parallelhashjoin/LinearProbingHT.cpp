@@ -25,7 +25,7 @@ private:
 
 public:
   // Constructor
-  LinearProbingHT(uint64_t size) : size(size) {
+  LinearProbingHT(uint64_t buildSize) : size(buildSize * 5 /* 48 max memory / sizeof(Entry) = 48 / 9 */) {
     entries = new Entry[size];
   }
 
@@ -37,14 +37,25 @@ public:
   // Returns the number of hits
   inline uint64_t lookup(uint64_t key) {
     uint64_t hash = hashKey(key);
-    uint64_t pos = hash % size;
+    uint64_t pos = hash % size, initialPos = pos;
 
     uint64_t count = 0;
-    while (entries[pos].marker) {
+    // avoid introducing additional bool variable to check if the first pos has been left
+    if (entries[pos].marker) {
       if (entries[pos].key == key) {
         count++;
       }
-      pos++;
+      pos = (pos + 1) % size;
+
+      while (entries[pos].marker) {
+        if (pos == initialPos) {
+          break;
+        }
+        if (entries[pos].key == key) {
+          count++;
+        }
+        pos = (pos + 1) % size;
+      }
     }
     return count;
   }
@@ -65,7 +76,7 @@ public:
       Entry &entry = entries[i];
       bool currMarker = entry.marker;
       // check entry
-      if (!currMarker && entry.marker
+      if (!currMarker && entries[i].marker
           .compare_exchange_strong(currMarker, true,
                                    std::memory_order_seq_cst, std::memory_order_seq_cst)) {
         entry.key = key;
