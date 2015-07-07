@@ -22,7 +22,8 @@ public:
     uint64_t key;
     Entry *next;
 
-    Entry(){}
+    Entry() { }
+
     Entry(uint64_t key) : key(key), next(nullptr) { }
   };
 
@@ -56,13 +57,12 @@ public:
 
     unsigned c;
     for (c = 0; c < COLUMNS - 1; c++) {
-      // TODO: jump table instead of branching
       if (entries[r + c] == INVALID_FLAG) {
         break;
       }
-      if (entries[r + c] == key) {
-        count++;
-      }
+      // branch-free. equivalent to if (entries[r + c] == key) count++
+      bool inc = entries[r + c] == key;
+      count += inc;
     }
     if (c == COLUMNS - 1 && entries[r + c] != INVALID_FLAG) {
       uint64_t ptr = entries[r + c];
@@ -72,7 +72,7 @@ public:
         bool inc = entry->key == key;
         count += inc;
         entry = entry->next;
-      } while(entry != nullptr);
+      } while (entry != nullptr);
     }
 
     return count;
@@ -124,22 +124,24 @@ public:
       if (entries[r] == INVALID_FLAG) {
         continue;
       }
-      printf("[%u]", r);
-      for (unsigned i = r; i < COLUMNS - 1; i++) {
+      printf("[%u]", r / COLUMNS);
+      unsigned i;
+      for (i = r; i < r + COLUMNS - 1; i++) {
         uint64_t val = entries[i];
         if (val == INVALID_FLAG) {
           break;
         }
         printf(" | (%" PRIu64 ")", val);
       }
-      uint64_t ptr = entries[r];
-      if (ptr == INVALID_FLAG) {
-        continue;
-      }
-      Entry *entryPtr = (Entry *) ptr;
-      while (entryPtr != nullptr) {
-        printf(" -> (%" PRIu64 ")", entryPtr->key);
-        entryPtr = entryPtr->next;
+      if (i == r + COLUMNS - 1) {
+        uint64_t ptr = entries[i];
+        if (ptr != INVALID_FLAG) {
+          Entry *entryPtr = (Entry *) ptr;
+          while (entryPtr != nullptr) {
+            printf(" -> (%" PRIu64 ")", entryPtr->key);
+            entryPtr = entryPtr->next;
+          }
+        }
       }
       printf("\n");
     }
