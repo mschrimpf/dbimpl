@@ -42,18 +42,19 @@ public:
     uint64_t count = 0;
     // avoid introducing additional bool variable to check if the first pos has been left
     if (entries[pos].marker) {
-      if (entries[pos].key == key) {
-        count++;
-      }
+      // branch-free. equivalent to if(entries[pos].key == key) count++
+      bool inc = entries[pos].key == key;
+      count += inc;
+
       pos = (pos + 1) % size;
 
       while (entries[pos].marker) {
         if (pos == initialPos) {
           break;
         }
-        if (entries[pos].key == key) {
-          count++;
-        }
+        // branch-free. equivalent to if(entries[pos].key == key) count++
+        inc = entries[pos].key == key;
+        count += inc;
         pos = (pos + 1) % size;
       }
     }

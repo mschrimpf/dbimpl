@@ -14,7 +14,8 @@ public:
     Entry *next;
 
     Entry(uint64_t key) : key(key), next(nullptr) { }
-    Entry(){}
+
+    Entry() { }
   };
 
 private:
@@ -41,9 +42,9 @@ public:
     Entry *entry = atomicEntries[hash];
     uint64_t count = 0;
     while (entry != nullptr) {
-      if (entry->key == key) {
-        count++;
-      }
+      // branch-free. equivalent to if(entry->key == key) count++
+      bool inc = entry->key == key;
+      count += inc;
       entry = entry->next;
     }
     return count;

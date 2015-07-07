@@ -50,9 +50,9 @@ public:
     Entry *entry = buckets[hash].entry;
     uint64_t count = 0;
     while (entry != nullptr) {
-      if (entry->key == key) {
-        count++;
-      }
+      // branch-free. equivalent to if(entry->key == key) count++
+      bool inc = entry->key == key;
+      count += inc;
       entry = entry->next;
     }
     return count;

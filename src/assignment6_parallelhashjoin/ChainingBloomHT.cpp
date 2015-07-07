@@ -69,10 +69,9 @@ public:
     entry = (Entry *) (((uint64_t) entry) & POINTER_POINTER_MASK);
     uint64_t count = 0;
     while (entry != nullptr) {
-      // TODO: jump table instead of branching
-      if (entry->key == key) {
-        count++;
-      }
+      // branch-free. equivalent to if(entry->key == key) count++
+      bool inc = entry->key == key;
+      count += inc;
       entry = entry->next;
     }
     return count;
