@@ -47,8 +47,13 @@ public:
 
   template<typename ParallelHashJoin, typename Entry>
   inline void insertLookup50(ParallelHashJoin *parallelHashJoin) {
+    insertLookupNHalf<ParallelHashJoin, Entry>(parallelHashJoin, 100);
+  }
+
+  template<typename ParallelHashJoin, typename Entry>
+  inline void insertLookupNHalf(ParallelHashJoin *parallelHashJoin, uint64_t n) {
     std::vector<Entry *> entryPointers;
-    for (uint64_t t = 0; t < 100; t++) {
+    for (uint64_t t = 0; t < n; t++) {
       if (t % 2 == 0) {
         continue;
       }
@@ -57,7 +62,7 @@ public:
       parallelHashJoin->insert(entry);
     }
 
-    for (uint64_t t = 0; t < 100; t++) {
+    for (uint64_t t = 0; t < n; t++) {
       uint64_t count = parallelHashJoin->lookup(t);
       if (t % 2 == 0) {
         ASSERT_EQ(0, count);
@@ -86,6 +91,11 @@ public:
   TEST_F(ParallelHashJoinTest, TABLE_NAME ## Insert50) {\
     TABLE_NAME hashTable(testSize);\
     insertLookup50<TABLE_NAME, TABLE_NAME::Entry>(&hashTable);\
+  }\
+  \
+  TEST_F(ParallelHashJoinTest, TABLE_NAME ## InsertHighLoadFactor) {\
+    TABLE_NAME hashTable(10);\
+    insertLookupNHalf<TABLE_NAME, TABLE_NAME::Entry>(&hashTable, 100);\
   }
 
 HT_TESTS(ChainingHT)
