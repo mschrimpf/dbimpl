@@ -32,11 +32,11 @@ private:
   const unsigned COLUMNS = 4;
   const uint64_t INVALID_FLAG = std::numeric_limits<uint64_t>::max();
   std::atomic<uint64_t> *entries;
-  uint64_t size;
+  uint64_t numRows;
 
 public:
   // Constructor
-  MatrixHT(uint64_t size) : size(size) {
+  MatrixHT(uint64_t size) : numRows(size) {
     uint64_t entriesSize = size * COLUMNS;
     entries = new std::atomic<uint64_t>[entriesSize];
     for (unsigned i = 0; i < entriesSize; i++) {
@@ -51,21 +51,21 @@ public:
 
   // Returns the number of hits
   inline uint64_t lookup(uint64_t key) const {
-    uint64_t hash = hashKey(key) % size;
+    uint64_t hash = hashKey(key) % numRows;
     uint64_t r = hash * COLUMNS;
     uint64_t count = 0;
 
     unsigned c;
     for (c = 0; c < COLUMNS - 1; c++) {
       if (entries[r + c] == INVALID_FLAG) {
-        break;
+        return count;
       }
       // branch-free. equivalent to if (entries[r + c] == key) count++
       bool inc = entries[r + c] == key;
       count += inc;
     }
     if (c == COLUMNS - 1 && entries[r + c] != INVALID_FLAG) {
-      uint64_t ptr = entries[r + c];
+      uint64_t ptr = entries[r + COLUMNS - 1];
       Entry *entry = (Entry *) ptr;
       do {
         // branch-free. equivalent to if(entry->key == key) count++
@@ -86,41 +86,39 @@ public:
     }
 #endif
 
-    uint64_t hash = hashKey(newKey) % size;
+    uint64_t hash = hashKey(newKey) % numRows;
 
     uint64_t r = hash * COLUMNS;
     unsigned c = 0;
-    uint64_t oldValue;
     uint64_t possiblePtr = INVALID_FLAG;
+    uint64_t invalid_flag = INVALID_FLAG;
     do {
       for (; c < COLUMNS - 1 && entries[r + c] != INVALID_FLAG; c++);
 
       if (c == COLUMNS - 1) {
-        possiblePtr = entries[r + c];
-        if (possiblePtr != INVALID_FLAG) {
-          break; // continue after loop
-        }
+        break;
       }
-      oldValue = entries[r + c];
     } while (!entries[r + c]
-        .compare_exchange_strong(oldValue, newKey,
+        .compare_exchange_strong(invalid_flag, newKey,
                                  std::memory_order_seq_cst, std::memory_order_seq_cst));
 
-    if (possiblePtr == INVALID_FLAG) {
+    if (c != COLUMNS - 1) {
       return;
     }
 
     uint64_t oldEntry; // is actually Entry *
     do {
-      oldEntry = entries[r + COLUMNS];
-      newEntry->next = (Entry *) oldEntry;
-    } while (!entries[r + COLUMNS]
+      oldEntry = entries[r + COLUMNS - 1];
+      bool isValid = oldEntry != INVALID_FLAG;
+      newEntry->next = (Entry *) (oldEntry * isValid + 0 * !isValid);
+    } while (!entries[r + COLUMNS - 1]
         .compare_exchange_strong(oldEntry, (uint64_t) newEntry,
                                  std::memory_order_seq_cst, std::memory_order_seq_cst));
+    uint64_t newEntriesVal = entries[r + COLUMNS - 1];
   }
 
   inline void print() {
-    for (unsigned r = 0; r < size; r += COLUMNS) {
+    for (unsigned r = 0; r < numRows * COLUMNS; r += COLUMNS) {
       if (entries[r] == INVALID_FLAG) {
         continue;
       }
@@ -137,8 +135,9 @@ public:
         uint64_t ptr = entries[i];
         if (ptr != INVALID_FLAG) {
           Entry *entryPtr = (Entry *) ptr;
+          printf(" | %p", entryPtr);
           while (entryPtr != nullptr) {
-            printf(" -> (%" PRIu64 ")", entryPtr->key);
+            printf(" -> (%" PRIu64 ")\n", entryPtr->key);
             entryPtr = entryPtr->next;
           }
         }
