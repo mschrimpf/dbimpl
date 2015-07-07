@@ -85,3 +85,24 @@ To run the operator tests:
     
     make -C ../.. operators_tests
     ./operators_tests
+
+## Assignment 6: Parallel Hash Join
+To run the unit tests:
+    
+    # inside dbimpl directory
+    cmake .
+    cd testing/parallelhashjoin
+    
+    make -C ../.. parallel_hash_join_tests
+    ./parallel_hash_join_tests
+    
+    cd ../..
+
+To run the benchmark:
+
+    # inside dbimpl directory
+    cmake .
+    cd testing/parallelhashjoin
+    
+    make -C ../.. parallel_hash_join_benchmark
+    ./parallel_hash_join_benchmark <sizeR> <sizeS> <threads>
