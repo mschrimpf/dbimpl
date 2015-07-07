@@ -3,6 +3,7 @@
 #include "../../src/assignment6_parallelhashjoin/ChainingLockingHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/ChainingBloomHT.cpp"
+#include "../../src/assignment6_parallelhashjoin/ChainingBloomAggregateHT.cpp"
 #include "../../src/assignment6_parallelhashjoin/MatrixHT.cpp"
 
 
@@ -69,7 +70,6 @@ public:
       delete entryIt;
     }
   }
-
 };
 
 #define HT_TESTS(TABLE_NAME) \

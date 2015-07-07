@@ -25,9 +25,17 @@ private:
 
 public:
   // Constructor
-  LinearProbingHT(uint64_t buildSize) : size(buildSize * 5 /* 48 max memory / sizeof(Entry) = 48 / 9 */) {
+  LinearProbingHT(uint64_t buildSize, bool clearEntries)
+      : size(buildSize * 5 /* 48 max memory / sizeof(Entry) = 48 / 9 */) {
     entries = new Entry[size];
+    if (clearEntries) {
+      for (uint64_t i = 0; i < size; i++) {
+        entries[i].marker = false;
+      }
+    }
   }
+
+  LinearProbingHT(uint64_t buildSize) : LinearProbingHT(buildSize, true) { }
 
   // Destructor
   ~LinearProbingHT() {
@@ -74,14 +82,13 @@ public:
     // derived from practical experience however,
     // we assume that the table will never be full.
     for (uint64_t i = pos; ; i = (i + 1) % size) {
-      Entry &entry = entries[i];
-      bool currMarker = entry.marker;
+      bool currMarker = entries[i].marker;
       // check entry
       if (!currMarker && entries[i].marker
           .compare_exchange_strong(currMarker, true,
                                    std::memory_order_seq_cst, std::memory_order_seq_cst)) {
-        entry.key = key;
-        entry.marker = true;
+        entries[i].key = key;
+        entries[i].marker = true;
         break;
       }
     }
