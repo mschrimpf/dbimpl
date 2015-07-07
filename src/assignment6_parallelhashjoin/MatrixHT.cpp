@@ -68,9 +68,9 @@ public:
       uint64_t ptr = entries[r + c];
       Entry *entry = (Entry *) ptr;
       do {
-        if(entry->key == key) {
-          count++;
-        }
+        // branch-free. equivalent to if(entry->key == key) count++
+        bool inc = entry->key == key;
+        count += inc;
         entry = entry->next;
       } while(entry != nullptr);
     }
