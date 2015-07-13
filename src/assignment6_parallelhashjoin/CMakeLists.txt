@@ -1,6 +1,6 @@
 project(parallelhashjoin)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(PARALLELHASHJOIN_SOURCE_FILES
     hash.hpp
@@ -9,7 +9,6 @@ set(PARALLELHASHJOIN_SOURCE_FILES
     LinearProbingHT.cpp
     ChainingHT.cpp
     ChainingBloomHT.cpp
-    ChainingBloomAggregateHT.cpp
     MatrixHT.cpp)
 
 add_executable(parallelhashjoin ${PARALLELHASHJOIN_SOURCE_FILES})
