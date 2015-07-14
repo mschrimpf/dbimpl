@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <string.h>
 
-#define MATRIX_DEBUG 1
+#define MATRIX_DEBUG 0
 
 /**
  * Matrix of keys that fully use the allowed memory
