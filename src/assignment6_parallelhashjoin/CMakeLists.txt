@@ -9,7 +9,6 @@ set(PARALLELHASHJOIN_SOURCE_FILES
     LinearProbingHT.cpp
     ChainingHT.cpp
     ChainingBloomHT.cpp
-    ChainingBloomAggregateHT.cpp
     MatrixHT.cpp)
 
 add_executable(parallelhashjoin ${PARALLELHASHJOIN_SOURCE_FILES})

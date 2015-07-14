@@ -1,6 +1,6 @@
 add_test(NAME unit_tests COMMAND $<TARGET_FILE:database>)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 add_executable(parallel_hash_join_tests test_hash_join.cpp)
 set_target_properties(parallel_hash_join_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY .)
